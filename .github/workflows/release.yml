@@ -10,7 +10,8 @@ permissions:
   contents: write
 
 jobs:
-  bump:
+  bump-version:
+    name: Bump Package Version
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
