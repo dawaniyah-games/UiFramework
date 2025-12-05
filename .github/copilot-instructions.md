@@ -2,7 +2,7 @@
 
 ## Package Information
 
-**Package Name**: `com.mohamedmoghazy.uiframework`  
+**Package Name**: `com.DawaniyahGames.UiFramework`  
 **Version**: 1.0.0  
 **Repository**: https://github.com/mohamedmoghazy/UiFramework
 
@@ -17,7 +17,7 @@ https://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework
 Via manifest.json:
 
 ```json
-"com.mohamedmoghazy.uiframework": "https://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework"
+"com.DawaniyahGames.UiFramework": "https://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework"
 ```
 
 ## Architecture Overview

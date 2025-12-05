@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UiFramework.Core;
 using System.Threading.Tasks;
 
 namespace UiFramework.Runtime.Manager

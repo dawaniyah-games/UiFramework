@@ -24,24 +24,22 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Ensure VERSION file exists
-        run: |
-          if [ ! -f VERSION ]; then
-            echo "1.0.0" > VERSION
-          fi
-          echo "Current VERSION: $(cat VERSION)"
-
-      - name: Bump patch version
+      - name: Get latest tag and calculate next version
         id: bump
         run: |
-          VERSION_FILE=VERSION
-          CURRENT=$(cat "$VERSION_FILE")
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          # Get the latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
+          echo "Latest tag: $LATEST_TAG"
+
+          # Remove 'v' prefix and extract version numbers
+          VERSION=${LATEST_TAG#v}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          # Bump patch version
           PATCH=$((PATCH+1))
           NEW="$MAJOR.$MINOR.$PATCH"
-          echo "$NEW" > "$VERSION_FILE"
           echo "new_version=$NEW" >> $GITHUB_OUTPUT
-          echo "Bumped version: $NEW"
+          echo "Bumped version: $LATEST_TAG → v$NEW"
 
       - name: Update package.json version
         run: |
@@ -77,20 +75,20 @@ jobs:
           VERSION="${{ steps.bump.outputs.new_version }}"
           cat > release-notes.md <<EOF
           ## What's Changed
-          
+
           Merged \`dev\` → \`main\`
-          
+
           ### Version Information
           - **Version**: v${VERSION}
           - **Package**: com.mohamedmoghazy.uiframework
-          
+
           ### Installation
-          
+
           #### Via Package Manager UI
           \`\`\`
           https://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework#v${VERSION}
           \`\`\`
-          
+
           #### Via manifest.json
           \`\`\`json
           {
