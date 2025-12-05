@@ -123,9 +123,9 @@ jobs:
           git add package.json CHANGELOG.md
           git commit -m "chore: Bump version to v${{ steps.bump.outputs.new_version }}"
 
-      - name: Push version updates to main
+      - name: Push version updates to dev
         run: |
-          git push origin main
+          git push origin main:dev
 
       - name: Compose Slack release message
         if: env.SLACK_WEBHOOK != ''
