@@ -7,7 +7,7 @@ on:
       - main
 
 permissions:
-  contents: write  # required to create tags and releases
+  contents: write # required to create tags and releases
 
 jobs:
   release:
@@ -53,16 +53,23 @@ jobs:
         run: |
           VERSION="${{ steps.bump.outputs.new_version }}"
           DATE=$(date +%Y-%m-%d)
-          
-          # Create new version entry
-          sed -i "/^## \[Unreleased\]/a\\
-\\
-## [$VERSION] - $DATE\\
-\\
-### Changed\\
-- Merged dev branch to main\\
-- See GitHub release notes for detailed changes" Assets/UiFramework/CHANGELOG.md
-          
+
+          # Create new version entry after Unreleased section
+          awk -v version="$VERSION" -v date="$DATE" '
+          /^## \[Unreleased\]/ {
+            print
+            print ""
+            print "## [" version "] - " date
+            print ""
+            print "### Changed"
+            print "- Merged dev branch to main"
+            print "- See GitHub release notes for detailed changes"
+            next
+          }
+          { print }
+          ' Assets/UiFramework/CHANGELOG.md > CHANGELOG.tmp
+          mv CHANGELOG.tmp Assets/UiFramework/CHANGELOG.md
+
           echo "Updated CHANGELOG.md with version $VERSION"
 
       - name: Commit version bumps
@@ -88,12 +95,12 @@ jobs:
             🎉 **Release v${{ steps.bump.outputs.new_version }}** is live!
 
             ## Installation
-            
+
             ### Via Package Manager UI
             ```
             https://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework#v${{ steps.bump.outputs.new_version }}
             ```
-            
+
             ### Via manifest.json
             ```json
             {
@@ -133,7 +140,7 @@ jobs:
             ]
           }
           JSON
-          
+
       - name: Send Slack release message
         if: env.SLACK_WEBHOOK != ''
         env:
