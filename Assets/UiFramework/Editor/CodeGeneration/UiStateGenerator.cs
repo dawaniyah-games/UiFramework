@@ -7,7 +7,15 @@ namespace UiFramework.Editor.CodeGeneration
 {
     public static class UiStateGenerator
     {
-        private const string TemplatePath = "Assets/Scripts/UiFramework/Editor/Templates/UiStateTemplate.txt";
+        private static string GetTemplatePath()
+        {
+            string[] guids = AssetDatabase.FindAssets("UiStateTemplate t:TextAsset");
+            if (guids.Length > 0)
+            {
+                return AssetDatabase.GUIDToAssetPath(guids[0]);
+            }
+            return "Assets/UiFramework/Editor/Templates/UiStateTemplate.txt";
+        }
 
         public static void Generate(string name, string outputPath, string namespaceName)
         {
@@ -29,13 +37,14 @@ namespace UiFramework.Editor.CodeGeneration
                 return;
             }
 
-            if (!File.Exists(TemplatePath))
+            string templatePath = GetTemplatePath();
+            if (!File.Exists(templatePath))
             {
-                UnityEngine.Debug.LogError($"❌ Template file not found: {TemplatePath}");
+                UnityEngine.Debug.LogError($"❌ Template file not found: {templatePath}");
                 return;
             }
 
-            string template = File.ReadAllText(TemplatePath);
+            string template = File.ReadAllText(templatePath);
 
             template = template.Replace("[UiStateNamespace]", namespaceName);
             template = template.Replace("[UiStateName]", className);

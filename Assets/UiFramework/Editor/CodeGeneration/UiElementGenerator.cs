@@ -6,7 +6,16 @@ namespace UiFramework.Editor.CodeGeneration
 {
     public static class UiElementGenerator
     {
-        private const string TemplateFolder = "Assets/Scripts/UiFramework/Editor/Templates/";
+        private static string GetTemplateFolder()
+        {
+            string[] guids = AssetDatabase.FindAssets("UiElementTemplate t:TextAsset");
+            if (guids.Length > 0)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                return System.IO.Path.GetDirectoryName(path).Replace("\\", "/") + "/";
+            }
+            return "Assets/UiFramework/Editor/Templates/";
+        }
 
         public static void Generate(string name, string outputPath, string ns, bool includeParams = false, bool includeReference = false)
         {
@@ -27,7 +36,7 @@ namespace UiFramework.Editor.CodeGeneration
 
         private static void WriteFromTemplate(string templateFile, string name, string ns, string outputPath, string className)
         {
-            string templatePath = Path.Combine(TemplateFolder, templateFile);
+            string templatePath = Path.Combine(GetTemplateFolder(), templateFile);
             Debug.Log($"🔍 Looking for template at: {templatePath}");
 
             if (!File.Exists(templatePath))

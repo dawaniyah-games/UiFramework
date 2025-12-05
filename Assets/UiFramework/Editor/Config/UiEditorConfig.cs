@@ -1,4 +1,7 @@
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace UiFramework.Editor.Config
 {
@@ -13,5 +16,36 @@ namespace UiFramework.Editor.Config
         public string RuntimeConfigOutputPath = "Assets/UiConfigs/RuntimeUiConfig.asset";
         public string ElementNamespace = "UiFramework.Editor.Elements";
         public string StateNamespace = "UiFramework.Editor.States";
+
+#if UNITY_EDITOR
+        private void OnEnable()
+        {
+            if (string.IsNullOrEmpty(UiSetupAssetPath) || UiSetupAssetPath == "Assets/UiConfigs/UiSetup.asset")
+            {
+                UiSetupAssetPath = GetDefaultConfigPath("UiSetup", "Assets/UiConfigs/UiSetup.asset");
+            }
+
+            if (string.IsNullOrEmpty(StateRegistryPath) || StateRegistryPath == "Assets/UiConfigs/UiStateRegistry.asset")
+            {
+                StateRegistryPath = GetDefaultConfigPath("UiStateRegistry", "Assets/UiConfigs/UiStateRegistry.asset");
+            }
+
+            if (string.IsNullOrEmpty(RuntimeConfigOutputPath) || RuntimeConfigOutputPath == "Assets/UiConfigs/RuntimeUiConfig.asset")
+            {
+                RuntimeConfigOutputPath = GetDefaultConfigPath("RuntimeUiConfig", "Assets/UiConfigs/RuntimeUiConfig.asset");
+            }
+        }
+
+        private string GetDefaultConfigPath(string assetName, string fallback)
+        {
+            string[] guids = AssetDatabase.FindAssets($"{assetName} t:ScriptableObject");
+            if (guids.Length > 0)
+            {
+                return AssetDatabase.GUIDToAssetPath(guids[0]);
+            }
+
+            return fallback;
+        }
+#endif
     }
 }
