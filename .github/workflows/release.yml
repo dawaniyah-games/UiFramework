@@ -52,9 +52,7 @@ jobs:
       - name: Update package.json version
         run: |
           VERSION="${{ steps.bump.outputs.new_version }}"
-          # Use jq to update JSON safely
-          jq --arg version "$VERSION" '.version = $version' package.json > package.json.tmp
-          mv package.json.tmp package.json
+          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" package.json
           echo "Updated package.json to version $VERSION"
 
       - name: Update CHANGELOG.md
@@ -127,7 +125,7 @@ jobs:
 
       - name: Push version updates to dev
         run: |
-          git push origin main:dev
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
 
       - name: Compose Slack release message
         if: env.SLACK_WEBHOOK != ''
