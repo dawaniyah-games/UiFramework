@@ -27,8 +27,16 @@ jobs:
       - name: Get latest tag and calculate next version
         id: bump
         run: |
-          # Get the latest tag
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
+          # Fetch all tags
+          git fetch --tags --force
+
+          # Get the latest tag sorted by version
+          LATEST_TAG=$(git tag -l "v*.*.*" | sort -V | tail -n1)
+
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG="v1.0.0"
+          fi
+
           echo "Latest tag: $LATEST_TAG"
 
           # Remove 'v' prefix and extract version numbers
