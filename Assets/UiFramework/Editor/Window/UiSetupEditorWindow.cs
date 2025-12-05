@@ -179,8 +179,18 @@ namespace UiFramework.Editor.Window
 
         public void LoadOrCreateConfig()
         {
-            const string path = "Assets/UiConfigs/UiEditorConfig.asset";
+            string path = "Assets/UiConfigs/UiEditorConfig.asset";
             UiEditorConfig config = AssetDatabase.LoadAssetAtPath<UiEditorConfig>(path);
+            
+            if (config == null)
+            {
+                string[] guids = AssetDatabase.FindAssets("UiEditorConfig t:ScriptableObject");
+                if (guids.Length > 0)
+                {
+                    path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                    config = AssetDatabase.LoadAssetAtPath<UiEditorConfig>(path);
+                }
+            }
 
             if (config == null)
             {
