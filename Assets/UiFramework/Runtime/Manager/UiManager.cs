@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using System.Threading.Tasks;
+using UiFramework.Core;
+using UiFramework.Core.Config;
 
 namespace UiFramework.Runtime.Manager
 {
@@ -53,7 +55,7 @@ namespace UiFramework.Runtime.Manager
                 return;
             }
 
-            if (!instance.typeToKeyMap.TryGetValue(typeof(T), out var key))
+            if (!instance.typeToKeyMap.TryGetValue(typeof(T), out string key))
             {
                 Debug.LogError($"❌ No UI state key registered for {typeof(T).Name}");
                 return;
@@ -70,7 +72,7 @@ namespace UiFramework.Runtime.Manager
                 return;
             }
 
-            if (!instance.cachedStates.TryGetValue(stateKey, out var entry))
+            if (!instance.cachedStates.TryGetValue(stateKey, out UiStateEntry entry))
             {
                 Debug.LogError($"❌ State '{stateKey}' not found in cache.");
                 return;

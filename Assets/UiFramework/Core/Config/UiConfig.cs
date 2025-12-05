@@ -17,15 +17,19 @@ namespace UiFramework.Runtime
 
         public void AddOrUpdateEntry(string stateKey, List<AssetReference> uiElementScenes)
         {
-            var existing = entries.Find(e => e.stateKey == stateKey);
+            UiStateEntry existing = entries.Find(e => e.stateKey == stateKey);
             if (existing != null)
+            {
                 existing.uiElementScenes = uiElementScenes;
+            }
             else
+            {
                 entries.Add(new UiStateEntry
                 {
                     stateKey = stateKey,
                     uiElementScenes = uiElementScenes
                 });
+            }
         }
     }
 

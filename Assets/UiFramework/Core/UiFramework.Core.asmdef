@@ -2,7 +2,8 @@
     "name": "UiFramework.Core",
     "rootNamespace": "UiFramework.Core",
     "references": [
-        "Unity.Addressables"
+        "Unity.Addressables",
+        "Unity.ResourceManager"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

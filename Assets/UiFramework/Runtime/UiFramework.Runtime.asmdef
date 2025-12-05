@@ -2,7 +2,8 @@
     "name": "UiFramework.Runtime",
     "rootNamespace": "UiFramework.Runtime",
     "references": [
-        "Unity.Addressables"
+        "Unity.Addressables",
+        "UiFramework.Core"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
