@@ -1,35 +1,35 @@
 {
-    "name": "com.dawaniyahgames.uiframework",
-    "version": "1.0.10",
-    "displayName": "UI Framework",
-    "description": "Unity UI Framework with Addressables-based scene composition and LIFO state stack management. Provides a flexible system for loading UI screens as additive scenes with runtime data population.",
-    "unity": "2021.3",
-    "unityRelease": "0f1",
-    "keywords": [
-        "ui",
-        "framework",
-        "addressables",
-        "scene-management",
-        "state-stack",
-        "editor-tools"
-    ],
-    "author": {
-        "name": "Mohamed Moghazy",
-        "url": "https://github.com/mohamedmoghazy"
-    },
-    "dependencies": {
-        "com.unity.addressables": "1.21.0"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/mohamedmoghazy/UiFramework.git"
-    },
-    "license": "MIT",
-    "samples": [
-        {
-            "displayName": "Basic UI Setup",
-            "description": "Sample scenes and scripts demonstrating basic UI Framework setup",
-            "path": "Samples~/BasicSetup"
-        }
-    ]
+  "name": "com.dawaniyahgames.uiframework",
+  "version": "1.0.11",
+  "displayName": "UI Framework",
+  "description": "Unity UI Framework with Addressables-based scene composition and LIFO state stack management. Provides a flexible system for loading UI screens as additive scenes with runtime data population.",
+  "unity": "2021.3",
+  "unityRelease": "0f1",
+  "keywords": [
+    "ui",
+    "framework",
+    "addressables",
+    "scene-management",
+    "state-stack",
+    "editor-tools"
+  ],
+  "author": {
+    "name": "Mohamed Moghazy",
+    "url": "https://github.com/mohamedmoghazy"
+  },
+  "dependencies": {
+    "com.unity.addressables": "1.21.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mohamedmoghazy/UiFramework.git"
+  },
+  "license": "MIT",
+  "samples": [
+    {
+      "displayName": "Basic UI Setup",
+      "description": "Sample scenes and scripts demonstrating basic UI Framework setup",
+      "path": "Samples~/BasicSetup"
+    }
+  ]
 }
