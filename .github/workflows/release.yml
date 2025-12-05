@@ -116,6 +116,17 @@ jobs:
           body_path: release-notes.md
           make_latest: true
 
+      - name: Commit version updates
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add package.json CHANGELOG.md
+          git commit -m "chore: Bump version to v${{ steps.bump.outputs.new_version }}"
+
+      - name: Push version updates to main
+        run: |
+          git push origin main
+
       - name: Compose Slack release message
         if: env.SLACK_WEBHOOK != ''
         env:
