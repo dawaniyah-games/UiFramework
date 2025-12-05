@@ -1,9 +1,10 @@
-name: Bump version on dev push
+name: Bump version on PR to main
 
 on:
-  push:
+  pull_request:
+    types: [opened, synchronize]
     branches:
-      - dev
+      - main
 
 permissions:
   contents: write
@@ -107,13 +108,12 @@ jobs:
           \`\`\`
           EOF
 
-      - name: Commit version updates to dev
+      - name: Commit version updates
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add package.json CHANGELOG.md release-notes.md
           git commit -m "chore: Bump version to v${{ steps.bump.outputs.new_version }}"
-          git push origin HEAD:dev
+          git push origin HEAD:${{ github.head_ref }}
 
-      # Open PR to main manually: dev → main. Tagging and release
-      # are handled by the separate tag-triggered workflow.
+      # Tagging and release are handled by the separate tag-triggered workflow.
