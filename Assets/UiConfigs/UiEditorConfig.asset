@@ -16,7 +16,7 @@ MonoBehaviour:
   ElementsScriptPath: Assets/Scripts/Ui/UiElements
   ElementsScenePath: Assets/Scenes/UiElements
   StatesPath: Assets/Scripts/Ui/UiStates
-  StateRegistryPath: Assets/UiCongigs/UiStateRegistry.asset
+  StateRegistryPath: Assets/UiConfigs/UiStateRegistry.asset
   RuntimeConfigOutputPath: Assets/UiConfigs/RuntimeUiConfig.asset
   ElementNamespace: UiFramework.Editor.Elements
   StateNamespace: UiFramework.Editor.States
