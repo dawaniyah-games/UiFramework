@@ -42,7 +42,17 @@ namespace UiFramework.Editor.Window
             root.Clear();
             root.style.flexDirection = FlexDirection.Column;
 
-            StyleSheet styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/Scripts/UiFramework/Editor/Styles/UiSetupTabs.uss");
+            StyleSheet styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/UiFramework/Editor/Styles/UiSetupTabs.uss");
+            
+            if (styleSheet == null)
+            {
+                string[] guids = AssetDatabase.FindAssets("UiSetupTabs t:StyleSheet");
+                if (guids.Length > 0)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                    styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(path);
+                }
+            }
 
             if (styleSheet != null)
             {
@@ -50,7 +60,7 @@ namespace UiFramework.Editor.Window
             }
             else
             {
-                Debug.LogWarning("❌ Stylesheet not found at path: Assets/Scripts/UiFramework/Editor/Styles/UiSetupTabs.uss");
+                Debug.LogWarning("❌ Stylesheet 'UiSetupTabs.uss' not found.");
             }
 
 
