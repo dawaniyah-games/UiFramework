@@ -4,7 +4,6 @@ using System.Linq;
 using UnityEngine;
 using System.Threading.Tasks;
 using UiFramework.Core;
-using UiFramework.Core.Config;
 
 namespace UiFramework.Runtime.Manager
 {
