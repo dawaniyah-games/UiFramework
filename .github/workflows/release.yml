@@ -77,20 +77,20 @@ jobs:
           VERSION="${{ steps.bump.outputs.new_version }}"
           cat > release-notes.md <<EOF
           ## What's Changed
-          
+
           Merged \`dev\` → \`main\`
-          
+
           ### Version Information
           - **Version**: v${VERSION}
           - **Package**: com.mohamedmoghazy.uiframework
-          
+
           ### Installation
-          
+
           #### Via Package Manager UI
           \`\`\`
           https://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework#v${VERSION}
           \`\`\`
-          
+
           #### Via manifest.json
           \`\`\`json
           {

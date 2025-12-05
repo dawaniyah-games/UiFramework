@@ -30,7 +30,7 @@ Add this to your `Packages/manifest.json`:
 ```json
 {
   "dependencies": {
-    "com.mohamedmoghazy.uiframework": "https://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework"
+    "com.DawaniyahGames.UiFramework": "https://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework"
   }
 }
 ```
