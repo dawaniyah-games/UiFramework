@@ -1,5 +1,25 @@
 # UI Framework - Copilot Instructions
 
+## Package Information
+
+**Package Name**: `com.mohamedmoghazy.uiframework`  
+**Version**: 1.0.0  
+**Repository**: https://github.com/mohamedmoghazy/UiFramework
+
+### Installation (UPM)
+
+Via Package Manager:
+
+```
+https://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework
+```
+
+Via manifest.json:
+
+```json
+"com.mohamedmoghazy.uiframework": "https://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework"
+```
+
 ## Architecture Overview
 
 This is a Unity UI framework using **Addressables-based scene composition** with a LIFO state stack. UI screens are loaded as additive scenes and populated with runtime data through the `IUiElement.Populate(object context)` contract.

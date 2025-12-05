@@ -1,0 +1,144 @@
+name: Release when dev merged to main
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+permissions:
+  contents: write  # required to create tags and releases
+
+jobs:
+  release:
+    if: >
+      ${{
+        github.event.pull_request.merged == true &&
+        github.event.pull_request.base.ref == 'main' &&
+        github.event.pull_request.head.ref == 'dev'
+      }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure VERSION file exists
+        run: |
+          if [ ! -f VERSION ]; then
+            echo "1.0.0" > VERSION
+          fi
+          echo "Current VERSION: $(cat VERSION)"
+
+      - name: Bump patch version
+        id: bump
+        run: |
+          VERSION_FILE=VERSION
+          CURRENT=$(cat "$VERSION_FILE")
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          PATCH=$((PATCH+1))
+          NEW="$MAJOR.$MINOR.$PATCH"
+          echo "$NEW" > "$VERSION_FILE"
+          echo "new_version=$NEW" >> $GITHUB_OUTPUT
+          echo "Bumped version: $NEW"
+
+      - name: Update package.json version
+        run: |
+          VERSION="${{ steps.bump.outputs.new_version }}"
+          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" Assets/UiFramework/package.json
+          echo "Updated package.json to version $VERSION"
+
+      - name: Update CHANGELOG.md
+        run: |
+          VERSION="${{ steps.bump.outputs.new_version }}"
+          DATE=$(date +%Y-%m-%d)
+          
+          # Create new version entry
+          sed -i "/^## \[Unreleased\]/a\\
+\\
+## [$VERSION] - $DATE\\
+\\
+### Changed\\
+- Merged dev branch to main\\
+- See GitHub release notes for detailed changes" Assets/UiFramework/CHANGELOG.md
+          
+          echo "Updated CHANGELOG.md with version $VERSION"
+
+      - name: Commit version bumps
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add VERSION Assets/UiFramework/package.json Assets/UiFramework/CHANGELOG.md
+          git commit -m "chore(release): v${{ steps.bump.outputs.new_version }} [skip ci]" || echo "No changes to commit"
+          git push || echo "No push needed"
+
+      - name: Tag release
+        run: |
+          git tag -a "v${{ steps.bump.outputs.new_version }}" -m "Release v${{ steps.bump.outputs.new_version }}"
+          git push --follow-tags
+
+      - name: Create GitHub Release (auto notes)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.bump.outputs.new_version }}
+          name: v${{ steps.bump.outputs.new_version }}
+          generate_release_notes: true
+          body: |
+            🎉 **Release v${{ steps.bump.outputs.new_version }}** is live!
+
+            ## Installation
+            
+            ### Via Package Manager UI
+            ```
+            https://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework#v${{ steps.bump.outputs.new_version }}
+            ```
+            
+            ### Via manifest.json
+            ```json
+            {
+              "dependencies": {
+                "com.mohamedmoghazy.uiframework": "https://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework#v${{ steps.bump.outputs.new_version }}"
+              }
+            }
+            ```
+
+            ## What's Changed
+            - Merged `dev` → `main`
+            - Auto-generated notes below include PRs and commits since the last tag.
+
+            🚀 Happy shipping!
+
+      - name: Compose Slack release message
+        if: env.SLACK_WEBHOOK != ''
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACKGITHUBANNOUNCEMENTS }}
+        run: |
+          cat > payload.json <<'JSON'
+          {
+            "blocks": [
+              { "type": "header", "text": { "type": "plain_text", "text": "🎉 New UI Framework Release" } },
+              { "type": "section", "text": { "type": "mrkdwn",
+                "text": "*Repo:* ${{ github.repository }}\n*Version:* v${{ steps.bump.outputs.new_version }}\n*Merged by:* ${{ github.event.pull_request.merged_by.login }}\n*From → To:* dev → main"
+              }},
+              { "type": "section", "text": { "type": "mrkdwn",
+                "text": "📦 *Package:* com.mohamedmoghazy.uiframework\n🔗 <https://github.com/${{ github.repository }}/releases/tag/v${{ steps.bump.outputs.new_version }}|View Release on GitHub>"
+              }},
+              { "type": "section", "text": { "type": "mrkdwn",
+                "text": "```\nhttps://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework#v${{ steps.bump.outputs.new_version }}\n```"
+              }},
+              { "type": "context", "elements": [
+                { "type": "mrkdwn", "text": "🚀 Ship it! • 🧰 Auto notes generated • 📝 VERSION & package.json bumped" }
+              ]}
+            ]
+          }
+          JSON
+          
+      - name: Send Slack release message
+        if: env.SLACK_WEBHOOK != ''
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACKGITHUBANNOUNCEMENTS }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+               --data @payload.json \
+               ${{ secrets.SLACKGITHUBANNOUNCEMENTS }}
