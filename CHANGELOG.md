@@ -25,6 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Merged dev branch to main
 - See GitHub release notes for detailed changes
 
+## [1.0.13] - 2025-12-05
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
 ## [1.0.11] - 2025-12-05
 
 ### Changed
