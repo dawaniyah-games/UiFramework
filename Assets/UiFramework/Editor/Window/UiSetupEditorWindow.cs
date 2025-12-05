@@ -46,11 +46,18 @@ namespace UiFramework.Editor.Window
             
             if (styleSheet == null)
             {
-                string[] guids = AssetDatabase.FindAssets("UiSetupTabs t:StyleSheet");
-                if (guids.Length > 0)
+                string[] guids = AssetDatabase.FindAssets("UiSetupTabs");
+                foreach (string guid in guids)
                 {
-                    string path = AssetDatabase.GUIDToAssetPath(guids[0]);
-                    styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(path);
+                    string path = AssetDatabase.GUIDToAssetPath(guid);
+                    if (path.EndsWith(".uss"))
+                    {
+                        styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(path);
+                        if (styleSheet != null)
+                        {
+                            break;
+                        }
+                    }
                 }
             }
 
