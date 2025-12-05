@@ -72,49 +72,43 @@ jobs:
 
           echo "Updated CHANGELOG.md with version $VERSION"
 
-      - name: Commit version bumps
+      - name: Create release notes file
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add VERSION Assets/UiFramework/package.json Assets/UiFramework/CHANGELOG.md
-          git commit -m "chore(release): v${{ steps.bump.outputs.new_version }} [skip ci]" || echo "No changes to commit"
-          git push || echo "No push needed"
+          VERSION="${{ steps.bump.outputs.new_version }}"
+          cat > release-notes.md <<EOF
+          ## What's Changed
+          
+          Merged \`dev\` → \`main\`
+          
+          ### Version Information
+          - **Version**: v${VERSION}
+          - **Package**: com.mohamedmoghazy.uiframework
+          
+          ### Installation
+          
+          #### Via Package Manager UI
+          \`\`\`
+          https://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework#v${VERSION}
+          \`\`\`
+          
+          #### Via manifest.json
+          \`\`\`json
+          {
+            "dependencies": {
+              "com.mohamedmoghazy.uiframework": "https://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework#v${VERSION}"
+            }
+          }
+          \`\`\`
+          EOF
 
-      - name: Tag release
-        run: |
-          git tag -a "v${{ steps.bump.outputs.new_version }}" -m "Release v${{ steps.bump.outputs.new_version }}"
-          git push --follow-tags
-
-      - name: Create GitHub Release (auto notes)
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.bump.outputs.new_version }}
           name: v${{ steps.bump.outputs.new_version }}
           generate_release_notes: true
-          body: |
-            🎉 **Release v${{ steps.bump.outputs.new_version }}** is live!
-
-            ## Installation
-
-            ### Via Package Manager UI
-            ```
-            https://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework#v${{ steps.bump.outputs.new_version }}
-            ```
-
-            ### Via manifest.json
-            ```json
-            {
-              "dependencies": {
-                "com.mohamedmoghazy.uiframework": "https://github.com/mohamedmoghazy/UiFramework.git?path=/Assets/UiFramework#v${{ steps.bump.outputs.new_version }}"
-              }
-            }
-            ```
-
-            ## What's Changed
-            - Merged `dev` → `main`
-            - Auto-generated notes below include PRs and commits since the last tag.
-
-            🚀 Happy shipping!
+          body_path: release-notes.md
+          make_latest: true
 
       - name: Compose Slack release message
         if: env.SLACK_WEBHOOK != ''
