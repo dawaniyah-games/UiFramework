@@ -20,6 +20,7 @@
   "dependencies": {
     "com.unity.addressables": "1.21.0"
   },
+  "hideInEditor": false,
   "repository": {
     "type": "git",
     "url": "https://github.com/mohamedmoghazy/UiFramework.git"
