@@ -1,4 +1,4 @@
-name: Release when dev merged to main
+name: Bump version after dev→main merge
 
 on:
   pull_request:
@@ -143,19 +143,5 @@ jobs:
           base: dev
           labels: release
 
-      - name: Tag release branch
-        run: |
-          VERSION="${{ steps.bump.outputs.new_version }}"
-          BRANCH="release/v${{ steps.bump.outputs.new_version }}"
-          git fetch origin "$BRANCH"
-          git tag "v$VERSION" "origin/$BRANCH"
-          git push origin "v$VERSION"
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.bump.outputs.new_version }}
-          name: v${{ steps.bump.outputs.new_version }}
-          generate_release_notes: true
-          body_path: release-notes.md
-          make_latest: true
+      # Note: We only open PRs here to comply with branch protection.
+      # Tagging and release is handled by a separate workflow on tag creation.
