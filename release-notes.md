@@ -3,21 +3,21 @@
 Merged `dev` → `main`
 
 ### Version Information
-- **Version**: v1.0.17
+- **Version**: v1.0.18
 - **Package**: com.dawaniyahgames.uiframework
 
 ### Installation
 
 #### Via Package Manager UI
 ```
-https://github.com/mohamedmoghazy/UiFramework.git#v1.0.17
+https://github.com/mohamedmoghazy/UiFramework.git#v1.0.18
 ```
 
 #### Via manifest.json
 ```json
 {
   "dependencies": {
-    "com.dawaniyahgames.uiframework": "https://github.com/mohamedmoghazy/UiFramework.git#v1.0.17"
+    "com.dawaniyahgames.uiframework": "https://github.com/mohamedmoghazy/UiFramework.git#v1.0.18"
   }
 }
 ```
