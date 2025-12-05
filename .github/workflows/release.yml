@@ -52,7 +52,9 @@ jobs:
       - name: Update package.json version
         run: |
           VERSION="${{ steps.bump.outputs.new_version }}"
-          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" package.json
+          # Use jq to update JSON safely
+          jq --arg version "$VERSION" '.version = $version' package.json > package.json.tmp
+          mv package.json.tmp package.json
           echo "Updated package.json to version $VERSION"
 
       - name: Update CHANGELOG.md
