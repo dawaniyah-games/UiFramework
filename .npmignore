@@ -1,0 +1,38 @@
+# Build and test files
+Library/
+Logs/
+Temp/
+.vs/
+.vscode/
+*.user
+*.sln
+*.csproj
+
+# Documentation files
+CHANGELOG.md
+CONTRIBUTING.md
+DESIGN.md
+README.md
+release-notes.md
+TEST_AUTO_RELEASE.md
+TEST_RELEASE.md
+WORKFLOW_TEST.md
+
+# Git files
+.git/
+.gitattributes
+.gitignore
+
+# Project settings
+ProjectSettings/
+UserSettings/
+
+# Editor config
+.editorconfig
+.vsconfig
+
+# Metadata
+*.meta
+
+# Samples (will be included separately via package.json)
+Samples~/*/**/*.meta
