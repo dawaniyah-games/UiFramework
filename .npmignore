@@ -31,5 +31,13 @@ UserSettings/
 .editorconfig
 .vsconfig
 
+# Project-specific config files (not to be distributed in package)
+Assets/UiConfigs/UiEditorConfig.asset
+Assets/UiConfigs/UiEditorConfig.asset.meta
+Assets/UiConfigs/UiStateRegistry.asset
+Assets/UiConfigs/UiStateRegistry.asset.meta
+Assets/UiConfigs/RuntimeUiConfig.asset
+Assets/UiConfigs/RuntimeUiConfig.asset.meta
+
 # Samples (will be included separately via package.json)
 Samples~/*/**/*.meta
