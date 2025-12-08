@@ -28,6 +28,7 @@ LICENSE.md
 ProjectSettings/
 UserSettings/
 Packages/
+Assets/
 
 # Editor config
 .editorconfig
