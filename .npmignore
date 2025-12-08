@@ -17,15 +17,17 @@ release-notes.md
 TEST_AUTO_RELEASE.md
 TEST_RELEASE.md
 WORKFLOW_TEST.md
+LICENSE.md
 
 # Git files
 .git/
 .gitattributes
 .gitignore
 
-# Project settings
+# Project settings and folders
 ProjectSettings/
 UserSettings/
+Packages/
 
 # Editor config
 .editorconfig
