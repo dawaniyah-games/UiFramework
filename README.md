@@ -20,7 +20,7 @@ A flexible Unity UI Framework using **Addressables-based scene composition** wit
 
 1. Open Unity Package Manager (`Window → Package Manager`)
 2. Click the `+` button and select `Add package from git URL...`
-3. Enter: `https://github.com/mohamedmoghazy/UiFramework.git`
+3. Enter: `https://github.com/dawaniyah-games/UiFramework.git`
 4. Click `Add`
 
 ### Via manifest.json
@@ -30,7 +30,7 @@ Add this to your `Packages/manifest.json`:
 ```json
 {
   "dependencies": {
-    "com.dawaniyahgames.uiframework": "https://github.com/mohamedmoghazy/UiFramework.git"
+    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git"
   }
 }
 ```
@@ -137,5 +137,5 @@ Contributions are welcome! Please ensure code follows the `.editorconfig` standa
 
 ## Support
 
-- 📝 [Issues](https://github.com/mohamedmoghazy/UiFramework/issues)
-- 💬 [Discussions](https://github.com/mohamedmoghazy/UiFramework/discussions)
+- 📝 [Issues](https://github.com/dawaniyah-games/UiFramework/issues)
+- 💬 [Discussions](https://github.com/dawaniyah-games/UiFramework/discussions)

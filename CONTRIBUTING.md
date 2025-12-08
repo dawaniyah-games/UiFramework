@@ -4,7 +4,7 @@ Thank you for your interest in contributing! Please follow this workflow to main
 
 ## Development Workflow
 
-### For Repository Owner (mohamedmoghazy)
+### For Repository Owner (dawaniyah-games)
 
 1. **Create a feature branch from `dev`**
 
@@ -24,7 +24,7 @@ Thank you for your interest in contributing! Please follow this workflow to main
 
 3. **Create a Pull Request**
 
-   - Go to: https://github.com/mohamedmoghazy/UiFramework/pulls
+   - Go to: https://github.com/dawaniyah-games/UiFramework/pulls
    - Click "New Pull Request"
    - Base: `dev` ← Compare: `feature/your-feature-name`
    - Fill in description
@@ -53,7 +53,7 @@ Thank you for your interest in contributing! Please follow this workflow to main
 2. **Create a feature branch from `dev`**
 3. **Make changes and commit**
 4. **Push to your fork**
-5. **Create PR to `mohamedmoghazy/UiFramework:dev`**
+5. **Create PR to `dawaniyah-games/UiFramework:dev`**
 6. **Wait for review and merge**
 
 ## Branch Strategy

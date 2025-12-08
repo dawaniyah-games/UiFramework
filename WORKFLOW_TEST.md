@@ -20,5 +20,5 @@ When this commit is merged from `dev` to `main` via Pull Request:
 ## Package Info
 
 - Name: com.dawaniyahgames.uiframework
-- Repository: https://github.com/mohamedmoghazy/UiFramework
+- Repository: https://github.com/dawaniyah-games/UiFramework
 - Installation: Via UPM Git URL

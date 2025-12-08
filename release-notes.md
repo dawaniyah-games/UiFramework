@@ -17,7 +17,7 @@ https://github.com/mohamedmoghazy/UiFramework.git#v1.0.20
 ```json
 {
   "dependencies": {
-    "com.dawaniyahgames.uiframework": "https://github.com/mohamedmoghazy/UiFramework.git#v1.0.20"
+    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git#v1.0.20"
   }
 }
 ```

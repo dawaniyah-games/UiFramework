@@ -42,11 +42,17 @@ namespace UiFramework.Editor.Window
             root.Clear();
             root.style.flexDirection = FlexDirection.Column;
 
-            StyleSheet styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/UiFramework/Editor/Styles/UiSetupTabs.uss");
+            // Try package path first, then Assets path as fallback
+            StyleSheet styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Packages/com.dawaniyahgames.uiframework/Assets/UiFramework/Editor/Styles/UiSetupTabs.uss");
             
             if (styleSheet == null)
             {
-                string[] guids = AssetDatabase.FindAssets("UiSetupTabs");
+                styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/UiFramework/Editor/Styles/UiSetupTabs.uss");
+            }
+            
+            if (styleSheet == null)
+            {
+                string[] guids = AssetDatabase.FindAssets("UiSetupTabs t:StyleSheet");
                 foreach (string guid in guids)
                 {
                     string path = AssetDatabase.GUIDToAssetPath(guid);
@@ -55,6 +61,7 @@ namespace UiFramework.Editor.Window
                         styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(path);
                         if (styleSheet != null)
                         {
+                            Debug.Log($"✅ Found stylesheet at: {path}");
                             break;
                         }
                     }
@@ -67,7 +74,10 @@ namespace UiFramework.Editor.Window
             }
             else
             {
-                Debug.LogWarning("❌ Stylesheet 'UiSetupTabs.uss' not found.");
+                Debug.LogError("❌ Stylesheet 'UiSetupTabs.uss' not found in Packages or Assets. Searched paths:\n" +
+                    "- Packages/com.dawaniyahgames.uiframework/Assets/UiFramework/Editor/Styles/UiSetupTabs.uss\n" +
+                    "- Assets/UiFramework/Editor/Styles/UiSetupTabs.uss\n" +
+                    "- AssetDatabase search by name");
             }
 
 

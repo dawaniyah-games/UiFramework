@@ -15,14 +15,14 @@
   ],
   "author": {
     "name": "Dawaniyah Games",
-    "url": "https://github.com/mohamedmoghazy"
+    "url": "https://github.com/dawaniyah-games"
   },
   "dependencies": {
     "com.unity.addressables": "1.21.0"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mohamedmoghazy/UiFramework.git"
+    "url": "https://github.com/dawaniyah-games/UiFramework.git"
   },
   "license": "MIT",
   "samples": [

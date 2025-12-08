@@ -3,21 +3,27 @@
 ## Package Information
 
 **Package Name**: `com.dawaniyahgames.uiframework`  
-**Version**: 1.0.0  
-**Repository**: https://github.com/mohamedmoghazy/UiFramework
+**Version**: 1.0.20  
+**Repository**: https://github.com/dawaniyah-games/UiFramework  
+**Unity Version**: 2021.3+
 
 ### Installation (UPM)
 
 Via Package Manager:
 
 ```
-https://github.com/mohamedmoghazy/UiFramework.git
+https://github.com/dawaniyah-games/UiFramework.git
 ```
 
 Via manifest.json:
 
 ```json
-"com.dawaniyahgames.uiframework": "https://github.com/mohamedmoghazy/UiFramework.git"
+{
+  "dependencies": {
+    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git",
+    "com.unity.addressables": "1.21.0"
+  }
+}
 ```
 
 ## Architecture Overview
@@ -25,6 +31,11 @@ Via manifest.json:
 This is a Unity UI framework using **Addressables-based scene composition** with a LIFO state stack. UI screens are loaded as additive scenes and populated with runtime data through the `IUiElement.Populate(object context)` contract.
 
 **Core Flow**: `UiManager.ShowState<T>(context)` → looks up state in `UiConfig` → `UiState.Init()` loads scenes via Addressables → discovers `IUiElement` components → calls `Populate(context)` on each.
+
+**Assembly Structure**: The framework uses three assemblies:
+- `UiFramework.Core` - Base types (UiState, IUiElement, UiConfig)
+- `UiFramework.Runtime` - Runtime orchestration (UiManager) with Core dependency
+- `UiFramework.Editor` - Editor tools (generators, windows) with Core + Runtime dependencies
 
 ## Key Components
 
@@ -119,6 +130,8 @@ Assets/UiFramework/
 - **Addressables setup**: Scenes must be marked Addressable. If `Addressables.LoadSceneAsync()` fails silently, check the scene is in an addressables group.
 - **Scene naming**: `loadedScenes` dictionary keys are `Scene.name` (runtime name), not asset path. Keep scene names unique.
 - **Multiple UiManager instances**: Framework assumes singleton. Only call `Init()` once; subsequent calls clear the state stack.
+- **Template paths**: Code generators search for templates using `AssetDatabase.FindAssets` with fallback to `Assets/UiFramework/Editor/Templates/`. Ensure templates exist before generation.
+- **Config asset persistence**: `UiSetupEditorWindow` stores config reference using EditorPrefs with key `"UiFramework.Editor.ConfigAssetGUID"`. Clear this if switching projects.
 
 ## Testing & Debugging
 
@@ -133,6 +146,8 @@ Assets/UiFramework/
 - **Changing `Populate()` signature**: Don't. It's the core contract. Create strongly-typed wrappers if needed.
 - **New UI element patterns**: Create new templates in `Assets/UiFramework/Editor/Templates/` and update generators.
 - **Custom state lifecycle**: Subclass `UiState` and override `Init()` or add cleanup logic in `UnloadUiState()`.
+- **Modifying assembly definitions**: The three `.asmdef` files define strict dependencies: Editor → Runtime → Core. Never create circular references.
+- **Updating package version**: Increment version in `package.json` (currently 1.0.20). Follow semantic versioning.
 
 ## Code Standards
 
