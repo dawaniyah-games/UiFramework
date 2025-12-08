@@ -31,8 +31,5 @@ UserSettings/
 .editorconfig
 .vsconfig
 
-# Metadata
-*.meta
-
 # Samples (will be included separately via package.json)
 Samples~/*/**/*.meta
