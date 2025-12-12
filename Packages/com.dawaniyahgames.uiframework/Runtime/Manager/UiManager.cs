@@ -10,7 +10,14 @@ namespace UiFramework.Runtime.Manager
     public class UiManager : MonoBehaviour
     {
         private static UiManager instance;
-        public static void SetInstance(UiManager instance)
+        public static bool IsInitialized
+        {
+            get
+            {
+                return instance != null;
+            }
+        }
+        private static void SetInstance(UiManager instance)
         {
             UiManager.instance = instance;
         }
@@ -32,7 +39,7 @@ namespace UiFramework.Runtime.Manager
             cachedStates.Clear();
             typeToKeyMap.Clear();
 
-            foreach (var entry in config.entries)
+            foreach (UiStateEntry entry in config.entries)
             {
                 cachedStates[entry.stateKey] = entry;
                 typeToKeyMap[GetTypeForKey(entry.stateKey)] = entry.stateKey;
@@ -44,6 +51,28 @@ namespace UiFramework.Runtime.Manager
             {
                 // await ShowState(defaultState.GetType());
             }
+        }
+
+        public static UiManager Initialize(UiConfig uiConfig)
+        {
+            if (instance != null)
+            {
+                return instance;
+            }
+
+            GameObject gameObjectUiManager = new GameObject("UiManager");
+            UiManager created = gameObjectUiManager.AddComponent<UiManager>();
+            created.config = uiConfig;
+            DontDestroyOnLoad(gameObjectUiManager);
+            SetInstance(created);
+            return created;
+        }
+
+        public static async Task<UiManager> InitializeAsync(UiConfig uiConfig, UiState defaultState = null)
+        {
+            UiManager uiManager = Initialize(uiConfig);
+            await uiManager.Init(defaultState);
+            return uiManager;
         }
 
         public static async Task ShowState<T>(object context = null, bool additive = false) where T : UiState

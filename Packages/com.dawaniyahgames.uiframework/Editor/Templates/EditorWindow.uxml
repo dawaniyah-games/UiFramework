@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<engine:UIDocument
-    xmlns:engine="UnityEngine.UIElements"
-    xmlns:uie="UnityEditor.UIElements"
-    xmlns="UnityEngine.UIElements">
+<UXML 
+  xmlns="UnityEngine.UIElements"
+  xmlns:uie="UnityEditor.UIElements">
 
   <Style src="EditorWindow.uss" />
 
@@ -30,4 +29,4 @@
     </VisualElement>
 
   </VisualElement>
-</engine:UIDocument>
+</UXML>
