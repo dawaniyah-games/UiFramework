@@ -3,7 +3,7 @@
 ## Package Information
 
 **Package Name**: `com.dawaniyahgames.uiframework`  
-**Version**: 1.0.30  
+**Version**: 1.0.31  
 **Repository**: https://github.com/dawaniyah-games/UiFramework  
 **Unity Version**: 2021.3+
 
