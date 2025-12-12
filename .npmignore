@@ -33,8 +33,9 @@ Packages/
 .editorconfig
 .vsconfig
 
-# Project-specific config files (not to be distributed in package)
-Assets/UiConfigs/
+# Project-specific config asset files (not to be distributed in package)
+Assets/UiConfigs/**/*.asset
+Assets/UiConfigs/**/*.asset.meta
 
 # Samples (will be included separately via package.json)
 Samples~/*/**/*.meta
