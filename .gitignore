@@ -75,6 +75,12 @@ out/
 *.unitypackage
 
 # =================== #
+# Project-Specific Folder Meta Files
+# =================== #
+# UiConfigs folder structure is in git (.gitkeep), but meta file regenerates
+Assets/UiConfigs.meta
+
+# =================== #
 # Optional: Generated Models/Assets (only if auto-generated)
 # =================== #
 # Uncomment the lines below only if you generate these at runtime

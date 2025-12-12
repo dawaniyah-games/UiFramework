@@ -1,0 +1,18 @@
+namespace [UiStateNamespace]
+{
+    using UiFramework.Core;
+    using System.Collections.Generic;
+    using UnityEngine.AddressableAssets;
+
+    // Auto-generated: UI State
+    public class [UiStateName] : UiState
+    {
+        // Your UiState base expects (string name, List<AssetReference> uiElementScenes)
+        public [UiStateName]() : base("[UiStateName]", new List<AssetReference>())
+        {
+            // Add addressable UI prefabs/scenes to the list if needed
+        }
+
+        public override string ToString() => nameof([UiStateName]);
+    }
+}

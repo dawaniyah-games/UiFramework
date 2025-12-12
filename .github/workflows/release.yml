@@ -96,14 +96,14 @@ jobs:
 
           #### Via Package Manager UI
           \`\`\`
-          https://github.com/dawaniyah-games/UiFramework.git#v${VERSION}
+            https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v${VERSION}
           \`\`\`
 
           #### Via manifest.json
           \`\`\`json
           {
             "dependencies": {
-              "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git#v${VERSION}"
+                "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v${VERSION}"
             }
           }
           \`\`\`

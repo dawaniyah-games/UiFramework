@@ -1,0 +1,15 @@
+namespace [UiReferenceNamespace]
+{
+    using UiFramework.Core;
+
+    // Auto-generated: UI Element Reference
+    public class [UiReferenceName] : UiElementReference
+    {
+        // Assign your concrete elements here when you wire this reference up.
+        protected override void SetConcreteElements(UiElement[] elements)
+        {
+            // Example:
+            // this.Elements = new UiElement[] { /* elements */ };
+        }
+    }
+}

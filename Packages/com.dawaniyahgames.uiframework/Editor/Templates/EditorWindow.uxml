@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UIDocument
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:uie="UnityEditor.UIElements"
+    xmlns="UnityEngine.UIElements">
+
+  <Style src="EditorWindow.uss" />
+
+  <VisualElement name="MainContainer" style="flex-grow: 1; padding: 10px;">
+
+    <Label text="🎛️ UI Framework Setup Manager" class="title" />
+
+    <VisualElement class="config-box">
+      <Label text="UI Config Path:" />
+      <TextField name="ConfigPathField" binding-path="UiSetupAssetPath" />
+    </VisualElement>
+
+    <VisualElement class="button-row">
+      <Button name="LoadButton" text="🔄 Load Setup" />
+      <Button name="SaveButton" text="💾 Save Setup" />
+      <Button name="RevertButton" text="↩ Revert" />
+    </VisualElement>
+
+    <VisualElement style="height: 2px; background-color: #666666; margin: 12px 0;" />
+
+    <ScrollView name="StateList" />
+
+    <VisualElement class="bottom-row">
+      <Button name="AddStateButton" text="➕ Add New State" />
+    </VisualElement>
+
+  </VisualElement>
+</engine:UIDocument>

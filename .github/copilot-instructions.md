@@ -3,7 +3,7 @@
 ## Package Information
 
 **Package Name**: `com.dawaniyahgames.uiframework`  
-**Version**: 1.0.20  
+**Version**: 1.0.31  
 **Repository**: https://github.com/dawaniyah-games/UiFramework  
 **Unity Version**: 2021.3+
 
@@ -12,17 +12,17 @@
 Via Package Manager:
 
 ```
-https://github.com/dawaniyah-games/UiFramework.git
+https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework
 ```
 
 Via manifest.json:
 
 ```json
 {
-  "dependencies": {
-    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git",
-    "com.unity.addressables": "1.21.0"
-  }
+    "dependencies": {
+        "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework",
+        "com.unity.addressables": "1.21.0"
+    }
 }
 ```
 
@@ -39,10 +39,10 @@ This is a Unity UI framework using **Addressables-based scene composition** with
 
 ## Key Components
 
-- **`UiManager`** (`Assets/UiFramework/Runtime/Manager/UiManager.cs`): Singleton orchestrator with LIFO state stack. API: `ShowState<T>()`, `ShowStateByKey()`, `HideUI()`, `GetCurrentState()`.
-- **`UiState`** (`Assets/UiFramework/Core/UiCompoenets/UiState.cs`): Loads addressable scenes additively, discovers `IUiElement` components, handles scene unloading.
-- **`UiConfig`** (`Assets/UiFramework/Core/Config/UiConfig.cs`): ScriptableObject mapping `stateKey` (string) → `List<AssetReference>` scenes. Lives at `Assets/UiFramework/Runtime/UiConfig.asset`.
-- **`IUiElement` / `UiElement`** (`Assets/UiFramework/Core/UiCompoenets/`): Interface/base class for UI components. Override `Populate(object context)` to receive runtime data.
+- **`UiManager`** (`Packages/com.dawaniyahgames.uiframework/Runtime/Manager/UiManager.cs`): Singleton orchestrator with LIFO state stack. API: `ShowState<T>()`, `ShowStateByKey()`, `HideUI()`, `GetCurrentState()`.
+- **`UiState`** (`Packages/com.dawaniyahgames.uiframework/Core/UiCompoenets/UiState.cs`): Loads addressable scenes additively, discovers `IUiElement` components, handles scene unloading.
+- **`UiConfig`** (`Packages/com.dawaniyahgames.uiframework/Core/Config/UiConfig.cs`): ScriptableObject type used by runtime; create your instance in your project (e.g., `Assets/UiConfigs/RuntimeUiConfig.asset`).
+- **`IUiElement` / `UiElement`** (`Packages/com.dawaniyahgames.uiframework/Core/UiCompoenets/`): Interface/base class for UI components. Override `Populate(object context)`.
 
 ## Critical Patterns
 
@@ -88,39 +88,38 @@ Generated code uses configurable namespaces from `UiEditorConfig`: `ElementNames
 
 ### Code Generation
 
-- **`UiElementGenerator`**: Creates `UiElement` subclass from template (`Assets/UiFramework/Editor/Templates/UiElementTemplate.txt`). Can generate companion `UiElementReference` and `UiPopulationParams` classes.
-- **`UiStateGenerator`**: Creates `UiState` subclass from template (note: base constructor requires `(string name, List<AssetReference>)`).
+- **`UiElementGenerator`**: Creates `UiElement` subclass from template (`Packages/com.dawaniyahgames.uiframework/Editor/Templates/UiElementTemplate.txt`, with AssetDatabase search fallback). Can also generate companion `UiElementReference` and `UiPopulationParams` classes.
+- **`UiStateGenerator`**: Creates `UiState` subclass from template (`Packages/com.dawaniyahgames.uiframework/Editor/Templates/UiStateTemplate.txt`).
 - Templates use placeholders like `[UiElementName]`, `[UiElementNamespace]`, `[UiStateName]`, `[UiStateNamespace]`.
 
 ### Editor Config Paths
 
-`UiEditorConfig` (`Assets/UiConfigs/UiEditorConfig.asset`) centralizes:
+`UiEditorConfig` (create in your project at `Assets/UiConfigs/UiEditorConfig.asset`) centralizes:
 
 - Script output paths: `ElementsScriptPath`, `StatesPath`
 - Scene paths: `ElementsScenePath`
 - Namespaces: `ElementNamespace`, `StateNamespace`
-- Runtime config: `RuntimeConfigOutputPath` (where `UiConfig.asset` is generated/updated)
+- Runtime config: `RuntimeConfigOutputPath` (where your project's `UiConfig.asset` is generated/updated)
 
-## File Structure
+## File Structure (Package)
 
 ```
-Assets/UiFramework/
+Packages/com.dawaniyahgames.uiframework/
 ├── Core/
-│   ├── Config/UiConfig.cs          # ScriptableObject: stateKey → scenes
+│   ├── Config/UiConfig.cs
 │   └── UiCompoenets/
-│       ├── UiState.cs              # Scene loader with Addressables
-│       ├── IUiElement.cs           # Populate contract
-│       ├── UiElement.cs            # Base MonoBehaviour
-│       ├── UiElementReference.cs   # Base for typed references
-│       └── UiPopulationParams.cs   # Base for population DTOs
+│       ├── UiState.cs
+│       ├── IUiElement.cs
+│       ├── UiElement.cs
+│       ├── UiElementReference.cs
+│       └── UiPopulationParams.cs
 ├── Runtime/
-│   ├── Manager/UiManager.cs        # State orchestration
-│   └── UiConfig.asset              # Runtime configuration instance
+│   └── Manager/UiManager.cs
 └── Editor/
-    ├── CodeGeneration/             # UiElementGenerator, UiStateGenerator
-    ├── Templates/                  # .txt templates for code generation
-    ├── Window/UiSetupEditorWindow.cs  # Main editor UI
-    └── Config/UiEditorConfig.cs    # Editor paths/namespaces config
+    ├── CodeGeneration/
+    ├── Templates/
+    ├── Window/UiSetupEditorWindow.cs
+    └── Config/UiEditorConfig.cs
 ```
 
 ## Common Pitfalls
@@ -130,7 +129,7 @@ Assets/UiFramework/
 - **Addressables setup**: Scenes must be marked Addressable. If `Addressables.LoadSceneAsync()` fails silently, check the scene is in an addressables group.
 - **Scene naming**: `loadedScenes` dictionary keys are `Scene.name` (runtime name), not asset path. Keep scene names unique.
 - **Multiple UiManager instances**: Framework assumes singleton. Only call `Init()` once; subsequent calls clear the state stack.
-- **Template paths**: Code generators search for templates using `AssetDatabase.FindAssets` with fallback to `Assets/UiFramework/Editor/Templates/`. Ensure templates exist before generation.
+- **Template paths**: Code generators search for templates using `AssetDatabase.FindAssets` with fallback to `Packages/com.dawaniyahgames.uiframework/Editor/Templates/`.
 - **Config asset persistence**: `UiSetupEditorWindow` stores config reference using EditorPrefs with key `"UiFramework.Editor.ConfigAssetGUID"`. Clear this if switching projects.
 
 ## Testing & Debugging
@@ -144,7 +143,7 @@ Assets/UiFramework/
 
 - **Adding fields to `UiConfig`**: Update `UiStateEntry` class; existing assets auto-upgrade via Unity serialization.
 - **Changing `Populate()` signature**: Don't. It's the core contract. Create strongly-typed wrappers if needed.
-- **New UI element patterns**: Create new templates in `Assets/UiFramework/Editor/Templates/` and update generators.
+- **New UI element patterns**: Create new templates in `Packages/com.dawaniyahgames.uiframework/Editor/Templates/` and update generators.
 - **Custom state lifecycle**: Subclass `UiState` and override `Init()` or add cleanup logic in `UnloadUiState()`.
 - **Modifying assembly definitions**: The three `.asmdef` files define strict dependencies: Editor → Runtime → Core. Never create circular references.
 - **Updating package version**: Increment version in `package.json` (currently 1.0.20). Follow semantic versioning.

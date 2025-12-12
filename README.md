@@ -18,19 +18,19 @@ A flexible Unity UI Framework using **Addressables-based scene composition** wit
 
 ### Via Package Manager (Git URL)
 
-1. Open Unity Package Manager (`Window → Package Manager`)
-2. Click the `+` button and select `Add package from git URL...`
-3. Enter: `https://github.com/dawaniyah-games/UiFramework.git`
-4. Click `Add`
+1. Open Unity Package Manager (Window → Package Manager)
+2. Click the + button and select Add package from git URL...
+3. Enter: `https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework`
+4. Click Add
 
 ### Via manifest.json
 
-Add this to your `Packages/manifest.json`:
+Add this to your Packages/manifest.json:
 
 ```json
 {
   "dependencies": {
-    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git"
+        "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework"
   }
 }
 ```
@@ -109,7 +109,7 @@ UiManager (Singleton)
 ## Documentation
 
 - [Design Documentation](DESIGN.md) - Detailed architecture and system design
-- [Copilot Instructions](../../.github/copilot-instructions.md) - Guide for AI coding assistants
+- [Copilot Instructions](.github/copilot-instructions.md) - Guide for AI coding assistants
 
 ## Requirements
 
