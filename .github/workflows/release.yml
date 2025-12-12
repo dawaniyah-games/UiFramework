@@ -53,9 +53,9 @@ jobs:
         run: |
           VERSION="${{ steps.bump.outputs.new_version }}"
           tmp_file=$(mktemp)
-          jq --arg v "$VERSION" '.version = $v' package.json > "$tmp_file"
-          mv "$tmp_file" package.json
-          echo "Updated package.json to version $VERSION"
+          jq --arg v "$VERSION" '.version = $v' Packages/com.dawaniyahgames.uiframework/package.json > "$tmp_file"
+          mv "$tmp_file" Packages/com.dawaniyahgames.uiframework/package.json
+          echo "Updated Packages/com.dawaniyahgames.uiframework/package.json to version $VERSION"
 
       - name: Update CHANGELOG.md
         run: |
@@ -113,7 +113,7 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add package.json CHANGELOG.md release-notes.md
+          git add Packages/com.dawaniyahgames.uiframework/package.json CHANGELOG.md release-notes.md
           git commit -m "chore: Bump version to v${{ steps.bump.outputs.new_version }}"
           git push origin HEAD:${{ github.head_ref }}
 
