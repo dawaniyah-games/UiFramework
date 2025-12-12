@@ -9,7 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 04cc747a0a166654d801db00505e032b, type: 3}
-  m_Name: RuntimeUiConfig
+  m_Script: {fileID: 11500000, guid: dea69d41f90c6ea4fa55c27c1d60c145, type: 3}
+  m_Name: AddressableAssetGroupSortSettings
   m_EditorClassIdentifier: 
-  entries: []
+  sortOrder:
+  - af7387e9dc536a04da45a7ae75c93e27
+  - 6a333ae2299a16d479f6ff7bb2f1026d

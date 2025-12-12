@@ -8,7 +8,7 @@ namespace UiFramework.Editor.Config
     [CreateAssetMenu(fileName = "UiEditorConfig", menuName = "Scripts/UiFramework/Editor Config")]
     public class UiEditorConfig : ScriptableObject
     {
-        public string UiSetupAssetPath = "Assets/UiConfigs/UiSetup.asset";
+        public string UiSetupAssetPath = "Assets/UiConfigs";
         public string ElementsScriptPath = "Assets/Scripts/Ui/UiElements";
         public string ElementsScenePath = "Assets/Scenes/UiElements";
         public string StatesPath = "Assets/Scripts/Ui/UiStates";
@@ -20,10 +20,7 @@ namespace UiFramework.Editor.Config
 #if UNITY_EDITOR
         private void OnEnable()
         {
-            if (string.IsNullOrEmpty(UiSetupAssetPath) || UiSetupAssetPath == "Assets/UiConfigs/UiSetup.asset")
-            {
-                UiSetupAssetPath = GetDefaultConfigPath("UiSetup", "Assets/UiConfigs/UiSetup.asset");
-            }
+            UiSetupAssetPath = NormalizeAssetPath(UiSetupAssetPath, "UiSetup", "Assets/UiConfigs/UiSetup.asset");
 
             if (string.IsNullOrEmpty(StateRegistryPath) || StateRegistryPath == "Assets/UiConfigs/UiStateRegistry.asset")
             {
@@ -36,6 +33,37 @@ namespace UiFramework.Editor.Config
             }
         }
 
+        private string NormalizeAssetPath(string current, string assetName, string fallback)
+        {
+            // Only normalize project-local asset paths under Assets/
+            if (!string.IsNullOrEmpty(current))
+            {
+                string normalized = current.Replace("\\", "/");
+
+                // If path points to Packages/ or any non-Assets location, keep it unchanged
+                bool isProjectAsset = normalized.StartsWith("Assets/");
+                if (isProjectAsset && !normalized.EndsWith(".asset"))
+                {
+                    if (normalized.EndsWith("/"))
+                    {
+                        normalized = normalized + assetName + ".asset";
+                    }
+                    else
+                    {
+                        normalized = normalized + "/" + assetName + ".asset";
+                    }
+                }
+
+                current = normalized;
+            }
+
+            if (string.IsNullOrEmpty(current))
+            {
+                return GetDefaultConfigPath(assetName, fallback);
+            }
+
+            return current;
+        }
         private string GetDefaultConfigPath(string assetName, string fallback)
         {
             string[] guids = AssetDatabase.FindAssets($"{assetName} t:ScriptableObject");

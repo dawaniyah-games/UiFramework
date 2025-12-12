@@ -10,6 +10,8 @@ using UiFramework.Editor.Data;
 using UiFramework.Editor.Window.Tabs;
 using UnityEngine.AddressableAssets;
 using UiFramework.Runtime;
+using UnityEditor.AddressableAssets;
+using UnityEditor.AddressableAssets.Settings;
 
 namespace UiFramework.Editor.Window
 {
@@ -42,26 +44,18 @@ namespace UiFramework.Editor.Window
             root.Clear();
             root.style.flexDirection = FlexDirection.Column;
 
-            // Try package path first, then Assets path, then search
-            StyleSheet styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Packages/com.dawaniyahgames.uiframework/Editor/Styles/UiSetupTabs.uss");
-            if (styleSheet == null)
+            // Find stylesheet by name to avoid hardcoded paths
+            StyleSheet styleSheet = null;
+            string[] guids = AssetDatabase.FindAssets("UiSetupTabs t:StyleSheet");
+            for (int i = 0; i < guids.Length; i++)
             {
-                styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/UiFramework/Editor/Styles/UiSetupTabs.uss");
-            }
-            if (styleSheet == null)
-            {
-                string[] guids = AssetDatabase.FindAssets("UiSetupTabs t:StyleSheet");
-                foreach (string guid in guids)
+                string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+                if (path.EndsWith(".uss"))
                 {
-                    string path = AssetDatabase.GUIDToAssetPath(guid);
-                    if (path.EndsWith(".uss"))
+                    styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(path);
+                    if (styleSheet != null)
                     {
-                        styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(path);
-                        if (styleSheet != null)
-                        {
-                            Debug.Log($"✅ Found stylesheet at: {path}");
-                            break;
-                        }
+                        break;
                     }
                 }
             }
@@ -130,6 +124,12 @@ namespace UiFramework.Editor.Window
             root.Add(tabContent);
 
             LoadSavedConfig(tabButtonMap);
+
+            // Ensure a tab is visible even if no saved config exists
+            if (configAsset == null)
+            {
+                SwitchTab(tabs[0], tabButtonMap);
+            }
         }
 
         private void SwitchTab(IVisualElementTab tab, Dictionary<IVisualElementTab, Button> tabButtonMap = null)
@@ -202,22 +202,7 @@ namespace UiFramework.Editor.Window
             if (config == null)
             {
                 string folder = Path.GetDirectoryName(path);
-                if (!AssetDatabase.IsValidFolder(folder))
-                {
-                    string[] parts = folder.Split('/');
-                    string current = "Assets";
-                    for (int i = 1; i < parts.Length; i++)
-                    {
-                        string next = $"{current}/{parts[i]}";
-
-                        if (!AssetDatabase.IsValidFolder(next))
-                        {
-                            AssetDatabase.CreateFolder(current, parts[i]);
-                        }
-
-                        current = next;
-                    }
-                }
+                EnsureUnityFolderExists(folder);
 
                 config = CreateInstance<UiEditorConfig>();
                 AssetDatabase.CreateAsset(config, path);
@@ -264,7 +249,7 @@ namespace UiFramework.Editor.Window
             if (registry == null)
             {
                 registry = ScriptableObject.CreateInstance<UiStateRegistry>();
-                Directory.CreateDirectory(Path.GetDirectoryName(registryPath));
+                EnsureUnityFolderExists(Path.GetDirectoryName(registryPath));
                 AssetDatabase.CreateAsset(registry, registryPath);
                 AssetDatabase.SaveAssets();
                 Debug.Log($"🆕 Created new UiStateRegistry at: {registryPath}");
@@ -278,7 +263,7 @@ namespace UiFramework.Editor.Window
             if (config == null)
             {
                 config = CreateInstance<Runtime.UiConfig>();
-                Directory.CreateDirectory(Path.GetDirectoryName(configOutputPath));
+                EnsureUnityFolderExists(Path.GetDirectoryName(configOutputPath));
                 AssetDatabase.CreateAsset(config, configOutputPath);
                 Debug.Log($"🆕 Created new UiConfig at {configOutputPath}");
             }
@@ -313,6 +298,97 @@ namespace UiFramework.Editor.Window
             EditorUtility.SetDirty(config);
             AssetDatabase.SaveAssets();
             Debug.Log("✅ Built runtime UiConfig from UiStateRegistry.");
+
+            // Ensure Addressables setup: add to Global Configs group and assign labels
+            EnsureConfigIsAddressable(configOutputPath, new string[] { "UiConfig", "RuntimeUiConfig" }, "Global Configs");
+        }
+
+        private static void EnsureUnityFolderExists(string folderPath)
+        {
+            if (string.IsNullOrEmpty(folderPath))
+            {
+                return;
+            }
+
+            string normalized = folderPath.Replace("\\", "/");
+
+            if (AssetDatabase.IsValidFolder(normalized))
+            {
+                return;
+            }
+
+            string[] parts = normalized.Split('/');
+            if (parts.Length == 0)
+            {
+                return;
+            }
+
+            string current = parts[0];
+            for (int i = 1; i < parts.Length; i++)
+            {
+                string next = current + "/" + parts[i];
+                if (!AssetDatabase.IsValidFolder(next))
+                {
+                    AssetDatabase.CreateFolder(current, parts[i]);
+                }
+                current = next;
+            }
+        }
+
+        private static void EnsureConfigIsAddressable(string assetPath, string[] labels, string groupName)
+        {
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+            if (settings == null)
+            {
+                Debug.LogWarning("⚠️ Addressables settings not found. Please enable Addressables in your project.");
+                return;
+            }
+
+            // Ensure group exists
+            AddressableAssetGroup group = settings.FindGroup(groupName);
+            if (group == null)
+            {
+                group = settings.CreateGroup(groupName, false, false, true, null);
+                Debug.Log($"🆕 Created Addressables group '{groupName}'.");
+            }
+
+            string guid = AssetDatabase.AssetPathToGUID(assetPath);
+            if (string.IsNullOrEmpty(guid))
+            {
+                Debug.LogError($"❌ Could not resolve GUID for asset at {assetPath}");
+                return;
+            }
+
+            AddressableAssetEntry entry = settings.FindAssetEntry(guid);
+            if (entry == null)
+            {
+                entry = settings.CreateOrMoveEntry(guid, group);
+                entry.address = "UiConfig"; // Set a predictable address
+                Debug.Log("✅ Registered UiConfig as Addressable entry.");
+            }
+            else if (entry.parentGroup != group)
+            {
+                settings.MoveEntry(entry, group);
+                Debug.Log("🔄 Moved UiConfig entry to Global Configs group.");
+            }
+
+            // Ensure labels exist and are assigned
+            for (int i = 0; i < labels.Length; i++)
+            {
+                string label = labels[i];
+                IList<string> existingLabels = settings.GetLabels();
+                if (existingLabels == null || !existingLabels.Contains(label))
+                {
+                    settings.AddLabel(label);
+                }
+                if (!entry.labels.Contains(label))
+                {
+                    entry.SetLabel(label, true, true);
+                }
+            }
+
+            settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryModified, entry, true);
+            AssetDatabase.SaveAssets();
         }
     }
 }

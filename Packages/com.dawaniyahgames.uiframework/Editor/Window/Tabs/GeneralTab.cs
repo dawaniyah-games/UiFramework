@@ -37,7 +37,7 @@ namespace UiFramework.Editor.Window.Tabs
                 }
             });
 
-            root.Add(CreatePathField("UI Setup Asset Path", config?.UiSetupAssetPath));
+            // Hide internal UI Setup asset path from the editor UI
             root.Add(CreatePathField("Element Output Path", config?.ElementsScriptPath));
             root.Add(CreatePathField("Element Scene Path", config?.ElementsScenePath));
             root.Add(CreatePathField("State Output Path", config?.StatesPath));

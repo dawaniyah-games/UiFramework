@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bc8195b9d1de3411db880c13b18c7d0e, type: 3}
+  m_Script: {fileID: 11500000, guid: 3379ee6c370314741badec3e10fee03a, type: 3}
   m_Name: UiEditorConfig
   m_EditorClassIdentifier: 
   UiSetupAssetPath: Assets/UiConfigs/UiSetup.asset

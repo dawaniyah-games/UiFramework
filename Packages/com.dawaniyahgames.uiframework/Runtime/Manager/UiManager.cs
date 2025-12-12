@@ -22,20 +22,24 @@ namespace UiFramework.Runtime.Manager
             UiManager.instance = instance;
         }
 
-        [SerializeField] private UiConfig config;
+        private UiConfig config;
 
         private readonly Stack<UiState> stateStack = new();
         private readonly Dictionary<string, UiStateEntry> cachedStates = new();
         private readonly Dictionary<Type, string> typeToKeyMap = new();
 
-        public async Task Init(UiState defaultState = null)
+        private async Task InitializeInternal(UiState defaultState = null)
         {
-            if (config == null)
+            UiConfig loadedConfig = LoadRuntimeUiConfigFromAddressables();
+            
+            if (loadedConfig == null)
             {
-                Debug.LogError("❌ UiConfig not assigned to UiManager.");
+                Debug.LogError("❌ UiConfig failed to load via Addressables label 'RuntimeUiConfig'.");
                 return;
             }
 
+            config = loadedConfig;
+            
             cachedStates.Clear();
             typeToKeyMap.Clear();
 
@@ -44,16 +48,9 @@ namespace UiFramework.Runtime.Manager
                 cachedStates[entry.stateKey] = entry;
                 typeToKeyMap[GetTypeForKey(entry.stateKey)] = entry.stateKey;
             }
-
-            SetInstance(this);
-
-            if (defaultState != null)
-            {
-                // await ShowState(defaultState.GetType());
-            }
         }
 
-        public static UiManager Initialize(UiConfig uiConfig)
+        public static async Task<UiManager> InitializeAsync(UiState defaultState = null)
         {
             if (instance != null)
             {
@@ -62,17 +59,23 @@ namespace UiFramework.Runtime.Manager
 
             GameObject gameObjectUiManager = new GameObject("UiManager");
             UiManager created = gameObjectUiManager.AddComponent<UiManager>();
-            created.config = uiConfig;
             DontDestroyOnLoad(gameObjectUiManager);
             SetInstance(created);
+
+            await created.InitializeInternal(defaultState);
             return created;
         }
 
-        public static async Task<UiManager> InitializeAsync(UiConfig uiConfig, UiState defaultState = null)
+        private UiConfig LoadRuntimeUiConfigFromAddressables()
         {
-            UiManager uiManager = Initialize(uiConfig);
-            await uiManager.Init(defaultState);
-            return uiManager;
+            UiConfig cfg = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<UiConfig>("UiConfig").WaitForCompletion();
+
+            if (cfg == null)
+            {
+                Debug.LogError("❌ Failed to locate UiConfig via Addressables label 'UiConfig'. Ensure the UI Editor Window generated the runtime config and assigned this label in the Global Configs group.");
+            }
+
+            return cfg;
         }
 
         public static async Task ShowState<T>(object context = null, bool additive = false) where T : UiState
@@ -222,7 +225,5 @@ namespace UiFramework.Runtime.Manager
                 .FirstOrDefault(t => typeof(UiState).IsAssignableFrom(t) && t.Name == key)
                 ?? typeof(UiState);
         }
-
-
     }
 }

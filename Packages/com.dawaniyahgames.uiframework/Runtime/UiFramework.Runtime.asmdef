@@ -3,6 +3,7 @@
     "rootNamespace": "UiFramework.Runtime",
     "references": [
         "Unity.Addressables",
+        "Unity.ResourceManager",
         "UiFramework.Core"
     ],
     "includePlatforms": [],
