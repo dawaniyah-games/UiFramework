@@ -35,6 +35,69 @@ Add this to your Packages/manifest.json:
 }
 ```
 
+## Usage
+
+### Initialize `UiManager` in Code
+
+You no longer need to add `UiManager` to a scene. Create and persist it in code using your `UiConfig`.
+
+Basic bootstrap example:
+
+```csharp
+using System.Threading.Tasks;
+using UnityEngine;
+using UiFramework.Core;
+using UiFramework.Runtime.Manager;
+
+public class GameBootstrap : MonoBehaviour
+{
+    [SerializeField] private UiConfig runtimeUiConfig;
+
+    private async void Start()
+    {
+        if (!UiManager.IsInitialized)
+        {
+            await UiManager.InitializeAsync(runtimeUiConfig);
+        }
+
+        // Show your first UI state after init
+        await UiManager.ShowStateByKey("MainMenuState", null);
+    }
+}
+```
+
+Alternatively, initialize synchronously (e.g., in `Awake()`):
+
+```csharp
+void Awake()
+{
+    UiManager.Initialize(runtimeUiConfig);
+}
+```
+
+Internally, `UiManager.Initialize*` will:
+- Create a `GameObject` named `UiManager`
+- Add the `UiManager` component
+- Assign your `UiConfig`
+- Mark it `DontDestroyOnLoad`
+
+### Showing UI States
+
+- By type: `await UiManager.ShowState<MyMenuState>(context)`
+- By key: `await UiManager.ShowStateByKey("MyMenuState", context)`
+
+Ensure your `UiConfig` has a state entry whose `stateKey` matches the `UiState` class name when using `ShowState<T>()`.
+
+### Hiding UI
+
+Call `await UiManager.HideUI()` to pop the current state and restore the previous one (if any).
+
+### Common Pitfalls
+
+- Make sure scenes referenced in `UiConfig` are Addressable.
+- `stateKey` must match `UiState` class name if calling `ShowState<T>()`.
+- Use `UiManager.IsInitialized` to avoid duplicate initialization.
+
 ## Quick Start
 
 ### 1. Setup UI Manager
