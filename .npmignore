@@ -33,6 +33,10 @@ Packages/
 .editorconfig
 .vsconfig
 
+# Exclude top-level Assets folder (but keep Assets/UiFramework content)
+Assets.meta
+Assets/UiConfigs/
+
 # Project-specific config asset files (not to be distributed in package)
 Assets/UiConfigs/**/*.asset
 Assets/UiConfigs/**/*.asset.meta
