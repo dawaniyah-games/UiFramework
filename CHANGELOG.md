@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Merged dev branch to main
 - See GitHub release notes for detailed changes
 
+## [1.0.35] - 2026-01-28
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
 ## [1.0.35] - 2025-12-12
 
 ### Changed
