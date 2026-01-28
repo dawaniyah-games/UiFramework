@@ -61,7 +61,7 @@ public class GameBootstrap : MonoBehaviour
         }
 
         // Show your first UI state after init
-        await UiManager.ShowStateByKey("MainMenuState", null);
+        await UiManager.ShowStateByKey("MainMenuUiState", null);
     }
 }
 ```
@@ -124,7 +124,7 @@ public class GameBootstrap : MonoBehaviour
 using UiFramework.Core;
 using UnityEngine;
 
-public class MainMenuElement : UiElement
+public class MainMenuUiElement : UiElement
 {
     public override void Populate(object context = null)
     {
@@ -165,7 +165,7 @@ UiManager (Singleton)
 | Component    | Path                              | Purpose                                    |
 | ------------ | --------------------------------- | ------------------------------------------ |
 | `UiManager`  | `Runtime/Manager/UiManager.cs`    | Orchestrates state stack and scene loading |
-| `UiState`    | `Core/UiCompoenets/UiState.cs`    | Loads scenes and discovers UI elements     |
+| `UiState`    | `Core/UiCompoenets/UiState.cs`    | Loads scenes and holds UI elements     |
 | `UiConfig`   | `Core/Config/UiConfig.cs`         | Maps state keys to scene references        |
 | `IUiElement` | `Core/UiCompoenets/IUiElement.cs` | Contract for UI data population            |
 
