@@ -113,7 +113,7 @@ public class GameBootstrap : MonoBehaviour
     private async void Start()
     {
         await uiManager.Init();
-        await UiManager.ShowStateByKey("MainMenu");
+        await UiManager.ShowStateByKey("MainMenuUiState");
     }
 }
 ```
