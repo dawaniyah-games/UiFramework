@@ -10,11 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
-  m_Name: Default Local Group
+  m_Name: UiElements
   m_EditorClassIdentifier: 
-  m_GroupName: Default Local Group
-  m_GUID: 6a333ae2299a16d479f6ff7bb2f1026d
-  m_SerializeEntries: []
+  m_GroupName: UiElements
+  m_GUID: 7e15f45decaf3fa48892665a4caafa8a
+  m_SerializeEntries:
+  - m_GUID: 02261e40e6aade846b94e65c25b841e3
+    m_Address: MainMenuUiElement
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UiElements
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 0d0ac1461efb513459318a0b87c14492, type: 2}
   m_SchemaSet:

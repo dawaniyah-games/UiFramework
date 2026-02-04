@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 468a46d0ae32c3544b7d98094e6448a9, type: 3}
   m_Name: AddressableAssetSettings
   m_EditorClassIdentifier: 
-  m_DefaultGroup: 6a333ae2299a16d479f6ff7bb2f1026d
+  m_DefaultGroup: 7e15f45decaf3fa48892665a4caafa8a
   m_currentHash:
     serializedVersion: 2
     Hash: 00000000000000000000000000000000
@@ -60,7 +60,7 @@ MonoBehaviour:
   m_BuildAddressablesWithPlayerBuild: 0
   m_overridePlayerVersion: '[UnityEditor.PlayerSettings.bundleVersion]'
   m_GroupAssets:
-  - {fileID: 11400000, guid: 0e0a54f569758d647b531e5b349d602c, type: 2}
+  - {fileID: 11400000, guid: 4b8c0b641ec9f9443ab6a8ce816ee738, type: 2}
   - {fileID: 11400000, guid: b1e7c1b193e507c43b1f5582ecafd854, type: 2}
   m_BuildSettings:
     m_LogResourceManagerExceptions: 1
@@ -103,6 +103,7 @@ MonoBehaviour:
     - default
     - UiConfig
     - RuntimeUiConfig
+    - UiElements
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 645e26e2a43a0fd45906dc927fb70bfe, type: 2}

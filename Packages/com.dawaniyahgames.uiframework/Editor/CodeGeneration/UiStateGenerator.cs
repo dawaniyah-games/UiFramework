@@ -10,10 +10,12 @@ namespace UiFramework.Editor.CodeGeneration
         private static string GetTemplatePath()
         {
             string[] guids = AssetDatabase.FindAssets("UiStateTemplate t:TextAsset");
+            
             if (guids.Length > 0)
             {
                 return AssetDatabase.GUIDToAssetPath(guids[0]);
             }
+
             return "Packages/com.dawaniyahgames.uiframework/Editor/Templates/UiStateTemplate.txt";
         }
 
@@ -24,7 +26,7 @@ namespace UiFramework.Editor.CodeGeneration
 
             if (!Directory.Exists(outputPath))
             {
-                UnityEngine.Debug.LogWarning($"⚠️ Output directory does not exist, creating: {outputPath}");
+                Debug.LogWarning($"⚠️ Output directory does not exist, creating: {outputPath}");
                 Directory.CreateDirectory(outputPath);
             }
 
@@ -33,14 +35,14 @@ namespace UiFramework.Editor.CodeGeneration
 
             if (File.Exists(filePath))
             {
-                UnityEngine.Debug.LogWarning($"⚠️ File already exists: {filePath}");
+                Debug.LogWarning($"⚠️ File already exists: {filePath}");
                 return;
             }
 
             string templatePath = GetTemplatePath();
             if (!File.Exists(templatePath))
             {
-                UnityEngine.Debug.LogError($"❌ Template file not found: {templatePath}");
+                Debug.LogError($"❌ Template file not found: {templatePath}");
                 return;
             }
 
@@ -51,7 +53,7 @@ namespace UiFramework.Editor.CodeGeneration
 
             File.WriteAllText(filePath, template);
             AssetDatabase.ImportAsset(filePath);
-            UnityEngine.Debug.Log($"✅ Generated UI State: {filePath}");
+            Debug.Log($"✅ Generated UI State: {filePath}");
         }
     }
 }

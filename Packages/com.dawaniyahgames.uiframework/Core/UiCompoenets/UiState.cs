@@ -76,6 +76,7 @@ namespace UiFramework.Core
             }
 
             GameObject[] roots = sceneInstance.Scene.GetRootGameObjects();
+            
             for (int r = 0; r < roots.Length; r++)
             {
                 IUiElement[] uiElements = roots[r].GetComponentsInChildren<IUiElement>(true);
@@ -91,10 +92,7 @@ namespace UiFramework.Core
 
         public async Task UnloadUiState(List<string> keepScenes)
         {
-            if (keepScenes == null)
-            {
-                keepScenes = new List<string>();
-            }
+            keepScenes ??= new List<string>();
 
             if (pendingLoads.Count > 0)
             {
@@ -107,6 +105,7 @@ namespace UiFramework.Core
             }
 
             List<string> toUnload = new List<string>();
+            
             foreach (KeyValuePair<string, SceneInstance> kvp in loadedScenes)
             {
                 if (!keepScenes.Contains(kvp.Key))
@@ -118,8 +117,8 @@ namespace UiFramework.Core
             for (int i = 0; i < toUnload.Count; i++)
             {
                 string sceneName = toUnload[i];
-                SceneInstance instance;
-                if (loadedScenes.TryGetValue(sceneName, out instance))
+                
+                if (loadedScenes.TryGetValue(sceneName, out SceneInstance instance))
                 {
                     await Addressables.UnloadSceneAsync(instance).Task;
                     loadedScenes.Remove(sceneName);

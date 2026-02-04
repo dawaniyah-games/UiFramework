@@ -3,6 +3,7 @@ using UnityEditor.Callbacks;
 using UnityEngine;
 using UnityEditor.SceneManagement;
 using System.Linq;
+using System;
 
 public class UiElementScriptBinder : AssetPostprocessor
 {
@@ -13,21 +14,27 @@ public class UiElementScriptBinder : AssetPostprocessor
         string scriptPath = EditorPrefs.GetString("UiElementAutoBind_ScriptPath", null);
 
         if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(scriptPath))
+        {
             return;
+        }
 
         EditorPrefs.DeleteKey("UiElementAutoBind_Name");
         EditorPrefs.DeleteKey("UiElementAutoBind_ScriptPath");
 
-        var scriptGuid = AssetDatabase.FindAssets($"{name} t:MonoScript", new[] { scriptPath }).FirstOrDefault();
-        if (string.IsNullOrEmpty(scriptGuid)) return;
+        string scriptGuid = AssetDatabase.FindAssets($"{name} t:MonoScript", new[] { scriptPath }).FirstOrDefault();
+        
+        if (string.IsNullOrEmpty(scriptGuid))
+        {
+            return;
+        }
 
-        var scriptAssetPath = AssetDatabase.GUIDToAssetPath(scriptGuid);
-        var monoScript = AssetDatabase.LoadAssetAtPath<MonoScript>(scriptAssetPath);
-        var type = monoScript?.GetClass();
+        string scriptAssetPath = AssetDatabase.GUIDToAssetPath(scriptGuid);
+        MonoScript monoScript = AssetDatabase.LoadAssetAtPath<MonoScript>(scriptAssetPath);
+        Type type = monoScript?.GetClass();
 
         if (type != null && typeof(MonoBehaviour).IsAssignableFrom(type))
         {
-            var rootGO = GameObject.Find(name + "Root");
+            GameObject rootGO = GameObject.Find(name + "Root");
             if (rootGO != null && rootGO.GetComponent(type) == null)
             {
                 Undo.AddComponent(rootGO, type);
