@@ -12,4 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04cc747a0a166654d801db00505e032b, type: 3}
   m_Name: RuntimeUiConfig
   m_EditorClassIdentifier: 
-  entries: []
+  entries:
+  - stateKey: MainMenuUiState
+    uiElementScenes:
+    - m_AssetGUID: 02261e40e6aade846b94e65c25b841e3
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0

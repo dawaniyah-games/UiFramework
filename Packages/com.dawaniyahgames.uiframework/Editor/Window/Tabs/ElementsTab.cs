@@ -10,11 +10,17 @@ using System.IO;
 using UnityEditor.UIElements;
 using UnityEngine.SceneManagement;
 using System;
+using UnityEditor.AddressableAssets.Settings;
+using UiFramework.Editor.Addressables;
+using UiFramework.Editor.Window.Popups;
 
 namespace UiFramework.Editor.Window.Tabs
 {
     public class ElementsTab : BaseVisualElementTab
     {
+        private const string defaultUiElementsGroupName = "UiElements";
+        private const string defaultUiElementsLabel = "UiElements";
+
         public override string TabName
         {
             get
@@ -131,8 +137,8 @@ namespace UiFramework.Editor.Window.Tabs
 
             sceneListScrollView.Clear();
 
-            List<string> sceneList = GetElementScenes();
-            if (sceneList.Count == 0)
+            List<string> scenePaths = GetElementScenePaths();
+            if (scenePaths.Count == 0)
             {
                 Label noSceneLabel = new Label("\u26a0\ufe0f No UI element scenes found.")
                 {
@@ -142,28 +148,198 @@ namespace UiFramework.Editor.Window.Tabs
             }
             else
             {
-                for (int i = 0; i < sceneList.Count; i++)
+                AddressableAssetSettings settings;
+                bool hasAddressables = AddressablesAssetUtility.TryGetSettings(out settings);
+                List<string> groupNames = hasAddressables ? AddressablesAssetUtility.GetGroupNames(settings) : new List<string>();
+                if (groupNames.Count == 0)
                 {
-                    string scene = sceneList[i];
+                    groupNames.Add(defaultUiElementsGroupName);
+                }
+                else if (!groupNames.Contains(defaultUiElementsGroupName))
+                {
+                    groupNames.Insert(0, defaultUiElementsGroupName);
+                }
 
-                    Label label = new Label(scene)
-                    {
-                        style =
-                        {
-                            fontSize = 13,
-                            unityFontStyleAndWeight = FontStyle.Bold,
-                            marginBottom = 6,
-                            paddingLeft = 8,
-                            paddingTop = 4,
-                            paddingBottom = 4,
-                            backgroundColor = new Color(0.2f, 0.2f, 0.2f, 0.15f),
-                            borderBottomWidth = 1,
-                            borderBottomColor = Color.gray
-                        }
-                    };
-                    sceneListScrollView.Add(label);
+                for (int i = 0; i < scenePaths.Count; i++)
+                {
+                    string scenePath = scenePaths[i];
+                    string sceneName = Path.GetFileNameWithoutExtension(scenePath);
+                    sceneListScrollView.Add(CreateSceneRow(sceneName, scenePath, hasAddressables, settings, groupNames));
                 }
             }
+        }
+
+        private VisualElement CreateSceneRow(string sceneName, string sceneAssetPath, bool hasAddressables, AddressableAssetSettings settings, List<string> groupNames)
+        {
+            VisualElement row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.alignItems = Align.Center;
+            row.style.marginBottom = 6;
+            row.style.paddingLeft = 8;
+            row.style.paddingRight = 8;
+            row.style.paddingTop = 4;
+            row.style.paddingBottom = 4;
+            row.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 0.15f);
+            row.style.borderBottomWidth = 1;
+            row.style.borderBottomColor = Color.gray;
+
+            Label nameLabel = new Label(sceneName);
+            nameLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            nameLabel.style.minWidth = 180;
+            nameLabel.style.flexGrow = 0;
+            row.Add(nameLabel);
+
+            AddressableAssetEntry entry = null;
+            bool isAddressable = hasAddressables && AddressablesAssetUtility.IsAssetAddressable(sceneAssetPath, out entry);
+
+            HashSet<string> selectedLabels = new HashSet<string>(StringComparer.Ordinal);
+            if (entry != null && entry.labels != null)
+            {
+                foreach (string label in entry.labels)
+                {
+                    if (!string.IsNullOrEmpty(label))
+                    {
+                        selectedLabels.Add(label);
+                    }
+                }
+            }
+
+            if (selectedLabels.Count == 0 && !string.IsNullOrEmpty(defaultUiElementsLabel))
+            {
+                selectedLabels.Add(defaultUiElementsLabel);
+            }
+
+            Toggle addressableToggle = new Toggle();
+            addressableToggle.tooltip = "Mark scene as Addressable";
+            addressableToggle.value = isAddressable;
+            addressableToggle.SetEnabled(hasAddressables);
+            addressableToggle.style.marginRight = 8;
+            row.Add(addressableToggle);
+
+            string selectedGroup = "Write";
+
+            if (!string.IsNullOrEmpty(defaultUiElementsGroupName))
+            {
+                selectedGroup = defaultUiElementsGroupName;
+            }
+            
+            if (isAddressable && entry != null && entry.parentGroup != null)
+            {
+                selectedGroup = entry.parentGroup.Name;
+            }
+
+            if (!groupNames.Contains(selectedGroup))
+            {
+                selectedGroup = defaultUiElementsGroupName;
+
+                if (!groupNames.Contains(selectedGroup))
+                {
+                    selectedGroup = groupNames[0];
+                }
+            }
+
+            DropdownField groupDropdown = new DropdownField(groupNames, selectedGroup);
+            groupDropdown.style.minWidth = 140;
+            groupDropdown.style.marginRight = 8;
+            groupDropdown.SetEnabled(hasAddressables);
+            row.Add(groupDropdown);
+
+            groupDropdown.RegisterValueChangedCallback(evt =>
+            {
+                if (!hasAddressables)
+                {
+                    return;
+                }
+
+                if (!addressableToggle.value)
+                {
+                    return;
+                }
+
+                string address = sceneName;
+                string groupName = evt.newValue;
+                string[] labels = selectedLabels.ToArray();
+                AddressablesAssetUtility.EnsureAssetIsAddressable(sceneAssetPath, groupName, address, labels);
+                RefreshSceneList();
+            });
+
+            Label labelsSummary = new Label(BuildLabelsSummary(selectedLabels));
+            labelsSummary.style.flexGrow = 1;
+            labelsSummary.style.marginRight = 8;
+            labelsSummary.style.unityTextAlign = TextAnchor.MiddleLeft;
+            row.Add(labelsSummary);
+
+            Button labelsButton = new Button(() =>
+            {
+                if (!hasAddressables)
+                {
+                    return;
+                }
+
+                Rect rect = labelsSummary.worldBound;
+                UnityEditor.PopupWindow.Show(rect, new AddressablesLabelsPopup(settings, selectedLabels, _ =>
+                {
+                    labelsSummary.text = BuildLabelsSummary(selectedLabels);
+
+                    if (addressableToggle.value)
+                    {
+                        string address = sceneName;
+                        string groupName = groupDropdown.value;
+                        string[] labels = selectedLabels.ToArray();
+                        AddressablesAssetUtility.EnsureAssetIsAddressable(sceneAssetPath, groupName, address, labels);
+                        RefreshSceneList();
+                    }
+                }));
+            });
+            labelsButton.text = "Labels";
+            labelsButton.SetEnabled(hasAddressables);
+            labelsButton.style.marginRight = 8;
+            row.Add(labelsButton);
+
+            Button removeButton = new Button(() =>
+            {
+                AddressablesAssetUtility.RemoveAssetFromAddressables(sceneAssetPath);
+                RefreshSceneList();
+            });
+            removeButton.text = "Remove";
+            removeButton.SetEnabled(hasAddressables && isAddressable);
+            row.Add(removeButton);
+
+            addressableToggle.RegisterValueChangedCallback(evt =>
+            {
+                if (!hasAddressables)
+                {
+                    return;
+                }
+
+                if (evt.newValue)
+                {
+                    string address = sceneName;
+                    string groupName = groupDropdown.value;
+                    string[] labels = selectedLabels.ToArray();
+                    AddressablesAssetUtility.EnsureAssetIsAddressable(sceneAssetPath, groupName, address, labels);
+                }
+                else
+                {
+                    AddressablesAssetUtility.RemoveAssetFromAddressables(sceneAssetPath);
+                }
+
+                RefreshSceneList();
+            });
+
+            return row;
+        }
+
+        private string BuildLabelsSummary(HashSet<string> selectedLabels)
+        {
+            if (selectedLabels == null || selectedLabels.Count == 0)
+            {
+                return "(no labels)";
+            }
+
+            List<string> labels = new List<string>(selectedLabels);
+            labels.Sort(StringComparer.Ordinal);
+            return string.Join(", ", labels.ToArray());
         }
 
         private void CreateUiElementFromScene(string elementName, SceneAsset sceneAsset)
@@ -235,7 +411,7 @@ namespace UiFramework.Editor.Window.Tabs
             Debug.Log("\u2705 Created/updated scene: " + finalScenePath + ". Script will be attached to '" + rootName + "' after compilation.");
         }
 
-        private List<string> GetElementScenes()
+        private List<string> GetElementScenePaths()
         {
             if (editorConfig == null || string.IsNullOrEmpty(editorConfig.ElementsScenePath))
             {
@@ -245,11 +421,11 @@ namespace UiFramework.Editor.Window.Tabs
             List<string> scenes = AssetDatabase.FindAssets("t:Scene", new string[] { editorConfig.ElementsScenePath })
                 .Select(guid => AssetDatabase.GUIDToAssetPath(guid))
                 .Where(path => path.EndsWith(".unity"))
-                .Select(path => Path.GetFileNameWithoutExtension(path))
                 .Distinct()
                 .ToList();
 
-            return scenes ?? new List<string>();
+            scenes.Sort(StringComparer.Ordinal);
+            return scenes;
         }
     }
 }

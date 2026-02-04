@@ -12,12 +12,15 @@ using UnityEngine.AddressableAssets;
 using UiFramework.Runtime;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
+using UiFramework.Editor.Addressables;
 
 namespace UiFramework.Editor.Window
 {
     public class UiSetupEditorWindow : EditorWindow
     {
         private const string configKey = "UiFramework.Editor.ConfigAssetGUID";
+        private const string uiElementsGroupName = "UiElements";
+        private static readonly string[] uiElementsLabels = new string[] { "UiElements" };
 
         private UiEditorConfig configAsset;
         private ObjectField configField;
@@ -241,6 +244,13 @@ namespace UiFramework.Editor.Window
                 return;
             }
 
+            AddressableAssetSettings addressableSettings;
+            bool hasAddressables = AddressablesAssetUtility.TryGetSettings(out addressableSettings);
+            if (!hasAddressables)
+            {
+                Debug.LogWarning("⚠️ Addressables settings not found. Element scenes will not be auto-registered as Addressables.");
+            }
+
             string registryPath = configAsset.StateRegistryPath;
             string configOutputPath = configAsset.RuntimeConfigOutputPath;
 
@@ -283,6 +293,11 @@ namespace UiFramework.Editor.Window
 
                     if (!string.IsNullOrEmpty(scenePath))
                     {
+                        if (hasAddressables)
+                        {
+                            AddressablesAssetUtility.EnsureAssetIsAddressable(scenePath, uiElementsGroupName, sceneName, uiElementsLabels);
+                        }
+
                         AssetReference assetRef = new AssetReference(AssetDatabase.AssetPathToGUID(scenePath));
                         assetRefs.Add(assetRef);
                     }

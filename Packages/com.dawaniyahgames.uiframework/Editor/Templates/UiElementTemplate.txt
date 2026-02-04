@@ -1,7 +1,8 @@
 namespace [UiElementNamespace]
 {
     using UiFramework.Core;
-
+    using UnityEngine;
+    
     // Auto-generated: UI Element
     public class [UiElementName] : UiElement
     {
