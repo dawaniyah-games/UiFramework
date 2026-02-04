@@ -9,26 +9,34 @@ namespace UiFramework.Editor.CodeGeneration
         private static string GetTemplateFolder()
         {
             string[] guids = AssetDatabase.FindAssets("UiElementTemplate t:TextAsset");
+
             if (guids.Length > 0)
             {
                 string path = AssetDatabase.GUIDToAssetPath(guids[0]);
-                return System.IO.Path.GetDirectoryName(path).Replace("\\", "/") + "/";
+                return Path.GetDirectoryName(path).Replace("\\", "/") + "/";
             }
+            
             return "Packages/com.dawaniyahgames.uiframework/Editor/Templates/";
         }
 
         public static void Generate(string name, string outputPath, string ns, bool includeParams = false, bool includeReference = false)
         {
             if (!Directory.Exists(outputPath))
+            {
                 Directory.CreateDirectory(outputPath);
+            }
 
             WriteFromTemplate("UiElementTemplate.txt", name, ns, outputPath, name);
 
             if (includeReference)
+            {
                 WriteFromTemplate("UiElementReferenceTemplate.txt", name, ns, outputPath, name + "Reference");
+            }
 
             if (includeParams)
+            {
                 WriteFromTemplate("UiPopulationParameterTemplate.txt", name, ns, outputPath, name + "Params");
+            }
 
             AssetDatabase.Refresh();
         }
