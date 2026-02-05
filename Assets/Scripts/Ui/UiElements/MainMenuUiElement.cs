@@ -32,16 +32,17 @@ namespace UiFramework.Editor.Elements
             exitButton.onClick.AddListener(OnExitClicked);
         }
 
-        private void OnPlayClicked()
+        private async void OnPlayClicked()
         {
             Debug.Log("Play clicked! Loading LevelScene...");
-            SceneManager.LoadScene("LevelState"); // Or use UiManager.ShowStateByKey
+            await UiManager.ShowState<UserProfileUiState>(null, additive: true);
+            // SceneManager.LoadScene("LevelState"); 
         }
 
         private async void OnSettingsClicked()
         {
             Debug.Log("Settings clicked! Showing Settings State...");
-            // await UiManager.ShowState<SettingsUiState>(additive: false);
+            await UiManager.ShowState<SettingsUiState>(additive: true);
         }
 
         private void OnExitClicked()

@@ -18,5 +18,7 @@ MonoBehaviour:
     - MainMenuUiElement
   - StateName: SettingsUiState
     ElementSceneNames:
-    - MainMenuUiElement
     - SettingsUiElement
+  - StateName: UserProfileUiState
+    ElementSceneNames:
+    - UserProfileUiElement

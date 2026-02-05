@@ -22,12 +22,14 @@ MonoBehaviour:
       m_EditorAssetChanged: 0
   - stateKey: SettingsUiState
     uiElementScenes:
-    - m_AssetGUID: 02261e40e6aade846b94e65c25b841e3
+    - m_AssetGUID: 3808a9fddc7694786bd1c26bad3975a0
       m_SubObjectName: 
       m_SubObjectType: 
       m_SubObjectGUID: 
       m_EditorAssetChanged: 0
-    - m_AssetGUID: 3808a9fddc7694786bd1c26bad3975a0
+  - stateKey: UserProfileUiState
+    uiElementScenes:
+    - m_AssetGUID: 933ea99169a9b4ef2ac33e80dd37eb50
       m_SubObjectName: 
       m_SubObjectType: 
       m_SubObjectGUID: 

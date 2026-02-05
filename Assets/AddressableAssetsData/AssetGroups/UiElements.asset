@@ -27,6 +27,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - UiElements
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 933ea99169a9b4ef2ac33e80dd37eb50
+    m_Address: UserProfileUiElement
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UiElements
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 0d0ac1461efb513459318a0b87c14492, type: 2}
   m_SchemaSet:
