@@ -4,7 +4,6 @@ namespace UiFramework.Editor.Elements
     using UiFramework.Editor.States;
     using UiFramework.Runtime.Manager;
     using UnityEngine;
-    using UnityEngine.SceneManagement;
     using UnityEngine.UI;
 
     // Auto-generated: UI Element
