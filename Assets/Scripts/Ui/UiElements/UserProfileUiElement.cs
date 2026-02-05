@@ -14,6 +14,8 @@ namespace UiFramework.Editor.Elements
         public override void Populate(object context = null)
         {
             base.Populate(context);
+            
+            //Passing Data from Settings to Profile:
             if (context is SettingsContext settingsContext)
             {
                 userNameText.text = "Welcome " + settingsContext.playerName + "! :)";

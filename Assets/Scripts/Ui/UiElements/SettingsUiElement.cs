@@ -27,6 +27,9 @@ namespace UiFramework.Editor.Elements
 
         private void HandleButtons()
         {
+            backButton.onClick.RemoveAllListeners();
+            saveButton.onClick.RemoveAllListeners();
+
             backButton.onClick.AddListener(OnBackClicked);
             saveButton.onClick.AddListener(OnSaveClicked);
         }
@@ -45,7 +48,7 @@ namespace UiFramework.Editor.Elements
                 playerName = playerNameInput.text,
                 volumeLevel = 0.5f // Example volume level
             };
-            await UiManager.HideUI();
+            await UiManager.HideUI(); // Hide settings before showing the profile for better UX
             await UiManager.ShowState<UserProfileUiState>(context, additive: true);
         }
     }

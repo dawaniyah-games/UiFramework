@@ -36,6 +36,7 @@ namespace UiFramework.Editor.Elements
         {
             Debug.Log("Play clicked! Loading LevelScene...");
             await UiManager.ShowState<UserProfileUiState>(null, additive: true);
+            //Another way by Loading Scene directly:
             // SceneManager.LoadScene("LevelState"); 
         }
 
