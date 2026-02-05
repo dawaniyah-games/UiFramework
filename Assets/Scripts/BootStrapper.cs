@@ -25,7 +25,6 @@ public class BootStrapper : MonoBehaviour
 
         // await UiManager.ShowStateByKey("IntroUiState", additive: true);
 
-
         await UiManager.ShowState<MainMenuUiState>(additive: false);
     }
 }

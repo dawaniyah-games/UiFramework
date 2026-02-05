@@ -16,3 +16,7 @@ MonoBehaviour:
   - StateName: MainMenuUiState
     ElementSceneNames:
     - MainMenuUiElement
+  - StateName: SettingsUiState
+    ElementSceneNames:
+    - MainMenuUiElement
+    - SettingsUiElement
