@@ -1,17 +1,16 @@
-name: Bump version on PR to main
+name: Auto release on main
 
 on:
-  pull_request:
-    types: [opened, synchronize]
+  push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  bump-version:
-    name: Bump Package Version
+  release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -19,102 +18,46 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Configure git user
+      - name: Read package version
+        id: pkg
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          VERSION=$(jq -r .version Packages/com.dawaniyahgames.uiframework/package.json)
 
-      - name: Get latest tag and calculate next version
-        id: bump
-        run: |
-          # Fetch all tags
-          git fetch --tags --force
-
-          # Get the latest tag sorted by version
-          LATEST_TAG=$(git tag -l "v*.*.*" | sort -V | tail -n1)
-
-          if [ -z "$LATEST_TAG" ]; then
-            LATEST_TAG="v1.0.0"
+          if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
+            echo "Failed to read version from Packages/com.dawaniyahgames.uiframework/package.json" >&2
+            exit 1
           fi
 
-          echo "Latest tag: $LATEST_TAG"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+          echo "Package version: $VERSION"
 
-          # Remove 'v' prefix and extract version numbers
-          VERSION=${LATEST_TAG#v}
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-
-          # Bump patch version
-          PATCH=$((PATCH+1))
-          NEW="$MAJOR.$MINOR.$PATCH"
-          echo "new_version=$NEW" >> $GITHUB_OUTPUT
-          echo "Bumped version: $LATEST_TAG → v$NEW"
-
-      - name: Update package.json version
+      - name: Create and push tag (if missing)
+        id: tag
         run: |
-          VERSION="${{ steps.bump.outputs.new_version }}"
-          tmp_file=$(mktemp)
-          jq --arg v "$VERSION" '.version = $v' Packages/com.dawaniyahgames.uiframework/package.json > "$tmp_file"
-          mv "$tmp_file" Packages/com.dawaniyahgames.uiframework/package.json
-          echo "Updated Packages/com.dawaniyahgames.uiframework/package.json to version $VERSION"
+          TAG="${{ steps.pkg.outputs.tag }}"
 
-      - name: Update CHANGELOG.md
-        run: |
-          VERSION="${{ steps.bump.outputs.new_version }}"
-          DATE=$(date +%Y-%m-%d)
+          git fetch --tags --force
 
-          # Create new version entry after Unreleased section
-          awk -v version="$VERSION" -v date="$DATE" '
-          /^## \[Unreleased\]/ {
-            print
-            print ""
-            print "## [" version "] - " date
-            print ""
-            print "### Changed"
-            print "- Merged dev branch to main"
-            print "- See GitHub release notes for detailed changes"
-            next
-          }
-          { print }
-          ' CHANGELOG.md > CHANGELOG.tmp
-          mv CHANGELOG.tmp CHANGELOG.md
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "created=false" >> $GITHUB_OUTPUT
+            echo "Tag $TAG already exists. Skipping tag and release."
+            exit 0
+          fi
 
-          echo "Updated CHANGELOG.md with version $VERSION"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Create release notes file
-        run: |
-          VERSION="${{ steps.bump.outputs.new_version }}"
-          cat > release-notes.md <<EOF
-          ## What's Changed
+          git tag -a "$TAG" -m "$TAG"
+          git push origin "$TAG"
+          echo "created=true" >> $GITHUB_OUTPUT
+          echo "Created and pushed tag $TAG"
 
-          Merged \`dev\` → \`main\`
-
-          ### Version Information
-          - **Version**: v${VERSION}
-          - **Package**: com.dawaniyahgames.uiframework
-
-          ### Installation
-
-          #### Via Package Manager UI
-          \`\`\`
-            https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v${VERSION}
-          \`\`\`
-
-          #### Via manifest.json
-          \`\`\`json
-          {
-            "dependencies": {
-                "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v${VERSION}"
-            }
-          }
-          \`\`\`
-          EOF
-
-      - name: Commit version updates
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add Packages/com.dawaniyahgames.uiframework/package.json CHANGELOG.md release-notes.md
-          git commit -m "chore: Bump version to v${{ steps.bump.outputs.new_version }}"
-          git push origin HEAD:${{ github.head_ref }}
-
-      # Tagging and release are handled by the separate tag-triggered workflow.
+      - name: Create GitHub Release
+        if: steps.tag.outputs.created == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.pkg.outputs.tag }}
+          name: ${{ steps.pkg.outputs.tag }}
+          generate_release_notes: true
+          make_latest: true

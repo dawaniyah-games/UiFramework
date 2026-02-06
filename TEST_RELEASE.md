@@ -4,8 +4,9 @@ This file tests the automated release workflow.
 
 When merged to main via PR, it should:
 
-1. Bump version from 1.0.0 to 1.0.1
-2. Update package.json
-3. Update CHANGELOG.md
-4. Create git tag v1.0.1
-5. Create GitHub release with auto-generated notes
+1. Read the version from Packages/com.dawaniyahgames.uiframework/package.json
+2. Create git tag vX.Y.Z (if missing)
+3. Create GitHub release with auto-generated notes
+
+Notes:
+- Version bump is expected to be done manually (in dev) before merging to main.
