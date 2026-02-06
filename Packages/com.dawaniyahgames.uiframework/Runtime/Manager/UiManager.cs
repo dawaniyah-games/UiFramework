@@ -143,11 +143,6 @@ namespace UiFramework.Runtime.Manager
 
             await popped.UnloadUiState(nextScenes);
             popped.Dispose();
-
-            if (instance.stateStack.Count > 0)
-            {
-                instance.stateStack.Peek().Init();
-            }
         }
 
         public static bool IsLastSceneActive<T>()
