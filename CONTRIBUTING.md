@@ -40,12 +40,12 @@ Thank you for your interest in contributing! Please follow this workflow to main
    - Create PR: `dev` → `main`
    - Title: `release: v1.0.X - Brief description`
    - Description: Summarize changes
+    - ✅ Bump the package version first in `Packages/com.dawaniyahgames.uiframework/package.json`
    - Merge the PR
    - ✨ **Automatic release workflow triggers**:
-     - Version bumps (patch)
      - GitHub Release created
      - Tag pushed
-     - Package.json and CHANGELOG updated
+       - Uses the version from `Packages/com.dawaniyahgames.uiframework/package.json`
 
 ### For External Contributors
 
@@ -79,14 +79,13 @@ feature/* (feature branches)
 ## Release Process
 
 1. Test thoroughly on `dev`
+2. Bump version in `Packages/com.dawaniyahgames.uiframework/package.json`
 2. Create PR: `dev` → `main`
 3. Merge PR
 4. Automated workflow creates:
-   - ✅ Version bump
    - ✅ Git tag (v1.0.X)
    - ✅ GitHub Release
-   - ✅ Updated CHANGELOG.md
-   - ✅ Updated package.json
+   - ✅ Uses version from `Packages/com.dawaniyahgames.uiframework/package.json`
 
 ## Code Standards
 
