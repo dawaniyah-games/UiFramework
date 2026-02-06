@@ -1,13 +1,13 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UiFramework.Editor.CodeGeneration;
 using UiFramework.Editor.Config;
 using UiFramework.Editor.Data;
+using UiFramework.Core;
 
 namespace UiFramework.Editor.Window.Tabs
 {
@@ -22,26 +22,29 @@ namespace UiFramework.Editor.Window.Tabs
         }
 
         private UiEditorConfig editorConfig;
-        private UiStateRegistry registry;
         private ScrollView stateListView;
         private ScrollView elementDetailView;
-        private string selectedState;
+        private readonly List<MonoScript> stateScripts = new List<MonoScript>();
+        private readonly Dictionary<string, UiStateDefinition> definitionsByKey = new Dictionary<string, UiStateDefinition>(StringComparer.Ordinal);
+        private MonoScript selectedStateScript;
 
         public void SetRegistry(UiStateRegistry registryInstance)
         {
-            registry = registryInstance;
+            // Legacy no-op: states are now stored as per-state UiStateDefinition assets.
         }
 
         public override void OnCreateGUI(VisualElement root, UiEditorConfig config)
         {
             editorConfig = config;
-            LoadRegistry();
 
             root.style.flexDirection = FlexDirection.Column;
             root.style.flexGrow = 1;
 
             CreateTopBar(root);
             CreateContentArea(root);
+
+            ReloadStateScriptsAndDefinitions();
+            RebuildStateList();
         }
 
         private void CreateTopBar(VisualElement root)
@@ -98,10 +101,12 @@ namespace UiFramework.Editor.Window.Tabs
                 }
 
                 UiStateGenerator.Generate(name, editorConfig.StatesPath, editorConfig.StateNamespace);
-                AddToRegistry(name, new List<string>());
                 AssetDatabase.Refresh();
 
-                selectedState = name;
+                // The new script won't become a type until the next compile; still refresh the list.
+                ReloadStateScriptsAndDefinitions();
+                selectedStateScript = FindStateScriptByClassName(name);
+
                 RebuildStateList();
             };
 
@@ -116,25 +121,66 @@ namespace UiFramework.Editor.Window.Tabs
 
             deleteButton.clicked += () =>
             {
-                if (string.IsNullOrEmpty(selectedState))
+                if (selectedStateScript == null)
                 {
                     return;
                 }
 
-                if (EditorUtility.DisplayDialog("Delete UI State", "Are you sure you want to delete '" + selectedState + "'?", "Yes", "No"))
-                {
-                    UiStateMetadata metadata = registry.States.FirstOrDefault(s => s.StateName == selectedState);
-                    if (metadata != null)
-                    {
-                        registry.States.Remove(metadata);
-                        EditorUtility.SetDirty(registry);
-                        AssetDatabase.SaveAssets();
-                        Debug.Log("🗑 Deleted UIState: " + selectedState);
+                string stateKey = GetSelectedStateKey();
+                UiStateDefinition selectedDefinition = GetSelectedDefinition();
+                string definitionPath = selectedDefinition != null ? AssetDatabase.GetAssetPath(selectedDefinition) : null;
+                string scriptPath = AssetDatabase.GetAssetPath(selectedStateScript);
 
-                        selectedState = null;
-                        RebuildStateList();
+                if (selectedDefinition != null)
+                {
+                    int option = EditorUtility.DisplayDialogComplex(
+                        "Delete UI State",
+                        "Delete config for '" + stateKey + "'?\n\nYou can also delete the UiState script file.",
+                        "Config Only",
+                        "Cancel",
+                        "Config + Script");
+
+                    if (option == 1)
+                    {
+                        return;
+                    }
+
+                    if (!string.IsNullOrEmpty(definitionPath))
+                    {
+                        AssetDatabase.SaveAssets();
+                        AssetDatabase.DeleteAsset(definitionPath);
+                    }
+
+                    if (option == 2)
+                    {
+                        if (!string.IsNullOrEmpty(scriptPath))
+                        {
+                            AssetDatabase.DeleteAsset(scriptPath);
+                        }
                     }
                 }
+                else
+                {
+                    bool deleteScript = EditorUtility.DisplayDialog(
+                        "Delete UI State",
+                        "No config found for '" + stateKey + "'.\n\nDelete the UiState script file?",
+                        "Delete Script",
+                        "Cancel");
+
+                    if (!deleteScript)
+                    {
+                        return;
+                    }
+
+                    if (!string.IsNullOrEmpty(scriptPath))
+                    {
+                        AssetDatabase.DeleteAsset(scriptPath);
+                    }
+                }
+
+                selectedStateScript = null;
+                ReloadStateScriptsAndDefinitions();
+                RebuildStateList();
             };
 
             root.Add(topBar);
@@ -173,41 +219,46 @@ namespace UiFramework.Editor.Window.Tabs
             container.Add(stateListView);
             container.Add(elementDetailView);
             root.Add(container);
-
-            RebuildStateList();
         }
 
         private void RebuildStateList()
         {
-            if (registry == null)
+            stateListView.Clear();
+
+            if (stateScripts == null || stateScripts.Count == 0)
             {
-                Debug.LogWarning("⚠️ Registry not set in StatesTab.");
+                stateListView.Add(new Label("No UiState scripts found."));
+                PopulateElementDetails();
                 return;
             }
 
-            stateListView.Clear();
-
-            List<string> states = registry.States.Select(s => s.StateName).ToList();
-            if (string.IsNullOrEmpty(selectedState) && states.Count > 0)
+            if (selectedStateScript == null)
             {
-                selectedState = states[0];
+                selectedStateScript = stateScripts[0];
             }
 
-            for (int i = 0; i < states.Count; i++)
+            for (int i = 0; i < stateScripts.Count; i++)
             {
-                string stateName = states[i];
+                MonoScript script = stateScripts[i];
+                if (script == null)
+                {
+                    continue;
+                }
+
+                Type stateType = script.GetClass();
+                string stateName = stateType != null ? stateType.Name : script.name;
 
                 Button selectButton = new Button(() =>
                 {
-                    selectedState = stateName;
+                    selectedStateScript = script;
                     PopulateElementDetails();
-                    RefreshStateSelectionVisuals(states);
+                    RefreshStateSelectionVisuals();
                 })
                 {
                     text = stateName
                 };
 
-                if (selectedState == stateName)
+                if (selectedStateScript == script)
                 {
                     selectButton.AddToClassList("tab-button-selected");
                 }
@@ -218,7 +269,7 @@ namespace UiFramework.Editor.Window.Tabs
             PopulateElementDetails();
         }
 
-        private void RefreshStateSelectionVisuals(List<string> allStates)
+        private void RefreshStateSelectionVisuals()
         {
             for (int i = 0; i < stateListView.childCount; i++)
             {
@@ -229,7 +280,8 @@ namespace UiFramework.Editor.Window.Tabs
                     continue;
                 }
 
-                if (button.text == selectedState)
+                string selectedName = GetSelectedStateKey();
+                if (!string.IsNullOrEmpty(selectedName) && button.text == selectedName)
                 {
                     button.AddToClassList("tab-button-selected");
                 }
@@ -244,13 +296,15 @@ namespace UiFramework.Editor.Window.Tabs
         {
             elementDetailView.Clear();
 
-            UiStateMetadata metadata = registry.States.FirstOrDefault(s => s.StateName == selectedState);
-            if (metadata == null)
+            if (selectedStateScript == null)
             {
+                elementDetailView.Add(new Label("Select a state to edit."));
                 return;
             }
 
-            Label header = new Label("State: " + selectedState)
+            string stateKey = GetSelectedStateKey();
+
+            Label header = new Label("State: " + stateKey)
             {
                 style =
                 {
@@ -261,9 +315,44 @@ namespace UiFramework.Editor.Window.Tabs
             };
             elementDetailView.Add(header);
 
-            for (int i = 0; i < metadata.ElementSceneNames.Count; i++)
+            UiStateDefinition selectedDefinition = GetSelectedDefinition();
+            if (selectedDefinition == null)
             {
-                string sceneName = metadata.ElementSceneNames[i];
+                Label missing = new Label("No config found for this UiState.")
+                {
+                    style =
+                    {
+                        marginBottom = 6
+                    }
+                };
+                elementDetailView.Add(missing);
+
+                Button createConfigButton = new Button(() =>
+                {
+                    string folder = editorConfig != null ? editorConfig.StateDefinitionsPath : "Assets/UiConfigs/UiStateDefinitions";
+                    UiStateDefinition created = UiStateDefinitionUtility.CreateNew(folder, stateKey);
+                    if (created != null)
+                    {
+                        EditorGUIUtility.PingObject(created);
+                        Selection.activeObject = created;
+                    }
+
+                    ReloadStateScriptsAndDefinitions();
+                    PopulateElementDetails();
+                    RefreshStateSelectionVisuals();
+                })
+                {
+                    text = "Create Config"
+                };
+                createConfigButton.style.width = 140;
+                createConfigButton.style.height = 26;
+                elementDetailView.Add(createConfigButton);
+                return;
+            }
+
+            for (int i = 0; i < selectedDefinition.ElementSceneNames.Count; i++)
+            {
+                string sceneName = selectedDefinition.ElementSceneNames[i];
 
                 VisualElement row = new VisualElement
                 {
@@ -275,17 +364,14 @@ namespace UiFramework.Editor.Window.Tabs
                     }
                 };
 
-                Label icon = new Label("🎬");
-                icon.style.marginRight = 4;
-
                 Label label = new Label(sceneName);
                 label.style.flexGrow = 1;
                 label.style.fontSize = 13;
 
                 Button removeButton = new Button(() =>
                 {
-                    metadata.ElementSceneNames.Remove(sceneName);
-                    EditorUtility.SetDirty(registry);
+                    selectedDefinition.ElementSceneNames.Remove(sceneName);
+                    EditorUtility.SetDirty(selectedDefinition);
                     AssetDatabase.SaveAssets();
                     PopulateElementDetails();
                 })
@@ -296,15 +382,13 @@ namespace UiFramework.Editor.Window.Tabs
                 removeButton.style.width = 22;
                 removeButton.style.height = 22;
 
-                row.Add(icon);
                 row.Add(label);
                 row.Add(removeButton);
                 elementDetailView.Add(row);
             }
 
             List<string> availableScenes = GetAvailableElementScenes()
-                .Where(s => !metadata.ElementSceneNames.Contains(s))
-                .ToList();
+                .FindAll(s => !selectedDefinition.ElementSceneNames.Contains(s));
 
             if (availableScenes.Count > 0)
             {
@@ -330,10 +414,10 @@ namespace UiFramework.Editor.Window.Tabs
 
                 Button addButton = new Button(() =>
                 {
-                    if (!metadata.ElementSceneNames.Contains(selectedScene))
+                    if (!selectedDefinition.ElementSceneNames.Contains(selectedScene))
                     {
-                        metadata.ElementSceneNames.Add(selectedScene);
-                        EditorUtility.SetDirty(registry);
+                        selectedDefinition.ElementSceneNames.Add(selectedScene);
+                        EditorUtility.SetDirty(selectedDefinition);
                         AssetDatabase.SaveAssets();
                         PopulateElementDetails();
                     }
@@ -356,60 +440,198 @@ namespace UiFramework.Editor.Window.Tabs
             }
         }
 
-        private void LoadRegistry()
+        private void ReloadStateScriptsAndDefinitions()
         {
-            if (registry != null)
+            stateScripts.Clear();
+            definitionsByKey.Clear();
+
+            LoadDefinitions();
+            LoadStateScripts();
+
+            if (selectedStateScript != null && !stateScripts.Contains(selectedStateScript))
+            {
+                selectedStateScript = stateScripts.Count > 0 ? stateScripts[0] : null;
+            }
+        }
+
+        private void LoadDefinitions()
+        {
+            string folder = editorConfig != null ? editorConfig.StateDefinitionsPath : string.Empty;
+            List<UiStateDefinition> definitions = UiStateDefinitionUtility.FindAll(folder);
+
+            for (int i = 0; i < definitions.Count; i++)
+            {
+                UiStateDefinition definition = definitions[i];
+                if (definition == null || string.IsNullOrWhiteSpace(definition.StateKey))
+                {
+                    continue;
+                }
+
+                if (!definitionsByKey.ContainsKey(definition.StateKey))
+                {
+                    definitionsByKey.Add(definition.StateKey, definition);
+                }
+            }
+        }
+
+        private void LoadStateScripts()
+        {
+            if (editorConfig == null || string.IsNullOrEmpty(editorConfig.StatesPath))
             {
                 return;
             }
 
-            if (editorConfig == null || string.IsNullOrEmpty(editorConfig.StateRegistryPath))
+            string normalizedFolder = editorConfig.StatesPath.Replace("\\", "/").Trim();
+            if (!AssetDatabase.IsValidFolder(normalizedFolder))
             {
-                Debug.LogWarning("⚠️ Cannot load registry, config is null or path missing.");
                 return;
             }
 
-            registry = AssetDatabase.LoadAssetAtPath<UiStateRegistry>(editorConfig.StateRegistryPath);
+            string[] guids = AssetDatabase.FindAssets("t:MonoScript", new string[] { normalizedFolder });
+            for (int i = 0; i < guids.Length; i++)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+                MonoScript script = AssetDatabase.LoadAssetAtPath<MonoScript>(path);
+                if (script == null)
+                {
+                    continue;
+                }
+
+                Type type = script.GetClass();
+                if (type == null)
+                {
+                    continue;
+                }
+
+                if (type == typeof(UiState))
+                {
+                    continue;
+                }
+
+                if (!typeof(UiState).IsAssignableFrom(type))
+                {
+                    continue;
+                }
+
+                if (!stateScripts.Contains(script))
+                {
+                    stateScripts.Add(script);
+                }
+            }
+
+            stateScripts.Sort(CompareScriptsByClassName);
+        }
+
+        private int CompareScriptsByClassName(MonoScript a, MonoScript b)
+        {
+            string aName = GetScriptClassName(a);
+            string bName = GetScriptClassName(b);
+            return string.Compare(aName, bName, StringComparison.Ordinal);
+        }
+
+        private string GetScriptClassName(MonoScript script)
+        {
+            if (script == null)
+            {
+                return string.Empty;
+            }
+
+            Type type = script.GetClass();
+            if (type == null)
+            {
+                return script.name;
+            }
+
+            return type.Name;
+        }
+
+        private string GetSelectedStateKey()
+        {
+            if (selectedStateScript == null)
+            {
+                return string.Empty;
+            }
+
+            Type type = selectedStateScript.GetClass();
+            if (type == null)
+            {
+                return selectedStateScript.name;
+            }
+
+            return type.Name;
+        }
+
+        private UiStateDefinition GetSelectedDefinition()
+        {
+            string key = GetSelectedStateKey();
+            if (string.IsNullOrEmpty(key))
+            {
+                return null;
+            }
+
+            UiStateDefinition definition;
+            if (definitionsByKey.TryGetValue(key, out definition))
+            {
+                return definition;
+            }
+
+            return null;
+        }
+
+        private MonoScript FindStateScriptByClassName(string className)
+        {
+            if (string.IsNullOrWhiteSpace(className))
+            {
+                return null;
+            }
+
+            string trimmed = className.Trim();
+            for (int i = 0; i < stateScripts.Count; i++)
+            {
+                MonoScript script = stateScripts[i];
+                if (GetScriptClassName(script) == trimmed)
+                {
+                    return script;
+                }
+            }
+
+            return null;
         }
 
         private List<string> GetAvailableElementScenes()
         {
-            List<string> allScenePaths = AssetDatabase.FindAssets("t:Scene")
-                .Select(AssetDatabase.GUIDToAssetPath)
-                .ToList();
+            List<string> scenes = new List<string>();
 
-            List<string> filtered = allScenePaths
-                .Where(path => path.StartsWith("Assets/Scenes/UiElements/"))
-                .Select(Path.GetFileNameWithoutExtension)
-                .ToList();
-
-            return filtered;
-        }
-
-        private void AddToRegistry(string stateName, List<string> elementSceneNames)
-        {
-            if (registry == null)
+            string scenesFolder = editorConfig != null ? editorConfig.ElementsScenePath : string.Empty;
+            if (string.IsNullOrEmpty(scenesFolder))
             {
-                Debug.LogError("❌ Cannot add to registry, it's not loaded.");
-                return;
+                scenesFolder = "Assets/Scenes/UiElements";
             }
 
-            bool exists = registry.States.Any(s => s.StateName == stateName);
-            if (exists)
+            string normalized = scenesFolder.Replace("\\", "/").Trim();
+            if (!AssetDatabase.IsValidFolder(normalized))
             {
-                Debug.LogWarning("⚠️ State '" + stateName + "' already exists.");
-                return;
+                return scenes;
             }
 
-            UiStateMetadata newMeta = new UiStateMetadata
+            string[] guids = AssetDatabase.FindAssets("t:Scene", new string[] { normalized });
+            for (int i = 0; i < guids.Length; i++)
             {
-                StateName = stateName,
-                ElementSceneNames = elementSceneNames
-            };
+                string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+                string sceneName = Path.GetFileNameWithoutExtension(path);
+                if (string.IsNullOrEmpty(sceneName))
+                {
+                    continue;
+                }
 
-            registry.States.Add(newMeta);
-            EditorUtility.SetDirty(registry);
-            AssetDatabase.SaveAssets();
+                if (!scenes.Contains(sceneName))
+                {
+                    scenes.Add(sceneName);
+                }
+            }
+
+            scenes.Sort(StringComparer.Ordinal);
+            return scenes;
         }
     }
 }

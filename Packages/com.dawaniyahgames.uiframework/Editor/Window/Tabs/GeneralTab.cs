@@ -1,26 +1,32 @@
+using UnityEngine;
+using UnityEngine.UIElements;
+using UiFramework.Editor.Config;
+
 namespace UiFramework.Editor.Window.Tabs
 {
-    using UnityEngine;
-    using UnityEngine.UIElements;
-    using UiFramework.Editor.Config;
-
     public class GeneralTab : BaseVisualElementTab
     {
-        public override string TabName => "General";
+        public override string TabName
+        {
+            get
+            {
+                return "General";
+            }
+        }
 
-        private System.Action _onLoadOrCreate;
-        private System.Action _onBuildRuntimeUi;
-        private Label _statusLabel;
+        private System.Action onLoadOrCreate;
+        private System.Action onBuildRuntimeUi;
+        private Label statusLabel;
 
 
         public void SetLoadOrCreateCallback(System.Action callback)
         {
-            _onLoadOrCreate = callback;
+            onLoadOrCreate = callback;
         }
 
         public void SetRuntimeUiBuildCallback(System.Action callback)
         {
-            _onBuildRuntimeUi = callback;
+            onBuildRuntimeUi = callback;
         }
 
         public override void OnCreateGUI(VisualElement root, UiEditorConfig config)
@@ -41,10 +47,11 @@ namespace UiFramework.Editor.Window.Tabs
             root.Add(CreatePathField("Element Output Path", config?.ElementsScriptPath));
             root.Add(CreatePathField("Element Scene Path", config?.ElementsScenePath));
             root.Add(CreatePathField("State Output Path", config?.StatesPath));
+            root.Add(CreatePathField("State Definitions Path", config?.StateDefinitionsPath));
             root.Add(CreatePathField("State Registry Path", config?.StateRegistryPath));
             root.Add(CreatePathField("Runtime Config Output Path", config?.RuntimeConfigOutputPath));
 
-            var buttonRow = new VisualElement
+            VisualElement buttonRow = new VisualElement
             {
                 style =
                 {
@@ -56,17 +63,29 @@ namespace UiFramework.Editor.Window.Tabs
                 }
             };
 
-            var loadBtn = new Button(() => _onLoadOrCreate?.Invoke()) { text = "🔄 Create Config" };
-
-            var buildBtn = new Button(() =>
+            Button loadBtn = new Button(() =>
             {
-                _onBuildRuntimeUi?.Invoke();
-                _statusLabel.text = "✅ Built runtime UiConfig successfully.";
+                if (onLoadOrCreate != null)
+                {
+                    onLoadOrCreate.Invoke();
+                }
+            })
+            {
+                text = "🔄 Create Config"
+            };
+
+            Button buildBtn = new Button(() =>
+            {
+                if (onBuildRuntimeUi != null)
+                {
+                    onBuildRuntimeUi.Invoke();
+                }
+
+                statusLabel.text = "✅ Built runtime UiConfig successfully.";
             })
             { text = "⚙️ Build Runtime UiConfig" };
 
-
-            foreach (var btn in new[] { loadBtn, buildBtn })
+            foreach (Button btn in new Button[] { loadBtn, buildBtn })
             {
                 btn.style.width = 220;
                 btn.style.height = 32;
@@ -80,21 +99,21 @@ namespace UiFramework.Editor.Window.Tabs
             buttonRow.Add(buildBtn);
             root.Add(buttonRow);
 
-            _statusLabel = new Label("");
-            _statusLabel.style.marginTop = 6;
-            _statusLabel.style.alignSelf = Align.Center;
-            _statusLabel.style.color = Color.green;
-            _statusLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
-            _statusLabel.style.fontSize = 12;
+            statusLabel = new Label("");
+            statusLabel.style.marginTop = 6;
+            statusLabel.style.alignSelf = Align.Center;
+            statusLabel.style.color = Color.green;
+            statusLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
+            statusLabel.style.fontSize = 12;
 
-            root.Add(_statusLabel);
+            root.Add(statusLabel);
         }
 
         private VisualElement CreatePathField(string label, string value)
         {
-            var container = new VisualElement { style = { marginBottom = 8 } };
+            VisualElement container = new VisualElement { style = { marginBottom = 8 } };
             container.Add(new Label(label));
-            var field = new TextField { value = value ?? "", isReadOnly = true };
+            TextField field = new TextField { value = value ?? "", isReadOnly = true };
             container.Add(field);
             return container;
         }

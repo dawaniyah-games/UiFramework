@@ -12,6 +12,7 @@ namespace UiFramework.Editor.Config
         public string ElementsScriptPath = "Assets/Scripts/Ui/UiElements";
         public string ElementsScenePath = "Assets/Scenes/UiElements";
         public string StatesPath = "Assets/Scripts/Ui/UiStates";
+        public string StateDefinitionsPath = "Assets/UiConfigs/UiStateDefinitions";
         public string StateRegistryPath = "Assets/UiConfigs/UiStateRegistry.asset";
         public string RuntimeConfigOutputPath = "Assets/UiConfigs/RuntimeUiConfig.asset";
         public string ElementNamespace = "UiFramework.Editor.Elements";
@@ -22,6 +23,13 @@ namespace UiFramework.Editor.Config
         {
             UiSetupAssetPath = NormalizeAssetPath(UiSetupAssetPath, "UiSetup", "Assets/UiConfigs/UiSetup.asset");
 
+            if (string.IsNullOrEmpty(StateDefinitionsPath) || StateDefinitionsPath == "Assets/UiConfigs/UiStateDefinitions")
+            {
+                StateDefinitionsPath = "Assets/UiConfigs/UiStateDefinitions";
+            }
+
+            StateDefinitionsPath = NormalizeFolderPath(StateDefinitionsPath, "Assets/UiConfigs/UiStateDefinitions");
+
             if (string.IsNullOrEmpty(StateRegistryPath) || StateRegistryPath == "Assets/UiConfigs/UiStateRegistry.asset")
             {
                 StateRegistryPath = GetDefaultConfigPath("UiStateRegistry", "Assets/UiConfigs/UiStateRegistry.asset");
@@ -31,6 +39,28 @@ namespace UiFramework.Editor.Config
             {
                 RuntimeConfigOutputPath = GetDefaultConfigPath("RuntimeUiConfig", "Assets/UiConfigs/RuntimeUiConfig.asset");
             }
+        }
+
+        private string NormalizeFolderPath(string current, string fallback)
+        {
+            if (!string.IsNullOrEmpty(current))
+            {
+                string normalized = current.Replace("\\", "/").Trim();
+
+                while (normalized.EndsWith("/", System.StringComparison.Ordinal))
+                {
+                    normalized = normalized.Substring(0, normalized.Length - 1);
+                }
+
+                current = normalized;
+            }
+
+            if (string.IsNullOrEmpty(current))
+            {
+                return fallback;
+            }
+
+            return current;
         }
 
         private string NormalizeAssetPath(string current, string assetName, string fallback)

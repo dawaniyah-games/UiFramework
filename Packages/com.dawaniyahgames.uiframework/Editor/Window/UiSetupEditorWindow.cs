@@ -251,9 +251,73 @@ namespace UiFramework.Editor.Window
                 Debug.LogWarning("⚠️ Addressables settings not found. Element scenes will not be auto-registered as Addressables.");
             }
 
-            string registryPath = configAsset.StateRegistryPath;
             string configOutputPath = configAsset.RuntimeConfigOutputPath;
 
+            UiConfig config = AssetDatabase.LoadAssetAtPath<Runtime.UiConfig>(configOutputPath);
+            if (config == null)
+            {
+                config = CreateInstance<Runtime.UiConfig>();
+                EnsureUnityFolderExists(Path.GetDirectoryName(configOutputPath));
+                AssetDatabase.CreateAsset(config, configOutputPath);
+                Debug.Log($"🆕 Created new UiConfig at {configOutputPath}");
+            }
+
+            config.entries.Clear();
+
+            List<UiStateDefinition> definitions = UiStateDefinitionUtility.FindAll(configAsset.StateDefinitionsPath);
+            if (definitions != null && definitions.Count > 0)
+            {
+                HashSet<string> seenKeys = new HashSet<string>(System.StringComparer.Ordinal);
+
+                for (int i = 0; i < definitions.Count; i++)
+                {
+                    UiStateDefinition definition = definitions[i];
+                    if (definition == null || string.IsNullOrWhiteSpace(definition.StateKey))
+                    {
+                        continue;
+                    }
+
+                    if (!seenKeys.Add(definition.StateKey))
+                    {
+                        Debug.LogWarning("⚠️ Duplicate state key found in UiStateDefinition assets: '" + definition.StateKey + "'. Skipping.");
+                        continue;
+                    }
+
+                    List<AssetReference> assetRefs = new List<AssetReference>();
+
+                    for (int s = 0; s < definition.ElementSceneNames.Count; s++)
+                    {
+                        string sceneName = definition.ElementSceneNames[s];
+
+                        string scenePath;
+                        if (UiStateDefinitionUtility.TryResolveScenePath(sceneName, out scenePath))
+                        {
+                            if (hasAddressables)
+                            {
+                                AddressablesAssetUtility.EnsureAssetIsAddressable(scenePath, uiElementsGroupName, sceneName, uiElementsLabels);
+                            }
+
+                            AssetReference assetRef = new AssetReference(AssetDatabase.AssetPathToGUID(scenePath));
+                            assetRefs.Add(assetRef);
+                        }
+                        else
+                        {
+                            Debug.LogWarning("⚠️ Scene '" + sceneName + "' not found.");
+                        }
+                    }
+
+                    config.AddOrUpdateEntry(definition.StateKey, assetRefs);
+                }
+
+                EditorUtility.SetDirty(config);
+                AssetDatabase.SaveAssets();
+                Debug.Log("✅ Built runtime UiConfig from UiStateDefinition assets.");
+
+                EnsureConfigIsAddressable(configOutputPath, new string[] { "UiConfig", "RuntimeUiConfig" }, "Global Configs");
+                return;
+            }
+
+            string registryPath = configAsset.StateRegistryPath;
             UiStateRegistry registry = AssetDatabase.LoadAssetAtPath<UiStateRegistry>(registryPath);
 
             if (registry == null)
@@ -268,17 +332,6 @@ namespace UiFramework.Editor.Window
             {
                 Debug.Log($"🔄 Using existing UiStateRegistry at: {registryPath}");
             }
-
-            UiConfig config = AssetDatabase.LoadAssetAtPath<Runtime.UiConfig>(configOutputPath);
-            if (config == null)
-            {
-                config = CreateInstance<Runtime.UiConfig>();
-                EnsureUnityFolderExists(Path.GetDirectoryName(configOutputPath));
-                AssetDatabase.CreateAsset(config, configOutputPath);
-                Debug.Log($"🆕 Created new UiConfig at {configOutputPath}");
-            }
-
-            config.entries.Clear();
 
             for (int i = 0; i < registry.States.Count; i++)
             {
