@@ -146,7 +146,7 @@ Packages/com.dawaniyahgames.uiframework/
 - **New UI element patterns**: Create new templates in `Packages/com.dawaniyahgames.uiframework/Editor/Templates/` and update generators.
 - **Custom state lifecycle**: Subclass `UiState` and override `Init()` or add cleanup logic in `UnloadUiState()`.
 - **Modifying assembly definitions**: The three `.asmdef` files define strict dependencies: Editor → Runtime → Core. Never create circular references.
-- **Updating package version**: Increment version in `package.json` (currently 1.0.20). Follow semantic versioning.
+- **Updating package version**: Increment version in `Packages/com.dawaniyahgames.uiframework/package.json`. Follow semantic versioning.
 
 ## Code Standards
 
