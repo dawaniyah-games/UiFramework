@@ -5,6 +5,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      allow_existing_tag:
+        description: "Allow running even if the tag already exists (skip tag/release)."
+        required: false
+        default: "false"
 
 permissions:
   contents: write
@@ -36,13 +41,20 @@ jobs:
         id: tag
         run: |
           TAG="${{ steps.pkg.outputs.tag }}"
+          ALLOW_EXISTING_TAG="${{ github.event_name == 'workflow_dispatch' && inputs.allow_existing_tag || 'false' }}"
 
           git fetch --tags --force
 
           if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "created=false" >> $GITHUB_OUTPUT
-            echo "Tag $TAG already exists. Skipping tag and release."
-            exit 0
+            if [ "$ALLOW_EXISTING_TAG" = "true" ]; then
+              echo "created=false" >> $GITHUB_OUTPUT
+              echo "Tag $TAG already exists. allow_existing_tag=true, skipping tag and release."
+              exit 0
+            fi
+
+            echo "Tag $TAG already exists. This usually means the package version was not bumped before merging to main." >&2
+            echo "Please bump Packages/com.dawaniyahgames.uiframework/package.json version and merge again." >&2
+            exit 1
           fi
 
           git config user.name "github-actions[bot]"
