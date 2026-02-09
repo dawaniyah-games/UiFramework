@@ -3,7 +3,7 @@
 Merged `dev` → `main`
 
 ### Version Information
-- **Version**: v1.0.36
+- **Version**: v1.0.37
 - **Package**: com.dawaniyahgames.uiframework
 
 ### Installation
