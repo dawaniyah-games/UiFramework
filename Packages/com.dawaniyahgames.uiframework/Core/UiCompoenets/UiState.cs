@@ -1,11 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
-using UnityEngine.ResourceManagement.ResourceProviders;
 
 namespace UiFramework.Core
 {
@@ -14,9 +10,8 @@ namespace UiFramework.Core
         public string StateName { get; }
 
         private readonly List<AssetReference> uiElementScenes;
-        private readonly Dictionary<string, SceneInstance> loadedScenes = new Dictionary<string, SceneInstance>();
+        private readonly HashSet<string> acquiredSceneGuids = new HashSet<string>(StringComparer.Ordinal);
         private readonly List<IUiElement> activeUiElements = new List<IUiElement>();
-        private readonly List<AsyncOperationHandle<SceneInstance>> pendingLoads = new List<AsyncOperationHandle<SceneInstance>>();
 
         public UiState(string stateName, List<AssetReference> uiElementScenes)
         {
@@ -24,128 +19,60 @@ namespace UiFramework.Core
             this.uiElementScenes = uiElementScenes ?? new List<AssetReference>();
         }
 
-        public void Init(object context = null)
+        public IReadOnlyList<AssetReference> GetUiElementScenes()
         {
-            for (int i = 0; i < uiElementScenes.Count; i++)
-            {
-                AssetReference sceneRef = uiElementScenes[i];
-
-                AsyncOperationHandle<SceneInstance> handle = Addressables.LoadSceneAsync(sceneRef, UnityEngine.SceneManagement.LoadSceneMode.Additive, true);
-                pendingLoads.Add(handle);
-
-                object capturedContext = context;
-                handle.Completed += op => OnSceneLoadCompleted(op, capturedContext);
-            }
+            return uiElementScenes.AsReadOnly();
         }
 
-        public async Task WaitForInitializationAsync()
+        public void RegisterLoadedScene(string sceneGuid, UnityEngine.SceneManagement.Scene loadedScene, object context)
         {
-            if (pendingLoads == null || pendingLoads.Count == 0)
+            if (string.IsNullOrEmpty(sceneGuid))
             {
-                Debug.Log("[UiState] No pending loads to wait for.");
                 return;
             }
 
-            List<Task> waits = new List<Task>(pendingLoads.Count);
-            for (int i = 0; i < pendingLoads.Count; i++)
+            if (!acquiredSceneGuids.Add(sceneGuid))
             {
-                waits.Add(pendingLoads[i].Task);
-            }
-
-            if (waits.Count > 0)
-            {
-                await Task.WhenAll(waits);
-            }
-        }
-
-        private void OnSceneLoadCompleted(AsyncOperationHandle<SceneInstance> op, object context)
-        {
-            if (op.Status != AsyncOperationStatus.Succeeded)
-            {
-                Debug.LogError("Failed to load scene (Addressables): " + op.DebugName);
-                pendingLoads.Remove(op);
                 return;
             }
 
-            SceneInstance sceneInstance = op.Result;
-            string sceneName = sceneInstance.Scene.name;
-
-            if (!loadedScenes.ContainsKey(sceneName))
+            if (!loadedScene.isLoaded)
             {
-                loadedScenes[sceneName] = sceneInstance;
+                Debug.LogWarning("[UiState] RegisterLoadedScene called with an unloaded scene.");
+                return;
             }
 
-            GameObject[] roots = sceneInstance.Scene.GetRootGameObjects();
-            
+            PopulateFromScene(loadedScene, context);
+        }
+
+        public List<string> GetAcquiredSceneGuids()
+        {
+            List<string> result = new List<string>(acquiredSceneGuids.Count);
+
+            foreach (string guid in acquiredSceneGuids)
+            {
+                result.Add(guid);
+            }
+
+            return result;
+        }
+
+        private void PopulateFromScene(UnityEngine.SceneManagement.Scene scene, object context)
+        {
+            GameObject[] roots = scene.GetRootGameObjects();
+
             for (int r = 0; r < roots.Length; r++)
             {
                 IUiElement[] uiElements = roots[r].GetComponentsInChildren<IUiElement>(true);
                 for (int u = 0; u < uiElements.Length; u++)
                 {
                     uiElements[u].Populate(context);
-                    activeUiElements.Add(uiElements[u]);
-                }
-            }
 
-            pendingLoads.Remove(op);
-        }
-
-        public async Task UnloadUiState(List<string> keepScenes)
-        {
-            keepScenes ??= new List<string>();
-
-            if (pendingLoads.Count > 0)
-            {
-                List<Task> waits = new List<Task>(pendingLoads.Count);
-                for (int i = 0; i < pendingLoads.Count; i++)
-                {
-                    waits.Add(pendingLoads[i].Task);
-                }
-                await Task.WhenAll(waits);
-            }
-
-            List<string> toUnload = new List<string>();
-            
-            foreach (KeyValuePair<string, SceneInstance> kvp in loadedScenes)
-            {
-                if (!keepScenes.Contains(kvp.Key))
-                {
-                    toUnload.Add(kvp.Key);
-                }
-            }
-
-            for (int i = 0; i < toUnload.Count; i++)
-            {
-                string sceneName = toUnload[i];
-                
-                if (loadedScenes.TryGetValue(sceneName, out SceneInstance instance))
-                {
-                    await Addressables.UnloadSceneAsync(instance).Task;
-                    loadedScenes.Remove(sceneName);
-                }
-            }
-
-            activeUiElements.RemoveAll(uiElement =>
-            {
-                MonoBehaviour mono = uiElement as MonoBehaviour;
-                if (mono == null || mono.gameObject == null)
-                {
-                    return true;
-                }
-                return !keepScenes.Contains(mono.gameObject.scene.name);
-            });
-
-            if (keepScenes.Count == 0 && activeUiElements.Count > 0)
-            {
-                for (int i = 0; i < activeUiElements.Count; i++)
-                {
-                    MonoBehaviour mono = activeUiElements[i] as MonoBehaviour;
-                    if (mono != null && mono.gameObject != null)
+                    if (!activeUiElements.Contains(uiElements[u]))
                     {
-                        UnityEngine.Object.Destroy(mono.gameObject);
+                        activeUiElements.Add(uiElements[u]);
                     }
                 }
-                activeUiElements.Clear();
             }
         }
 
@@ -154,16 +81,10 @@ namespace UiFramework.Core
             return activeUiElements.AsReadOnly();
         }
 
-        public List<string> GetUiElementSceneNames()
-        {
-            return loadedScenes.Keys.ToList();
-        }
-
         public void Dispose()
         {
-            loadedScenes.Clear();
+            acquiredSceneGuids.Clear();
             activeUiElements.Clear();
-            pendingLoads.Clear();
         }
     }
 }

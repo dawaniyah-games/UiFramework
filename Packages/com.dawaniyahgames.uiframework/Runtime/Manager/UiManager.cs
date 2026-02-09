@@ -4,6 +4,10 @@ using System.Linq;
 using UnityEngine;
 using System.Threading.Tasks;
 using UiFramework.Core;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceProviders;
+using UnityEngine.SceneManagement;
 
 namespace UiFramework.Runtime.Manager
 {
@@ -24,13 +28,17 @@ namespace UiFramework.Runtime.Manager
 
         private UiConfig config;
 
-        private readonly Stack<UiState> stateStack = new();
-        private readonly Dictionary<string, UiStateEntry> cachedStates = new();
-        private readonly Dictionary<Type, string> typeToKeyMap = new();
+        private readonly Stack<UiState> stateStack = new Stack<UiState>();
+        private readonly Dictionary<string, UiStateEntry> cachedStates = new Dictionary<string, UiStateEntry>(StringComparer.Ordinal);
+        private readonly Dictionary<Type, string> typeToKeyMap = new Dictionary<Type, string>();
+
+        private readonly Dictionary<string, SceneInstance> loadedScenesByGuid = new Dictionary<string, SceneInstance>(StringComparer.Ordinal);
+        private readonly Dictionary<string, int> sceneRefCountsByGuid = new Dictionary<string, int>(StringComparer.Ordinal);
+        private readonly Dictionary<string, AsyncOperationHandle<SceneInstance>> loadingHandlesByGuid = new Dictionary<string, AsyncOperationHandle<SceneInstance>>(StringComparer.Ordinal);
 
         private async Task InitializeInternal(UiState defaultState = null)
         {
-            UiConfig loadedConfig = LoadRuntimeUiConfigFromAddressables();
+            UiConfig loadedConfig = await LoadRuntimeUiConfigFromAddressablesAsync();
             
             if (loadedConfig == null)
             {
@@ -66,9 +74,19 @@ namespace UiFramework.Runtime.Manager
             return created;
         }
 
-        private UiConfig LoadRuntimeUiConfigFromAddressables()
+        private async Task<UiConfig> LoadRuntimeUiConfigFromAddressablesAsync()
         {
-            UiConfig cfg = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<UiConfig>("UiConfig").WaitForCompletion();
+            AsyncOperationHandle<UiConfig> handle = Addressables.LoadAssetAsync<UiConfig>("UiConfig");
+
+            await handle.Task;
+
+            if (handle.Status != AsyncOperationStatus.Succeeded)
+            {
+                Debug.LogError("❌ Failed to locate UiConfig via Addressables key/label 'UiConfig'. Ensure the UI Editor Window generated the runtime config and assigned this label in the Global Configs group.");
+                return null;
+            }
+
+            UiConfig cfg = handle.Result;
 
             if (cfg == null)
             {
@@ -114,21 +132,155 @@ namespace UiFramework.Runtime.Manager
 
         private async Task LoadAndPushState(UiStateEntry entry, object context, bool additive)
         {
-            UiState newState = new(entry.stateKey, entry.uiElementScenes);
+            UiState newState = new UiState(entry.stateKey, entry.uiElementScenes);
 
             if (!additive && stateStack.Count > 0)
             {
-                newState.Init(context);
-                await newState.WaitForInitializationAsync();
-                List<string> keepScenes = newState.GetUiElementSceneNames();
-                await UnloadAllPreviousStates(keepScenes);
+                await LoadStateScenesAsync(newState, context);
+                await UnloadAllPreviousStates();
                 stateStack.Clear();
                 stateStack.Push(newState);
                 return;
             }
 
+            await LoadStateScenesAsync(newState, context);
             stateStack.Push(newState);
-            newState.Init(context);
+        }
+
+        private async Task LoadStateScenesAsync(UiState state, object context)
+        {
+            if (state == null)
+            {
+                return;
+            }
+
+            IReadOnlyList<AssetReference> sceneRefs = state.GetUiElementScenes();
+            if (sceneRefs == null)
+            {
+                return;
+            }
+
+            HashSet<string> uniqueGuids = new HashSet<string>(StringComparer.Ordinal);
+
+            for (int i = 0; i < sceneRefs.Count; i++)
+            {
+                AssetReference sceneRef = sceneRefs[i];
+                if (sceneRef == null)
+                {
+                    continue;
+                }
+
+                string sceneGuid = sceneRef.AssetGUID;
+                if (string.IsNullOrEmpty(sceneGuid))
+                {
+                    Debug.LogWarning("[UiManager] Scene reference has no AssetGUID; cannot dedupe shared scenes.");
+                    continue;
+                }
+
+                if (!uniqueGuids.Add(sceneGuid))
+                {
+                    continue;
+                }
+
+                SceneInstance sceneInstance = await LoadSceneIfNeededAsync(sceneRef, sceneGuid);
+                if (!sceneInstance.Scene.isLoaded)
+                {
+                    Debug.LogError("[UiManager] Failed to load UI element scene. Guid: " + sceneGuid);
+                    continue;
+                }
+
+                IncrementSceneRefCount(sceneGuid);
+                state.RegisterLoadedScene(sceneGuid, sceneInstance.Scene, context);
+            }
+        }
+
+        private async Task<SceneInstance> LoadSceneIfNeededAsync(AssetReference sceneRef, string sceneGuid)
+        {
+            if (loadedScenesByGuid.TryGetValue(sceneGuid, out SceneInstance existing))
+            {
+                return existing;
+            }
+
+            if (loadingHandlesByGuid.TryGetValue(sceneGuid, out AsyncOperationHandle<SceneInstance> inFlight))
+            {
+                await inFlight.Task;
+
+                if (loadedScenesByGuid.TryGetValue(sceneGuid, out SceneInstance loadedAfterWait))
+                {
+                    return loadedAfterWait;
+                }
+
+                return default;
+            }
+
+            AsyncOperationHandle<SceneInstance> handle = Addressables.LoadSceneAsync(sceneRef, LoadSceneMode.Additive, true);
+            loadingHandlesByGuid.Add(sceneGuid, handle);
+
+            await handle.Task;
+            loadingHandlesByGuid.Remove(sceneGuid);
+
+            if (handle.Status != AsyncOperationStatus.Succeeded)
+            {
+                Debug.LogError("[UiManager] Failed to load scene (Addressables): " + handle.DebugName);
+                return default;
+            }
+
+            SceneInstance sceneInstance = handle.Result;
+            loadedScenesByGuid[sceneGuid] = sceneInstance;
+            return sceneInstance;
+        }
+
+        private void IncrementSceneRefCount(string sceneGuid)
+        {
+            if (sceneRefCountsByGuid.TryGetValue(sceneGuid, out int count))
+            {
+                sceneRefCountsByGuid[sceneGuid] = count + 1;
+                return;
+            }
+
+            sceneRefCountsByGuid.Add(sceneGuid, 1);
+        }
+
+        private async Task DecrementSceneRefCountAndUnloadIfNeededAsync(string sceneGuid)
+        {
+            if (!sceneRefCountsByGuid.TryGetValue(sceneGuid, out int count))
+            {
+                return;
+            }
+
+            int nextCount = count - 1;
+            if (nextCount > 0)
+            {
+                sceneRefCountsByGuid[sceneGuid] = nextCount;
+                return;
+            }
+
+            sceneRefCountsByGuid.Remove(sceneGuid);
+
+            if (loadingHandlesByGuid.TryGetValue(sceneGuid, out AsyncOperationHandle<SceneInstance> inFlight))
+            {
+                await inFlight.Task;
+            }
+
+            if (loadedScenesByGuid.TryGetValue(sceneGuid, out SceneInstance instance))
+            {
+                loadedScenesByGuid.Remove(sceneGuid);
+                await Addressables.UnloadSceneAsync(instance).Task;
+            }
+        }
+
+        private async Task ReleaseStateScenesAsync(UiState state)
+        {
+            if (state == null)
+            {
+                return;
+            }
+
+            List<string> guids = state.GetAcquiredSceneGuids();
+            for (int i = 0; i < guids.Count; i++)
+            {
+                await DecrementSceneRefCountAndUnloadIfNeededAsync(guids[i]);
+            }
         }
 
         public static async Task HideUI()
@@ -139,9 +291,8 @@ namespace UiFramework.Runtime.Manager
             }
 
             UiState popped = instance.stateStack.Pop();
-            List<string> nextScenes = instance.stateStack.Count > 0 ? instance.stateStack.Peek().GetUiElementSceneNames() : new List<string>();
 
-            await popped.UnloadUiState(nextScenes);
+            await instance.ReleaseStateScenesAsync(popped);
             popped.Dispose();
         }
 
@@ -187,13 +338,11 @@ namespace UiFramework.Runtime.Manager
 
         public void ResetUI()
         {
-            while (stateStack.Count > 0)
-            {
-                stateStack.Pop().Dispose();
-            }
+            Task task = UnloadAllPreviousStates();
+            task.Wait();
         }
 
-        private async Task UnloadAllPreviousStates(List<string> keepScenes = null)
+        private async Task UnloadAllPreviousStates()
         {
             while (stateStack.Count > 0)
             {
@@ -202,7 +351,7 @@ namespace UiFramework.Runtime.Manager
                 if (poppedState != null)
                 {
                     Debug.Log($"[UiManager] Unloading UI state: {poppedState.StateName}");
-                    await poppedState.UnloadUiState(keepScenes);
+                    await ReleaseStateScenesAsync(poppedState);
                     poppedState.Dispose();
                 }
             }
