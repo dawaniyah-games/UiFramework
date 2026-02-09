@@ -1,0 +1,21 @@
+namespace UiFramework.Editor.States
+{
+    using UiFramework.Core;
+    using System.Collections.Generic;
+    using UnityEngine.AddressableAssets;
+
+    // Auto-generated: UI State
+    public class StoreUiState : UiState
+    {
+        // Your UiState base expects (string name, List<AssetReference> uiElementScenes)
+        public StoreUiState() : base("StoreUiState", new List<AssetReference>())
+        {
+            // Add addressable UI prefabs/scenes to the list if needed
+        }
+
+        public override string ToString()
+        {
+            return nameof(StoreUiState);
+        }
+    }
+}

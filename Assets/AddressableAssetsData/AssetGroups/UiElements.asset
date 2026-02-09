@@ -21,6 +21,18 @@ MonoBehaviour:
     m_SerializedLabels:
     - UiElements
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c1b4c279b933b9c429efe3256e20c845
+    m_Address: NavBarUiElement
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UiElements
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e48bc7f8f24c1414faafe2cfe38e899c
+    m_Address: StoreUiElement
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UiElements
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 0d0ac1461efb513459318a0b87c14492, type: 2}
   m_SchemaSet:

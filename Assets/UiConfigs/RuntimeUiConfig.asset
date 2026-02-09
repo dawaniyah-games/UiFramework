@@ -20,3 +20,20 @@ MonoBehaviour:
       m_SubObjectType: 
       m_SubObjectGUID: 
       m_EditorAssetChanged: 0
+    - m_AssetGUID: c1b4c279b933b9c429efe3256e20c845
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+  - stateKey: StoreUiState
+    uiElementScenes:
+    - m_AssetGUID: e48bc7f8f24c1414faafe2cfe38e899c
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+    - m_AssetGUID: c1b4c279b933b9c429efe3256e20c845
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
