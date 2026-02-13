@@ -28,6 +28,8 @@ namespace UiFramework.Runtime.Manager
 
         private UiConfig config;
 
+        private UiState loadingState;
+
         private readonly Stack<UiState> stateStack = new Stack<UiState>();
         private readonly Dictionary<string, UiStateEntry> cachedStates = new Dictionary<string, UiStateEntry>(StringComparer.Ordinal);
         private readonly Dictionary<Type, string> typeToKeyMap = new Dictionary<Type, string>();
@@ -134,6 +136,8 @@ namespace UiFramework.Runtime.Manager
         {
             UiState newState = new UiState(entry.stateKey, entry.uiElementScenes);
 
+            loadingState = newState;
+
             HashSet<int> currentlyVisibleElementIds = GetVisibleElementIds();
 
             if (!additive && stateStack.Count > 0)
@@ -149,11 +153,14 @@ namespace UiFramework.Runtime.Manager
                 await UnloadAllPreviousStates(false);
                 stateStack.Clear();
                 stateStack.Push(newState);
+                loadingState = null;
                 return;
             }
 
             await LoadStateScenesAsync(newState, context, true, currentlyVisibleElementIds);
             stateStack.Push(newState);
+
+            loadingState = null;
 
             HashSet<int> sharedInAdditive = GetSharedElementIds(currentlyVisibleElementIds, newState);
             await PlayShowTransitionAsync(newState, sharedInAdditive);
@@ -581,7 +588,17 @@ namespace UiFramework.Runtime.Manager
 
         public static UiState GetCurrentState()
         {
-            return instance?.stateStack.Count > 0 ? instance.stateStack.Peek() : null;
+            if (instance == null)
+            {
+                return null;
+            }
+
+            if (instance.loadingState != null)
+            {
+                return instance.loadingState;
+            }
+
+            return instance.stateStack.Count > 0 ? instance.stateStack.Peek() : null;
         }
 
         private Type GetTypeForKey(string key)
