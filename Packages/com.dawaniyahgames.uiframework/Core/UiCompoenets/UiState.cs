@@ -63,14 +63,26 @@ namespace UiFramework.Core
 
             for (int r = 0; r < roots.Length; r++)
             {
-                IUiElement[] uiElements = roots[r].GetComponentsInChildren<IUiElement>(true);
-                for (int u = 0; u < uiElements.Length; u++)
+                MonoBehaviour[] behaviours = roots[r].GetComponentsInChildren<MonoBehaviour>(true);
+                for (int u = 0; u < behaviours.Length; u++)
                 {
-                    uiElements[u].Populate(context);
-
-                    if (!activeUiElements.Contains(uiElements[u]))
+                    MonoBehaviour behaviour = behaviours[u];
+                    if (behaviour == null)
                     {
-                        activeUiElements.Add(uiElements[u]);
+                        continue;
+                    }
+
+                    IUiElement element = behaviour as IUiElement;
+                    if (element == null)
+                    {
+                        continue;
+                    }
+
+                    element.Populate(context);
+
+                    if (!activeUiElements.Contains(element))
+                    {
+                        activeUiElements.Add(element);
                     }
                 }
             }

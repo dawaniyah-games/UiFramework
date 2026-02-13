@@ -3,7 +3,8 @@
     "rootNamespace": "UiFramework.Core",
     "references": [
         "Unity.Addressables",
-        "Unity.ResourceManager"
+        "Unity.ResourceManager",
+        "UiFramework.Tweening"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
