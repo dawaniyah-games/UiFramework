@@ -13,6 +13,8 @@ using System;
 using UnityEditor.AddressableAssets.Settings;
 using UiFramework.Editor.Addressables;
 using UiFramework.Editor.Window.Popups;
+using UiFramework.Core;
+using UiFramework.Tweening;
 
 namespace UiFramework.Editor.Window.Tabs
 {
@@ -151,6 +153,9 @@ namespace UiFramework.Editor.Window.Tabs
                 AddressableAssetSettings settings;
                 bool hasAddressables = AddressablesAssetUtility.TryGetSettings(out settings);
                 List<string> groupNames = hasAddressables ? AddressablesAssetUtility.GetGroupNames(settings) : new List<string>();
+
+                sceneListScrollView.Add(CreateSceneListHeaderRow());
+
                 if (groupNames.Count == 0)
                 {
                     groupNames.Add(defaultUiElementsGroupName);
@@ -167,6 +172,59 @@ namespace UiFramework.Editor.Window.Tabs
                     sceneListScrollView.Add(CreateSceneRow(sceneName, scenePath, hasAddressables, settings, groupNames));
                 }
             }
+        }
+
+        private VisualElement CreateSceneListHeaderRow()
+        {
+            VisualElement row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.alignItems = Align.Center;
+            row.style.marginBottom = 6;
+            row.style.paddingLeft = 8;
+            row.style.paddingRight = 8;
+            row.style.paddingTop = 4;
+            row.style.paddingBottom = 4;
+
+            Label nameLabel = new Label("Scene");
+            nameLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            nameLabel.style.minWidth = 180;
+            nameLabel.style.flexGrow = 0;
+            row.Add(nameLabel);
+
+            Label showLabel = new Label("Show");
+            showLabel.tooltip = "Animation preset to play when this UI element is shown.";
+            showLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            showLabel.style.minWidth = 110;
+            showLabel.style.marginRight = 8;
+            row.Add(showLabel);
+
+            Label hideLabel = new Label("Hide");
+            hideLabel.tooltip = "Animation preset to play when this UI element is hidden/unloaded.";
+            hideLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            hideLabel.style.minWidth = 110;
+            hideLabel.style.marginRight = 8;
+            row.Add(hideLabel);
+
+            Label addressableLabel = new Label("Addressable");
+            addressableLabel.tooltip = "If enabled, the scene will be registered in Addressables for loading at runtime.";
+            addressableLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            addressableLabel.style.minWidth = 90;
+            addressableLabel.style.marginRight = 8;
+            row.Add(addressableLabel);
+
+            Label groupLabel = new Label("Group");
+            groupLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            groupLabel.style.minWidth = 140;
+            groupLabel.style.marginRight = 8;
+            row.Add(groupLabel);
+
+            Label labelsLabel = new Label("Labels");
+            labelsLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            labelsLabel.style.flexGrow = 1;
+            labelsLabel.style.marginRight = 8;
+            row.Add(labelsLabel);
+
+            return row;
         }
 
         private VisualElement CreateSceneRow(string sceneName, string sceneAssetPath, bool hasAddressables, AddressableAssetSettings settings, List<string> groupNames)
@@ -188,6 +246,62 @@ namespace UiFramework.Editor.Window.Tabs
             nameLabel.style.minWidth = 180;
             nameLabel.style.flexGrow = 0;
             row.Add(nameLabel);
+
+            List<string> presetKeys = new List<string>(TweenPresets.GetPresetKeys());
+            if (presetKeys.Count == 0)
+            {
+                presetKeys.Add(TweenPresets.NoneKey);
+            }
+
+            string currentShowPreset;
+            string currentHidePreset;
+            bool hasUiElement = TryReadElementAnimationPresets(sceneAssetPath, out currentShowPreset, out currentHidePreset);
+
+            if (string.IsNullOrWhiteSpace(currentShowPreset) || !presetKeys.Contains(currentShowPreset))
+            {
+                currentShowPreset = TweenPresets.NoneKey;
+            }
+
+            if (string.IsNullOrWhiteSpace(currentHidePreset) || !presetKeys.Contains(currentHidePreset))
+            {
+                currentHidePreset = TweenPresets.NoneKey;
+            }
+
+            DropdownField showDropdown = new DropdownField(presetKeys, currentShowPreset);
+            showDropdown.tooltip = "Show animation preset for this UI element scene.";
+            showDropdown.style.minWidth = 110;
+            showDropdown.style.marginRight = 8;
+            showDropdown.SetEnabled(hasUiElement);
+            row.Add(showDropdown);
+
+            DropdownField hideDropdown = new DropdownField(presetKeys, currentHidePreset);
+            hideDropdown.tooltip = "Hide animation preset for this UI element scene.";
+            hideDropdown.style.minWidth = 110;
+            hideDropdown.style.marginRight = 8;
+            hideDropdown.SetEnabled(hasUiElement);
+            row.Add(hideDropdown);
+
+            showDropdown.RegisterValueChangedCallback(evt =>
+            {
+                if (!hasUiElement)
+                {
+                    return;
+                }
+
+                WriteElementAnimationPresets(sceneAssetPath, evt.newValue, hideDropdown.value);
+                RefreshSceneList();
+            });
+
+            hideDropdown.RegisterValueChangedCallback(evt =>
+            {
+                if (!hasUiElement)
+                {
+                    return;
+                }
+
+                WriteElementAnimationPresets(sceneAssetPath, showDropdown.value, evt.newValue);
+                RefreshSceneList();
+            });
 
             AddressableAssetEntry entry = null;
             bool isAddressable = hasAddressables && AddressablesAssetUtility.IsAssetAddressable(sceneAssetPath, out entry);
@@ -214,6 +328,7 @@ namespace UiFramework.Editor.Window.Tabs
             addressableToggle.value = isAddressable;
             addressableToggle.SetEnabled(hasAddressables);
             addressableToggle.style.marginRight = 8;
+            addressableToggle.style.minWidth = 90;
             row.Add(addressableToggle);
 
             string selectedGroup = "Write";
@@ -328,6 +443,101 @@ namespace UiFramework.Editor.Window.Tabs
             });
 
             return row;
+        }
+
+        private bool TryReadElementAnimationPresets(string sceneAssetPath, out string showPreset, out string hidePreset)
+        {
+            showPreset = null;
+            hidePreset = null;
+
+            if (string.IsNullOrWhiteSpace(sceneAssetPath))
+            {
+                return false;
+            }
+
+            UnityEngine.SceneManagement.Scene scene = EditorSceneManager.OpenScene(sceneAssetPath, OpenSceneMode.Additive);
+            try
+            {
+                GameObject[] roots = scene.GetRootGameObjects();
+                for (int i = 0; i < roots.Length; i++)
+                {
+                    UiElement[] elements = roots[i].GetComponentsInChildren<UiElement>(true);
+                    if (elements == null || elements.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    SerializedObject so = new SerializedObject(elements[0]);
+                    SerializedProperty showProp = so.FindProperty("showAnimationPreset");
+                    SerializedProperty hideProp = so.FindProperty("hideAnimationPreset");
+
+                    showPreset = showProp != null ? showProp.stringValue : null;
+                    hidePreset = hideProp != null ? hideProp.stringValue : null;
+                    return true;
+                }
+
+                return false;
+            }
+            finally
+            {
+                EditorSceneManager.CloseScene(scene, true);
+            }
+        }
+
+        private void WriteElementAnimationPresets(string sceneAssetPath, string showPreset, string hidePreset)
+        {
+            if (string.IsNullOrWhiteSpace(sceneAssetPath))
+            {
+                return;
+            }
+
+            UnityEngine.SceneManagement.Scene scene = EditorSceneManager.OpenScene(sceneAssetPath, OpenSceneMode.Additive);
+            try
+            {
+                bool wroteAny = false;
+                GameObject[] roots = scene.GetRootGameObjects();
+                for (int i = 0; i < roots.Length; i++)
+                {
+                    UiElement[] elements = roots[i].GetComponentsInChildren<UiElement>(true);
+                    if (elements == null || elements.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    for (int e = 0; e < elements.Length; e++)
+                    {
+                        SerializedObject so = new SerializedObject(elements[e]);
+                        SerializedProperty showProp = so.FindProperty("showAnimationPreset");
+                        SerializedProperty hideProp = so.FindProperty("hideAnimationPreset");
+
+                        if (showProp != null)
+                        {
+                            showProp.stringValue = showPreset;
+                        }
+
+                        if (hideProp != null)
+                        {
+                            hideProp.stringValue = hidePreset;
+                        }
+
+                        so.ApplyModifiedProperties();
+                        wroteAny = true;
+                    }
+                }
+
+                if (!wroteAny)
+                {
+                    Debug.LogWarning("[UiFramework] No UiElement found in scene: " + sceneAssetPath);
+                    return;
+                }
+
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene);
+            }
+            finally
+            {
+                EditorSceneManager.CloseScene(scene, true);
+            }
         }
 
         private string BuildLabelsSummary(HashSet<string> selectedLabels)

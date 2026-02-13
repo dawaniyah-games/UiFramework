@@ -1,5 +1,30 @@
 # UI Framework — High-Level System Design (DenDon)
 
+
+## Animation & Transition System (2026)
+
+### Per-Element Animation
+- Each `UiElement` can have its own show/hide animation preset (Fade, Scale, Slide, etc.), set in the Editor Elements tab.
+- Animation target is auto-detected: the first child under a Canvas is used, so layout and animation never fight.
+
+### Slide Direction Semantics
+- SlideUp means "move up from below" (not "appear from above").
+- SlideDown means "move down from above".
+- SlideLeft/Right are similarly movement-based.
+
+### Shared Element Deduplication
+- Shared UI elements (e.g. NavBar) animate only once, not on every state switch.
+- The system detects which elements are already visible and skips prepare/hide/show for those GameObjects.
+
+### Overlapping Transitions
+- New UI animates in while old UI animates out (no empty gap).
+- Hide and show transitions run in parallel, but scenes are not unloaded until hide completes.
+
+### No UI Flash
+- Show pose is prepared immediately after scene load, so UI never flashes before animating in.
+
+---
+
 ## Architecture Overview
 
 The UI framework composes application UI from Addressable scenes and exposes a small runtime API to push/pop logical UI states. It follows the project's MVC-S approach: the framework is the View layer's composition system and integrates with the app via `UiState` contexts and `IUiElement.Populate` calls.

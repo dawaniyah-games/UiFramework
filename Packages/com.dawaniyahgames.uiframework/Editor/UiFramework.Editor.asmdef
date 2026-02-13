@@ -4,6 +4,7 @@
     "references": [
         "UiFramework.Core",
         "UiFramework.Runtime",
+        "UiFramework.Tweening",
         "Unity.Addressables",
         "Unity.Addressables.Editor"
     ],

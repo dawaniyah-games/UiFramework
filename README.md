@@ -1,3 +1,44 @@
+## Features
+
+- 🎯 **Addressables Integration** - Load UI screens as additive scenes for efficient memory management
+- 📚 **LIFO State Stack** - Push/pop UI states with automatic scene lifecycle management
+- 🔄 **Context-Based Population** - Pass runtime data to UI elements via `IUiElement.Populate()`
+- 🌀 **Per-Element Animation System** - Each UI element can have its own show/hide animation preset (Fade, Scale, Slide, etc.)
+- 🧭 **Correct Slide Directions** - SlideUp/Down/Left/Right now match movement direction (e.g. SlideUp moves up from below)
+- 🔗 **Shared Element Deduplication** - Shared UI elements (e.g. NavBar) animate only once, not on every state switch
+- ⏩ **Overlapping Transitions** - New UI animates in while old UI animates out (no empty gap)
+- 🧠 **Animation Target Auto-Detection** - Animations run on the first child under a Canvas, so layout and animation never fight
+### 2. Create UI Element (with Animation)
+
+```csharp
+using UiFramework.Core;
+using UnityEngine;
+
+public class MainMenuUiElement : UiElement
+{
+    public override void Populate(object context = null)
+    {
+        if (context is MenuData data)
+        {
+            // Use data to configure UI
+        }
+    }
+}
+// In the Editor, select your element scene and choose show/hide animation presets (e.g. SlideUp, Fade, etc.)
+// Animation will run on the first child under a Canvas automatically.
+```
+### Animation & Transition Notes
+
+- **Per-element animation**: Each UI element can have its own show/hide preset (set in the Editor Elements tab).
+- **Slide direction**: SlideUp means "move up from below" (not "appear from above").
+- **No UI flash**: Show pose is prepared immediately after scene load, so UI never flashes before animating in.
+- **Overlapping transitions**: New UI animates in while old UI animates out; the screen is never empty.
+- **Shared UI elements**: Elements present in both old and new states (e.g. NavBar) animate only once, not on every state switch.
+- **Animation target**: Animations run on the first child under a Canvas, so layout and animation never fight.
+## Documentation
+
+- [Design Documentation](DESIGN.md) - Detailed architecture, animation, and transition system
+- [Copilot Instructions](.github/copilot-instructions.md) - Guide for AI coding assistants
 # UI Framework
 
 [![Unity Version](https://img.shields.io/badge/Unity-2021.3%2B-blue.svg)](https://unity.com)

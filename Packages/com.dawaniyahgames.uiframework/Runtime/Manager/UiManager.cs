@@ -134,20 +134,157 @@ namespace UiFramework.Runtime.Manager
         {
             UiState newState = new UiState(entry.stateKey, entry.uiElementScenes);
 
+            HashSet<int> currentlyVisibleElementIds = GetVisibleElementIds();
+
             if (!additive && stateStack.Count > 0)
             {
-                await LoadStateScenesAsync(newState, context);
-                await UnloadAllPreviousStates();
+                await LoadStateScenesAsync(newState, context, true, currentlyVisibleElementIds);
+
+                HashSet<int> sharedElementIds = GetSharedElementIds(currentlyVisibleElementIds, newState);
+
+                Task hideTask = PlayHideTransitionsForAllStatesAsync(sharedElementIds);
+                Task showTask = PlayShowTransitionAsync(newState, sharedElementIds);
+                await Task.WhenAll(hideTask, showTask);
+
+                await UnloadAllPreviousStates(false);
                 stateStack.Clear();
                 stateStack.Push(newState);
                 return;
             }
 
-            await LoadStateScenesAsync(newState, context);
+            await LoadStateScenesAsync(newState, context, true, currentlyVisibleElementIds);
             stateStack.Push(newState);
+
+            HashSet<int> sharedInAdditive = GetSharedElementIds(currentlyVisibleElementIds, newState);
+            await PlayShowTransitionAsync(newState, sharedInAdditive);
         }
 
-        private async Task LoadStateScenesAsync(UiState state, object context)
+        private static void PrepareShowTransition(UiState state, HashSet<int> skipElementIds)
+        {
+            if (state == null)
+            {
+                return;
+            }
+
+            IReadOnlyList<IUiElement> elements = state.GetActiveUiElements();
+            if (elements == null || elements.Count == 0)
+            {
+                return;
+            }
+
+            HashSet<int> visited = new HashSet<int>();
+
+            for (int i = 0; i < elements.Count; i++)
+            {
+                MonoBehaviour uiElementBehaviour = elements[i] as MonoBehaviour;
+                if (uiElementBehaviour == null || uiElementBehaviour.gameObject == null)
+                {
+                    continue;
+                }
+
+                int id = uiElementBehaviour.gameObject.GetInstanceID();
+                if (!visited.Add(id))
+                {
+                    continue;
+                }
+
+                if (skipElementIds != null && skipElementIds.Contains(id))
+                {
+                    continue;
+                }
+
+                UiElement uiElement = elements[i] as UiElement;
+                if (uiElement == null)
+                {
+                    continue;
+                }
+
+                uiElement.PrepareForShow();
+            }
+        }
+
+        private async Task PlayShowTransitionAsync(UiState state, HashSet<int> skipElementIds)
+        {
+            if (state == null)
+            {
+                return;
+            }
+
+            await PlayTransitionAsync(state, true, skipElementIds);
+        }
+
+        private async Task PlayHideTransitionsForAllStatesAsync(HashSet<int> skipElementIds)
+        {
+            if (stateStack == null || stateStack.Count == 0)
+            {
+                return;
+            }
+
+            UiState[] states = stateStack.ToArray();
+            for (int i = 0; i < states.Length; i++)
+            {
+                await PlayTransitionAsync(states[i], false, skipElementIds);
+            }
+        }
+
+        private static async Task PlayTransitionAsync(UiState state, bool isShow, HashSet<int> skipElementIds)
+        {
+            if (state == null)
+            {
+                return;
+            }
+
+            IReadOnlyList<IUiElement> elements = state.GetActiveUiElements();
+            if (elements == null || elements.Count == 0)
+            {
+                return;
+            }
+
+            HashSet<int> visited = new HashSet<int>();
+            List<Task> tasks = new List<Task>();
+
+            for (int i = 0; i < elements.Count; i++)
+            {
+                MonoBehaviour uiElementBehaviour = elements[i] as MonoBehaviour;
+                if (uiElementBehaviour == null)
+                {
+                    continue;
+                }
+
+                GameObject uiElementGameObject = uiElementBehaviour.gameObject;
+                if (uiElementGameObject == null)
+                {
+                    continue;
+                }
+
+                int id = uiElementGameObject.GetInstanceID();
+                if (!visited.Add(id))
+                {
+                    continue;
+                }
+
+                if (skipElementIds != null && skipElementIds.Contains(id))
+                {
+                    continue;
+                }
+
+                UiElement uiElement = elements[i] as UiElement;
+                if (uiElement != null)
+                {
+                    tasks.Add(isShow ? uiElement.ShowAsync() : uiElement.HideAsync());
+                    continue;
+                }
+
+                // Non-UiElement implementations of IUiElement do not have built-in animation.
+            }
+
+            if (tasks.Count > 0)
+            {
+                await Task.WhenAll(tasks);
+            }
+        }
+
+        private async Task LoadStateScenesAsync(UiState state, object context, bool prepareForShow, HashSet<int> skipPrepareElementIds)
         {
             if (state == null)
             {
@@ -191,7 +328,84 @@ namespace UiFramework.Runtime.Manager
 
                 IncrementSceneRefCount(sceneGuid);
                 state.RegisterLoadedScene(sceneGuid, sceneInstance.Scene, context);
+
+                if (prepareForShow)
+                {
+                    PrepareShowTransition(state, skipPrepareElementIds);
+                }
             }
+        }
+
+        private HashSet<int> GetVisibleElementIds()
+        {
+            HashSet<int> result = new HashSet<int>();
+
+            if (stateStack == null || stateStack.Count == 0)
+            {
+                return result;
+            }
+
+            UiState[] states = stateStack.ToArray();
+            for (int s = 0; s < states.Length; s++)
+            {
+                UiState state = states[s];
+                if (state == null)
+                {
+                    continue;
+                }
+
+                IReadOnlyList<IUiElement> elements = state.GetActiveUiElements();
+                if (elements == null)
+                {
+                    continue;
+                }
+
+                for (int i = 0; i < elements.Count; i++)
+                {
+                    MonoBehaviour behaviour = elements[i] as MonoBehaviour;
+                    if (behaviour == null || behaviour.gameObject == null)
+                    {
+                        continue;
+                    }
+
+                    result.Add(behaviour.gameObject.GetInstanceID());
+                }
+            }
+
+            return result;
+        }
+
+        private static HashSet<int> GetSharedElementIds(HashSet<int> currentlyVisibleElementIds, UiState newState)
+        {
+            HashSet<int> shared = new HashSet<int>();
+
+            if (currentlyVisibleElementIds == null || currentlyVisibleElementIds.Count == 0 || newState == null)
+            {
+                return shared;
+            }
+
+            IReadOnlyList<IUiElement> elements = newState.GetActiveUiElements();
+            if (elements == null)
+            {
+                return shared;
+            }
+
+            for (int i = 0; i < elements.Count; i++)
+            {
+                MonoBehaviour behaviour = elements[i] as MonoBehaviour;
+                if (behaviour == null || behaviour.gameObject == null)
+                {
+                    continue;
+                }
+
+                int id = behaviour.gameObject.GetInstanceID();
+                if (currentlyVisibleElementIds.Contains(id))
+                {
+                    shared.Add(id);
+                }
+            }
+
+            return shared;
         }
 
         private async Task<SceneInstance> LoadSceneIfNeededAsync(AssetReference sceneRef, string sceneGuid)
@@ -292,6 +506,8 @@ namespace UiFramework.Runtime.Manager
 
             UiState popped = instance.stateStack.Pop();
 
+            await PlayTransitionAsync(popped, false, null);
+
             await instance.ReleaseStateScenesAsync(popped);
             popped.Dispose();
         }
@@ -342,7 +558,7 @@ namespace UiFramework.Runtime.Manager
             task.Wait();
         }
 
-        private async Task UnloadAllPreviousStates()
+        private async Task UnloadAllPreviousStates(bool playHideTransitions = true)
         {
             while (stateStack.Count > 0)
             {
@@ -351,6 +567,12 @@ namespace UiFramework.Runtime.Manager
                 if (poppedState != null)
                 {
                     Debug.Log($"[UiManager] Unloading UI state: {poppedState.StateName}");
+
+                    if (playHideTransitions)
+                    {
+                        await PlayTransitionAsync(poppedState, false, null);
+                    }
+
                     await ReleaseStateScenesAsync(poppedState);
                     poppedState.Dispose();
                 }

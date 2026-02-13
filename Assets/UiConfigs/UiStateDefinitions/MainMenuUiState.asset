@@ -16,3 +16,5 @@ MonoBehaviour:
   elementSceneNames:
   - MainMenuUiElement
   - NavBarUiElement
+  showAnimationPreset: SlideLeft
+  hideAnimationPreset: SlideRight

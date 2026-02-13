@@ -1,12 +1,7 @@
 {
-    "name": "UiFramework.Runtime",
-    "rootNamespace": "UiFramework.Runtime",
-    "references": [
-        "Unity.Addressables",
-        "Unity.ResourceManager",
-        "UiFramework.Core",
-        "UiFramework.Tweening"
-    ],
+    "name": "UiFramework.Tweening",
+    "rootNamespace": "UiFramework.Tweening",
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
