@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
-  m_Name: Global Configs
-  m_EditorClassIdentifier: 
-  m_GroupName: Global Configs
-  m_GUID: af7387e9dc536a04da45a7ae75c93e27
+  m_Name: GlobalConfigs
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: GlobalConfigs
+  m_GUID: 872cf406d7e84ac409ceed252b28cbc9
   m_SerializeEntries:
   - m_GUID: 0f824885c39d2634ba8f3fa712ebe2ec
     m_Address: UiConfig
@@ -25,6 +25,4 @@ MonoBehaviour:
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 0d0ac1461efb513459318a0b87c14492, type: 2}
   m_SchemaSet:
-    m_Schemas:
-    - {fileID: 11400000, guid: b5ba73776edb55b47868854a78936bb8, type: 2}
-    - {fileID: 11400000, guid: bd3fa49d4a403d346a321e8a108f9b1f, type: 2}
+    m_Schemas: []

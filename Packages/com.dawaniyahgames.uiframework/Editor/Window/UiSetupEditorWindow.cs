@@ -18,6 +18,9 @@ namespace UiFramework.Editor.Window
 {
     public class UiSetupEditorWindow : EditorWindow
     {
+        private const string globalConfigsGroupName = "GlobalConfigs";
+        private const string legacyGlobalConfigsGroupName = "Global Configs";
+
         private const string configKey = "UiFramework.Editor.ConfigAssetGUID";
         private const string uiElementsGroupName = "UiElements";
         private static readonly string[] uiElementsLabels = new string[] { "UiElements" };
@@ -313,7 +316,7 @@ namespace UiFramework.Editor.Window
                 AssetDatabase.SaveAssets();
                 Debug.Log("✅ Built runtime UiConfig from UiStateDefinition assets.");
 
-                EnsureConfigIsAddressable(configOutputPath, new string[] { "UiConfig", "RuntimeUiConfig" }, "Global Configs");
+                EnsureConfigIsAddressable(configOutputPath, new string[] { "UiConfig", "RuntimeUiConfig" }, globalConfigsGroupName);
                 return;
             }
 
@@ -367,8 +370,8 @@ namespace UiFramework.Editor.Window
             AssetDatabase.SaveAssets();
             Debug.Log("✅ Built runtime UiConfig from UiStateRegistry.");
 
-            // Ensure Addressables setup: add to Global Configs group and assign labels
-            EnsureConfigIsAddressable(configOutputPath, new string[] { "UiConfig", "RuntimeUiConfig" }, "Global Configs");
+            // Ensure Addressables setup: add to GlobalConfigs group and assign labels
+            EnsureConfigIsAddressable(configOutputPath, new string[] { "UiConfig", "RuntimeUiConfig" }, globalConfigsGroupName);
         }
 
         private static void EnsureUnityFolderExists(string folderPath)
@@ -416,8 +419,24 @@ namespace UiFramework.Editor.Window
             AddressableAssetGroup group = settings.FindGroup(groupName);
             if (group == null)
             {
+                if (string.Equals(groupName, globalConfigsGroupName, System.StringComparison.Ordinal))
+                {
+                    AddressableAssetGroup legacyGroup = settings.FindGroup(legacyGlobalConfigsGroupName);
+                    if (legacyGroup != null)
+                    {
+                        legacyGroup.Name = globalConfigsGroupName;
+                        group = legacyGroup;
+                        EditorUtility.SetDirty(settings);
+                        AssetDatabase.SaveAssets();
+                        Debug.Log("🔄 Renamed Addressables group '" + legacyGlobalConfigsGroupName + "' to '" + globalConfigsGroupName + "'.");
+                    }
+                }
+
+                if (group == null)
+                {
                 group = settings.CreateGroup(groupName, false, false, true, null);
                 Debug.Log($"🆕 Created Addressables group '{groupName}'.");
+                }
             }
 
             string guid = AssetDatabase.AssetPathToGUID(assetPath);
@@ -437,7 +456,7 @@ namespace UiFramework.Editor.Window
             else if (entry.parentGroup != group)
             {
                 settings.MoveEntry(entry, group);
-                Debug.Log("🔄 Moved UiConfig entry to Global Configs group.");
+                Debug.Log("🔄 Moved UiConfig entry to '" + groupName + "' group.");
             }
 
             // Ensure labels exist and are assigned
