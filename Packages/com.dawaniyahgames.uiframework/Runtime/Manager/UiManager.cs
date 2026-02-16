@@ -84,7 +84,7 @@ namespace UiFramework.Runtime.Manager
 
             if (handle.Status != AsyncOperationStatus.Succeeded)
             {
-                Debug.LogError("❌ Failed to locate UiConfig via Addressables key/label 'UiConfig'. Ensure the UI Editor Window generated the runtime config and assigned this label in the Global Configs group.");
+                Debug.LogError("❌ Failed to locate UiConfig via Addressables key/label 'UiConfig'. Ensure the UI Editor Window generated the runtime config and assigned this label in the GlobalConfigs group.");
                 return null;
             }
 
@@ -92,7 +92,7 @@ namespace UiFramework.Runtime.Manager
 
             if (cfg == null)
             {
-                Debug.LogError("❌ Failed to locate UiConfig via Addressables label 'UiConfig'. Ensure the UI Editor Window generated the runtime config and assigned this label in the Global Configs group.");
+                Debug.LogError("❌ Failed to locate UiConfig via Addressables label 'UiConfig'. Ensure the UI Editor Window generated the runtime config and assigned this label in the GlobalConfigs group.");
             }
 
             return cfg;
