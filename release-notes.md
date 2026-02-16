@@ -4,7 +4,7 @@ Merged `dev` → `main`
 
 
 ### Version Information
-- **Version**: v1.0.38
+- **Version**: v1.0.39
 - **Package**: com.dawaniyahgames.uiframework
 
 ### Installation
@@ -12,14 +12,14 @@ Merged `dev` → `main`
 
 #### Via Package Manager UI
 ```
-  https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.0.38
+  https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.0.39
 ```
 
 #### Via manifest.json
 ```json
 {
   "dependencies": {
-      "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.0.38"
+      "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.0.39"
   }
 }
 ```
