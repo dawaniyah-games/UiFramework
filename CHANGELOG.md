@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.40] - 2026-03-09
+
+### Fixed
+- Made `LoadAndPushState` in UiManager resilient to exceptions by adding try/catch/finally blocks
+- Ensured old state cleanup always executes even if transitions or scene loading fails
+- Prevented scene leaks when exceptions occur during state transitions
+
 ## [1.0.35] - 2026-02-06
 
 ### Changed

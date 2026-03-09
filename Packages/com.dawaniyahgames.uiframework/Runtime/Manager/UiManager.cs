@@ -142,28 +142,54 @@ namespace UiFramework.Runtime.Manager
 
             if (!additive && stateStack.Count > 0)
             {
-                await LoadStateScenesAsync(newState, context, true, currentlyVisibleElementIds);
+                try
+                {
+                    await LoadStateScenesAsync(newState, context, true, currentlyVisibleElementIds);
 
-                HashSet<int> sharedElementIds = GetSharedElementIds(currentlyVisibleElementIds, newState);
+                    HashSet<int> sharedElementIds = GetSharedElementIds(currentlyVisibleElementIds, newState);
 
-                Task hideTask = PlayHideTransitionsForAllStatesAsync(sharedElementIds);
-                Task showTask = PlayShowTransitionAsync(newState, sharedElementIds);
-                await Task.WhenAll(hideTask, showTask);
+                    Task hideTask = PlayHideTransitionsForAllStatesAsync(sharedElementIds);
+                    Task showTask = PlayShowTransitionAsync(newState, sharedElementIds);
+                    await Task.WhenAll(hideTask, showTask);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError($"[UiManager] Exception during non-additive state transition to '{entry.stateKey}': {exception}");
+                }
+                finally
+                {
+                    await UnloadAllPreviousStates(false);
+                    stateStack.Clear();
+                    stateStack.Push(newState);
+                    loadingState = null;
+                }
 
-                await UnloadAllPreviousStates(false);
-                stateStack.Clear();
-                stateStack.Push(newState);
-                loadingState = null;
                 return;
             }
 
-            await LoadStateScenesAsync(newState, context, true, currentlyVisibleElementIds);
-            stateStack.Push(newState);
+            try
+            {
+                await LoadStateScenesAsync(newState, context, true, currentlyVisibleElementIds);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"[UiManager] Exception during additive state load for '{entry.stateKey}': {exception}");
+            }
+            finally
+            {
+                stateStack.Push(newState);
+                loadingState = null;
+            }
 
-            loadingState = null;
-
-            HashSet<int> sharedInAdditive = GetSharedElementIds(currentlyVisibleElementIds, newState);
-            await PlayShowTransitionAsync(newState, sharedInAdditive);
+            try
+            {
+                HashSet<int> sharedInAdditive = GetSharedElementIds(currentlyVisibleElementIds, newState);
+                await PlayShowTransitionAsync(newState, sharedInAdditive);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"[UiManager] Exception during additive show transition for '{entry.stateKey}': {exception}");
+            }
         }
 
         private static void PrepareShowTransition(UiState state, HashSet<int> skipElementIds)
