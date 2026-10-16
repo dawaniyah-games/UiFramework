@@ -1,249 +1,293 @@
-# UI Framework — High-Level System Design (DenDon)
+# UI Framework: System Design
 
-
-## Animation & Transition System (2026)
-
-### Per-Element Animation
-- Each `UiElement` can have its own show/hide animation preset (Fade, Scale, Slide, etc.), set in the Editor Elements tab.
-- Animation target is auto-detected: the first child under a Canvas is used, so layout and animation never fight.
-
-### Slide Direction Semantics
-- SlideUp means "move up from below" (not "appear from above").
-- SlideDown means "move down from above".
-- SlideLeft/Right are similarly movement-based.
-
-### Shared Element Deduplication
-- Shared UI elements (e.g. NavBar) animate only once, not on every state switch.
-- The system detects which elements are already visible and skips prepare/hide/show for those GameObjects.
-
-### Overlapping Transitions
-- New UI animates in while old UI animates out (no empty gap).
-- Hide and show transitions run in parallel, but scenes are not unloaded until hide completes.
-
-### No UI Flash
-- Show pose is prepared immediately after scene load, so UI never flashes before animating in.
+> Package `com.dawaniyahgames.uiframework` · describes **v1.0.40** · last reviewed 2026-10-16
+>
+> This document describes how the framework works *today*. If you change behaviour, update the matching section in the same PR ([CODING_STANDARDS.md §10](CODING_STANDARDS.md#10-comments--documentation)).
 
 ---
 
-## Architecture Overview
+## 1. Purpose
 
-The UI framework composes application UI from Addressable scenes and exposes a small runtime API to push/pop logical UI states. It follows the project's MVC-S approach: the framework is the View layer's composition system and integrates with the app via `UiState` contexts and `IUiElement.Populate` calls.
+The framework builds a game's UI from **Addressable scenes** that are loaded additively at runtime. Each screen is a named **UI state** made of one or more **element scenes**. `UiManager` keeps a LIFO stack of states. It loads the scenes a state needs, hands runtime data to the scene's elements, plays show/hide animations, and unloads scenes nothing references any more.
 
-## Core Components
+Goals:
+- Screens load and unload independently, so memory follows what is on screen.
+- Elements shared between screens (a nav bar, a currency header) stay loaded and do not re-animate on every switch.
+- Designers and TAs can author screens through an editor window with minimal C#.
 
-1. UiManager (Assets/Scripts/UiFramework/Runtime/Manager/UiManager.cs)
-   - Orchestrates a LIFO stack of `UiState` objects.
-   - Public API: `ShowState<T>`, `ShowStateByKey`, `HideUI`, `GetCurrentState`.
-   - Loads `UiConfig` (ScriptableObject) at Init and builds a type→stateKey map.
-2. UiState (Assets/Scripts/UiFramework/Core/UiCompoenets/UiState.cs)
-   - Loads addressable scenes additively via `Addressables.LoadSceneAsync`.
-   - Discovers `IUiElement` components in loaded scenes and calls `Populate(context)`.
-   - Handles unloading and cleanup (`UnloadUiState`, `Dispose`).
-3. UiElement / IUiElement (Assets/Scripts/UiFramework/Core/UiCompoenets)
-   - `IUiElement.Populate(object context)` is the contract for receiving runtime data.
-   - Recommended: implement `UiElement : MonoBehaviour` and override `Populate`.
-4. UiConfig (Assets/Scripts/UiFramework/Core/Config/UiConfig.cs)
-   - ScriptableObject mapping `stateKey` → list of `AssetReference` scene entries.
-5. Editor helpers (UiStateRegistry, UiStateGenerator)
-   - Editor tooling can generate `UiState` shells or register scenes; see `Assets/Scripts/UiFramework/Editor`.
+Non-goals: input routing, navigation history beyond the stack, data binding, localisation.
 
-## Data Flow Example — Showing a Screen
+## 2. Vocabulary
 
-- Call `UiManager.ShowState<MyState>(context)` or `UiManager.ShowStateByKey("MyState", context)`.
-- UiManager looks up the `UiStateEntry` from `UiConfig` and constructs a `UiState` with the configured `AssetReference` scenes.
-- `UiState.Init(context)` begins Addressables loads for each scene; on load complete it finds `IUiElement`s and calls `Populate(context)`.
-- If `additive` is false, previous states are unloaded via `UnloadUiState` and the new `UiState` is pushed onto the stack.
+| Term | Meaning |
+| --- | --- |
+| **Element scene** | A Unity scene containing one root GameObject `<Name>Root` with a `UiElement` component. It is the unit of loading. |
+| **UiElement** | `MonoBehaviour` implementing `IUiElement`. Receives data through `Populate(object context)` and owns its show/hide animation presets. |
+| **State** | A named set of element scenes, identified by a **state key** (string). At runtime it is a `UiState` instance. |
+| **State key** | The string identifying a state in `UiConfig`. It **must** equal the name of the matching `UiState` subclass if you use `ShowState<T>()`. |
+| **Context** | The `object` passed to `ShowState*`, forwarded unchanged to every element's `Populate`. Usually a `UiPopulationParams` subclass. |
+| **Shared scene / element** | A scene used by more than one state that is already loaded when the next state needs it. |
 
-## Important Patterns & Conventions
+## 3. Package layout & assemblies
 
-- `stateKey` naming: the framework expects `stateKey` values to align with `UiState` subclass names when using the generic API. `GetTypeForKey` resolves types by class name across assemblies.
-- Addressables-first: UI is built from addressable scenes so that screens can be loaded/unloaded independently at runtime.
-- LIFO state stack: `UiManager` maintains stacked states (push/pop) to support nested screens and modals.
-- Context object: the `context` parameter is the primary mechanism for passing runtime data to UI elements — cast it to expected types in `Populate`.
+```
+Packages/com.dawaniyahgames.uiframework/
+├── Runtime/Tweening/   → UiFramework.Tweening   Tween, TweenCurves, TweenPresets, UiTweenState
+├── Core/               → UiFramework.Core       IUiElement, UiElement, UiState, UiConfig,
+│                                                UiPopulationParams, UiElementReference
+├── Runtime/            → UiFramework.Runtime    UiManager
+└── Editor/             → UiFramework.Editor     UiSetupEditorWindow + tabs, code generators,
+                                                 UiEditorConfig, UiStateDefinition, Addressables utility
+```
 
-## Integration Points & Dependencies
+Dependency direction (an arrow means "references"):
 
-- Relies on Unity Addressables package: scenes are `AssetReference` items. Ensure addressables groups are set up.
-- Designed to be called from the project's loading steps or services (e.g., after `Bootstrapper` completes). Typical integration point: call `await uiManager.Init()` during app startup.
+```
+UiFramework.Editor ──► UiFramework.Runtime ──► UiFramework.Core ──► UiFramework.Tweening
+        │                     │                       │
+        └─────────────────────┴───────────────────────┴──► Unity.Addressables, Unity.ResourceManager
+UiFramework.Editor ──► Unity.Addressables.Editor   (Editor platform only)
+```
 
-## Developer Workflows (practical notes)
+| Assembly | Namespaces | Notes |
+| --- | --- | --- |
+| `UiFramework.Tweening` | `UiFramework.Tweening` | No dependencies. Its folder sits inside `Runtime/`, but it is a separate assembly that Core depends on. |
+| `UiFramework.Core` | `UiFramework.Core`, **and `UiFramework.Runtime` for `UiConfig`/`UiStateEntry`** | The namespace mismatch is historical. Moving `UiConfig` would change type identity for user assets. |
+| `UiFramework.Runtime` | `UiFramework.Runtime.Manager` | Holds `UiManager` only. |
+| `UiFramework.Editor` | `UiFramework.Editor.*` | Editor-only. `UiElementScriptBinder` is currently in the global namespace. |
 
-- Adding screens: create addressable scenes containing `UiElement` components, add `AssetReference` to `UiConfig` under a `stateKey`.
-- Debugging: enable logs in `UiManager` and `UiState` to trace load/unload flow; inspect `UiConfig` entries in the inspector.
-- Testing in editor: use `UiManager.ShowStateByKey` from a temporary debug MonoBehaviour or the console to validate scene loading and `Populate` invocations.
+## 4. Data model
 
-## Files To Inspect
+| Asset | Type | Where it lives | Who writes it | Read at |
+| --- | --- | --- | --- | --- |
+| Editor config | `UiEditorConfig` (Editor SO) | `Assets/UiConfigs/UiEditorConfig.asset` | Developer, via the General tab | Edit time |
+| State definition | `UiStateDefinition` (Editor SO), **one per state** | `UiEditorConfig.StateDefinitionsPath` (default `Assets/UiConfigs/UiStateDefinitions/`) | States tab | Edit time |
+| State registry *(legacy)* | `UiStateRegistry` (Editor SO) | `UiEditorConfig.StateRegistryPath` | Older versions | Edit time, only if no definitions exist |
+| **Runtime config** | `UiConfig` (runtime SO) | `UiEditorConfig.RuntimeConfigOutputPath` (default `Assets/UiConfigs/RuntimeUiConfig.asset`) | **Generated** by *Build Runtime UiConfig*. Do not hand-edit | Runtime, via Addressables |
+| Element scenes | `.unity` | `UiEditorConfig.ElementsScenePath` (default `Assets/Scenes/UiElements/`) | Elements tab, then designers | Runtime, via Addressables |
+| Generated scripts | `.cs` | `ElementsScriptPath`, `StatesPath` | Generators, then developers | Compile time |
 
-- `Assets/Scripts/UiFramework/Runtime/Manager/UiManager.cs` — state orchestration
-- `Assets/Scripts/UiFramework/Core/UiCompoenets/UiState.cs` — scene load/unload and element discovery
-- `Assets/Scripts/UiFramework/Core/UiCompoenets/UiElement.cs` & `IUiElement.cs` — element contract
-- `Assets/Scripts/UiFramework/Core/Config/UiConfig.cs` — mapping stateKey→scenes
-- `Assets/Scripts/UiFramework/Editor/*` — generator and registry tools
+`UiConfig` shape:
 
-## Do's & Don'ts
+```
+UiConfig
+└── entries : List<UiStateEntry>
+    └── UiStateEntry { stateKey : string, uiElementScenes : List<AssetReference> }
+```
 
-- Do: keep `stateKey` values consistent and descriptive. Prefer creating a `UiState` subclass named exactly like the `stateKey` if you use the generic API.
-- Do: place each isolated UI screen in its own addressable scene to enable efficient unloading.
-- Don't: rely on scene names alone — use `AssetReference`s stored in `UiConfig` so Addressables resolves properly.
-- Don't: have multiple `UiManager` instances active; `SetInstance` is called during `Init` and the framework assumes a single runtime manager.
+`UiStateDefinition` stores scene **names**. The build step resolves each name to a scene asset path and then to a GUID-based `AssetReference`. Element scene names must therefore be unique across the project.
 
-If you want, I can:
+## 5. Runtime
 
-- Add a small Editor validation window that enumerates `UiConfig` entries and verifies each `AssetReference` resolves and contains `IUiElement` components.
-- Add optional defensive logging and safer type-mapping (explicit type registration) to reduce runtime fragility.
+### 5.1 Initialization
 
----
+```csharp
+await UiManager.InitializeAsync();
+```
 
-Place this file next to the framework sources so engineers and AI agents can quickly understand and extend the UI framework.
+1. If an instance already exists, it is returned as-is.
+2. A `GameObject("UiManager")` is created and marked `DontDestroyOnLoad`, and it becomes the static instance. **`IsInitialized` is `true` from this point**, before the config has loaded.
+3. `UiConfig` is loaded with `Addressables.LoadAssetAsync<UiConfig>("UiConfig")`, using the address set by the build step (§9). If it fails, an error is logged and the manager stays empty: every `ShowState*` then logs "not found".
+4. For each entry, `stateKey → UiStateEntry` is cached and the `UiState` subclass is resolved (§5.3).
 
-## ASCII UML (high-level)
+The `defaultState` parameter of `InitializeAsync` is currently unused. There is no synchronous initializer. `UiManager` is never placed in a scene.
 
-Below is a compact ASCII UML-style diagram showing the runtime relationships and typical flow between components.
+### 5.2 Showing a state
 
-UiManager
-|
-|-- stack of UiState (LIFO)
-|
-+-- UiState
-| - StateName
-| - uiElementScenes : List<AssetReference>
-| - loadedScenes : Dictionary<string, SceneInstance>
-| - activeUiElements : List<IUiElement>
-| - Init(context) -> Addressables.LoadSceneAsync(...)
-| - OnSceneLoadCompleted -> Populate(context) on IUiElement
-| - UnloadUiState(keepScenes)
-|
-+-- UiElement (IUiElement) - Populate(object context) - MonoBehaviour (view logic)
+`ShowState<T>(context, additive)` resolves `T` to its key and delegates to `ShowStateByKey(key, context, additive)`, which calls `LoadAndPushState`:
 
-UiConfig (ScriptableObject)
-
-- entries: List<UiStateEntry>
-  - UiStateEntry { stateKey: string, uiElementScenes: List<AssetReference> }
+```
+ShowStateByKey(key, ctx, additive)
+│
+├─ newState   = new UiState(key, entry.uiElementScenes)      ← always the base class
+├─ loadingState = newState                                    ← GetCurrentState() returns it while loading
+├─ visibleIds = GameObject IDs of every element in every state on the stack
+│
+├─ LoadStateScenesAsync(newState)            for each distinct scene GUID, in config order:
+│     ├─ LoadSceneIfNeededAsync              reuse a loaded scene │ await an in-flight load │ Addressables.LoadSceneAsync(Additive)
+│     ├─ refCount[guid]++
+│     ├─ newState.RegisterLoadedScene        find every IUiElement in the scene (incl. inactive) → Populate(ctx)
+│     └─ PrepareForShow()                    on new elements not in visibleIds (sets the "before" pose: no flash)
+│
+├─ if !additive && stack not empty:
+│     ├─ sharedIds = newState elements ∩ visibleIds
+│     ├─ await WhenAll( hide every stacked state except sharedIds,
+│     │                 show newState except sharedIds )     ← overlapping transition
+│     └─ finally: pop every old state → refCount-- per scene → unload at 0 → Dispose
+│                 stack = [ newState ]; loadingState = null
+│
+└─ else (additive, or empty stack):
+      ├─ finally: push newState; loadingState = null
+      └─ show newState except sharedIds
+```
 
 Notes:
+- **Non-additive** (default) replaces the whole stack. **Additive** pushes on top, for modals and overlays. The states below stay loaded and visible.
+- The new state's scenes are ref-counted *before* old states are released, so shared scenes never unload and reload between states.
+- Exceptions in loading or transitions are logged. Cleanup and the stack update always run (`finally`).
+- Within a state, all element animations run in parallel. In a non-additive switch, the stacked states are hidden one after another, while the new state's show runs at the same time.
 
-- `UiManager` maps `Type` <-> `stateKey` via `GetTypeForKey(stateKey)` (type name matching).
-- `UiState` loads scenes additively; each scene contains root GameObjects implementing `IUiElement`.
+### 5.3 Type ↔ key resolution
 
-## Onboarding Quick Reference (for new developers)
+At init, `GetTypeForKey(stateKey)` scans all loaded assemblies for a type assignable to `UiState` whose **simple class name equals the key**. If none is found it falls back to `typeof(UiState)`.
 
-- Where to start:
+Consequences:
+- `ShowState<MainMenuUiState>()` works only if `UiConfig` has `stateKey = "MainMenuUiState"`.
+- **`UiState` subclasses are type tokens only.** The runtime always instantiates the base `UiState` with the scenes from `UiConfig`. Subclass constructors, fields and overrides never run, and the scene list in the generated constructor is ignored.
+- Two subclasses with the same simple name in different namespaces collide, and the first one found wins.
+- Keys without a subclass all map to `typeof(UiState)`, so `ShowState<UiState>()` is meaningless. Use `ShowStateByKey` for those.
 
-  - Read `Assets/Scripts/UiFramework/README.md` (this file).
-  - Open `Assets/Scripts/UiFramework/Core/Config/UiConfig.cs` in the Editor and inspect `UiConfig` ScriptableObject assigned to your `UiManager` GameObject.
-  - Inspect example states (search `UiState` subclasses in `Assets/Scripts/Ui` or project UI folders).
+### 5.4 Hiding
 
-- Fast checklist to show a UI state in code:
-  - Ensure `UiManager` has been initialized (call `await uiManager.Init()` during bootstrap).
-  - Call `await UiManager.ShowStateByKey("MyStateKey", context)` or `await UiManager.ShowState<MyState>(context)`.
+`HideUI()` pops the top state, plays its hide animations, releases its scene references (unloading at zero) and disposes it. It does **not** replay show animations on the state underneath.
 
-## Editor Tool: TA Tutorial — Creating a new UiState and UiElements
+### 5.5 Queries
 
-This step-by-step guide is written for Technical Artists (TA) or non-programmers who need to create new screens using the Editor tools and minimal C#.
+| API | Returns |
+| --- | --- |
+| `UiManager.IsInitialized` | `true` once `InitializeAsync` has created the instance (see §5.1) |
+| `UiManager.GetCurrentState()` | The state being loaded, if any, otherwise the top of the stack, otherwise `null` |
+| `UiManager.IsLastSceneActive<T>()` | Whether the top state's key is `T`'s key |
+| `UiManager.TryGetUiStateKeyName<T>(out key)` | The key registered for `T` |
 
-Prerequisites:
+## 6. Shared scenes and shared elements
 
-- Unity Editor with Addressables package configured.
-- `UiConfig` ScriptableObject instance created and assigned to `UiManager` in a scene (project bootstrap scene).
+Scenes are identified by **AssetReference GUID** and reference-counted in `UiManager`:
 
-Step 1 — Prepare the scene
+- `loadedScenesByGuid`: the `SceneInstance` for every loaded UI scene.
+- `sceneRefCountsByGuid`: how many states on the stack (plus the one loading) use that scene.
+- `loadingHandlesByGuid`: in-flight loads, so concurrent requests for the same scene share one load.
 
-1. Create a new Scene in Unity for your screen (e.g., `UI_PlayerProfile.unity`).
-2. Design UI visually using UI Toolkit or Unity UI; add root GameObjects for each logical element.
-3. For each root element that needs runtime data, add a MonoBehaviour that inherits `UiElement` (see example below) or add an existing `UiElement` script.
-4. Mark the Scene as Addressable: open Addressables Groups window, drag the scene into a group and create an `AssetReference`.
+A state counts a GUID at most once, even if `UiConfig` lists it twice. A scene unloads only when its count reaches zero.
 
-Step 2 — Create a UiElement script (small C#; TA can copy/paste)
+When a new state uses an already-loaded scene, its elements are:
+- **re-populated**: `Populate(newContext)` runs again on the same instance, so `Populate` must be idempotent;
+- **not prepared, hidden or shown**: their GameObject IDs are in `sharedIds`, so they stay on screen without re-animating.
 
-1. Create a script under `Assets/Scripts/Ui/UIDisplayes/` (or similar) named `PlayerProfileUiElement.cs`.
-2. Example (follow `.editorconfig` rules):
+## 7. Animation & transitions
 
-```csharp
-using UiFramework.Core;
-using TMPro;
+### 7.1 Animation target
 
-public class PlayerProfileUiElement : UiElement
-{
-      [SerializeField] private TextMeshProUGUI nameLabel;
+`UiElement.Awake` picks the GameObject to animate:
+1. The element's **first child**. If the element has no children, nothing animates.
+2. If that child has a `Canvas`, the target is the first descendant without a `Canvas` (depth-first) instead. This animates the content and never the Canvas root, so the layout and the animation do not fight.
 
-      public override void Populate(object context = null)
-      {
-            if (context is PlayerProfileContext p)
-            {
-                  nameLabel.text = p.DisplayName ?? "Player";
-            }
-            else
-            {
-                  nameLabel.text = "Player";
-            }
-      }
-}
+Recommended element scene hierarchy:
 
-public class PlayerProfileContext
-{
-      public string DisplayName { get; set; }
-}
+```
+<Name>Root            ← UiElement subclass lives here
+└── Canvas            ← Canvas / CanvasScaler / GraphicRaycaster
+    └── Content       ← animation target (RectTransform)
+        └── ...
 ```
 
-Step 3 — Add the scene to `UiConfig`
+### 7.2 Presets
 
-1. Open your `UiConfig` ScriptableObject in the inspector (Assets → find `UiConfig`).
-2. Add a new entry with:
-   - `stateKey`: choose `PlayerProfileState` (we recommend the `State` suffix to match class names),
-   - `uiElementScenes`: add the `AssetReference` to `UI_PlayerProfile` scene.
+Presets are strings stored on each `UiElement` (`showAnimationPreset`, `hideAnimationPreset`) and chosen in the **Elements** tab. All presets use unscaled time, 0.20 s and an ease-out curve.
 
-Step 4 — (Optional) Create a `UiState` subclass
+| Key | Show | Hide |
+| --- | --- | --- |
+| `None` | none | none |
+| `Fade` | CanvasGroup alpha 0 → 1 (adds a `CanvasGroup` if missing) | 1 → 0 |
+| `Scale` | scale 0.9× → 1× | 1× → 0.9× |
+| `SlideUp` / `SlideDown` / `SlideLeft` / `SlideRight` | **moves in the named direction** from off-canvas to its base position (SlideUp enters from below) | keeps moving the same direction off-canvas |
+| `ClickPop`, `SettlePop`, `Shake` | feedback punches, the same for show and hide | |
 
-1. If you need custom code when entering the state, create a subclass:
+- The slide distance is the parent canvas width or height, falling back to `Screen` size.
+- `UiTweenState` (added on demand) records the target's **base** position, anchored position and scale the first time it animates. Repeated slides always return to the authored layout instead of drifting.
+- `PrepareForShow()` applies the preset's starting pose immediately after each scene finishes loading, in the same continuation as `Populate`, so the element does not flash at its final pose before animating in.
 
-```csharp
-using UiFramework.Core;
+### 7.3 Extending
 
-public class PlayerProfileState : UiState
-{
-      public PlayerProfileState(List<UnityEngine.AddressableAssets.AssetReference> scenes)
-            : base("PlayerProfileState", scenes)
-      {
-      }
-}
-```
+Adding a preset means changing three places: the `TweenPresets` key constant + `presetKeys` list, the `TweenPresets.PlayAsync` branch, and the starting pose in `UiElement.PrepareForShow`. `ShowAsync`, `HideAsync` and `PrepareForShow` are `virtual` for per-element custom animation.
 
-2. Note: the framework can work without a custom subclass — `UiState` default behavior is usually sufficient.
+## 8. Editor pipeline
 
-Step 5 — Show the state at runtime (test)
+Menu: **UiFramework → UI Setup Manager** (`UiSetupEditorWindow`). The selected `UiEditorConfig` is remembered per machine in `EditorPrefs["UiFramework.Editor.ConfigAssetGUID"]`.
 
-1. Create a small debug MonoBehaviour (Editor-only if you prefer) with a button that calls:
+| Tab | What it does |
+| --- | --- |
+| **General** | Shows the configured paths. *Create Config* finds or creates `UiEditorConfig`. ***Build Runtime UiConfig*** generates the runtime config (below). |
+| **Elements** | Lists element scenes under `ElementsScenePath` with show/hide preset dropdowns (written straight into the scene's `UiElement`) and an Addressable toggle and labels. *Create* generates `<Name>.cs` from `UiElementTemplate.txt` (optionally `<Name>Params` / `<Name>Reference`), creates or opens the scene, reparents its roots under `<Name>Root`, and attaches the script after recompilation (`UiElementScriptBinder`, via `EditorPrefs` keys `UiElementAutoBind_*`). |
+| **States** | Creates and edits `UiStateDefinition` assets (key + element scene names) and generates `<Key>.cs` from `UiStateTemplate.txt` into `StatesPath`. |
 
-```csharp
-await UiManager.ShowStateByKey("PlayerProfileState", new PlayerProfileContext { DisplayName = "Alex" });
-```
+**Build Runtime UiConfig**:
+1. Load or create `UiConfig` at `RuntimeConfigOutputPath` and **clear all entries**.
+2. For each `UiStateDefinition` (sorted by key, duplicates skipped with a warning): resolve each scene name to a path, make the scene Addressable (§9), and add an `AssetReference(guid)`.
+3. If there are no definitions, fall back to the legacy `UiStateRegistry`.
+4. Make the `UiConfig` asset Addressable (§9).
 
-2. Enter Play Mode and click the button — the Addressable scene should load and the UI elements' `Populate` methods should be executed.
+Run it after **any** change to states or element scenes, then rebuild Addressables content for player builds.
 
-Step 6 — Validate and iterate
+## 9. Addressables layout
 
-- If UI does not appear, check these:
-  - `UiConfig` entry `stateKey` matches your chosen class name (or use `ShowStateByKey`).
-  - The scene is addressable and `AssetReference` is correct.
-  - Console logs for Addressables load errors (missing groups, build not updated).
+| What | Group | Address | Labels |
+| --- | --- | --- | --- |
+| Runtime `UiConfig` | `GlobalConfigs` | `UiConfig` (**the runtime loads by this key**) | `UiConfig`, `RuntimeUiConfig` |
+| Element scenes | `UiElements` | scene file name | `UiElements` |
 
-Editor Tools (where to look)
+A legacy group named `Global Configs` (with a space) is renamed to `GlobalConfigs` automatically on build. Groups and labels that do not exist yet are created.
 
-- `Assets/Scripts/UiFramework/Editor/UiStateRegistry.cs` — registry of states used by generator.
-- `Assets/Scripts/UiFramework/Editor/CodeGeneration/UiStateGenerator.cs` — helper to create `UiState` class shells; use this if you want boilerplate classes generated.
+## 10. Invariants
 
-TA tips
+These hold today. A change that breaks one is a design change and needs this document updated.
 
-- Keep UI scenes small and focused so individual screens load quickly.
-- Prefer one logical `UiElement` script per functional block (header, list, footer) to maximize reuse.
-- Use `context` as a plain DTO (POCO) with only the data the UI needs; avoid passing large service objects.
+1. Exactly one `UiManager` exists, created by `InitializeAsync` and kept alive with `DontDestroyOnLoad`.
+2. Only `UiManager` loads or unloads UI scenes. A UI scene is loaded ⇔ its ref count is > 0 or it is in flight.
+3. Scenes are keyed by Addressables GUID, never by scene name.
+4. After a non-additive show completes, the stack holds exactly one state.
+5. Every element in a newly loaded scene gets `Populate(context)` before its first frame is shown.
+6. Elements already visible when a state is shown are never prepared, hidden or shown by that transition.
 
-## Suggested Editor Validation (manual)
+## 11. Known limitations
 
-1. In Editor, open `UiConfig` and iterate entries:
-   - For each `AssetReference` click `Select` to open the referenced scene and visually confirm `IUiElement` components are present on root GameObjects.
-2. Run a quick Play Mode smoke test that calls `UiManager.ShowStateByKey` for each entry and confirms scenes load without Addressable errors.
+| Area | Limitation |
+| --- | --- |
+| Concurrency | Overlapping `ShowState*` / `HideUI` calls are not serialized. Callers should await one before starting the next, as `NavBarUiElement` does by deferring to end of frame and checking `IsLastSceneActive`. |
+| `HideUI` | Does not skip elements shared with the state underneath, so a shared element (e.g. NavBar) plays its hide animation even though its scene stays loaded. |
+| Init | `IsInitialized` is `true` before the config finishes loading, and stays `true` if loading fails. |
+| `ResetUI()` | Blocks with `Task.Wait()`. Can deadlock on the main thread, so avoid it. |
+| `IsLastSceneActive<T>()` | Throws on an empty stack. |
+| Type resolution | Reflection over all assemblies at init, matched by simple class name (§5.3). |
+| Tweens | Preset tweens are not cancellable. Starting a new animation on the same target mid-tween can leave a mixed pose. |
+| Non-`UiElement` `IUiElement`s | Receive `Populate` but never animate. |
+| Samples | `package.json` declares `Samples~/BasicSetup`, but that folder is empty. The working sample is the host project under `Assets/`. |
 
----
+## 12. Authoring a new screen (quick guide)
 
-If you want, I can implement an Editor Window that automates the validation steps (non-destructive) and optionally scaffolds `UiState` classes using the generator. Mark this in the todo list if you'd like me to proceed.
+1. **UiFramework → UI Setup Manager → General → Create Config** (first time only). Adjust the paths and namespaces on the `UiEditorConfig` asset. Set `ElementNamespace` / `StateNamespace` to your game's namespaces; the defaults (`UiFramework.Editor.*`) are placeholders.
+2. **Elements tab** → name it (e.g. `ProfileUiElement`) → *Create*. Build the UI under `ProfileUiElementRoot → Canvas → Content` (§7.1) and pick show/hide presets.
+3. Override `Populate`, cast `context`, and keep it idempotent:
+   ```csharp
+   public override void Populate(object context = null)
+   {
+       base.Populate(context);
+
+       ProfileUiElementParams data = context as ProfileUiElementParams;
+       if (data == null)
+       {
+           return;
+       }
+
+       nameLabel.text = data.DisplayName;
+   }
+   ```
+4. **States tab** → create a state key (e.g. `ProfileUiState`), add the element scenes it shows (shared ones like `NavBarUiElement` included), and generate the state class if you want `ShowState<T>()`.
+5. **General → Build Runtime UiConfig**.
+6. At runtime: `await UiManager.ShowState<ProfileUiState>(new ProfileUiElementParams { DisplayName = "Alex" });`
+
+If nothing appears, check the following: the key matches the class name; *Build Runtime UiConfig* ran after the last change; the Addressables play mode script / content build is current; the console shows no `[UiManager]` errors.
+
+## 13. Key files
+
+| File | Responsibility |
+| --- | --- |
+| `Runtime/Manager/UiManager.cs` | Stack, scene loading and ref counting, transitions, public API |
+| `Core/UiCompoenets/UiState.cs` | Per-state scene list, acquired GUIDs, element discovery and `Populate` |
+| `Core/UiCompoenets/UiElement.cs` | Element base: animation target, show/hide/prepare |
+| `Core/Config/UiConfig.cs` | Runtime state key → scenes map |
+| `Runtime/Tweening/TweenPresets.cs` | Preset catalogue and implementations |
+| `Editor/Window/UiSetupEditorWindow.cs` | Window host, *Build Runtime UiConfig*, config Addressables setup |
+| `Editor/Window/Tabs/ElementsTab.cs`, `StatesTab.cs` | Authoring UI |
+| `Editor/CodeGeneration/*` | Script generation and auto-binding |
+| `Editor/Templates/*.txt` | Code templates (must follow [CODING_STANDARDS.md](CODING_STANDARDS.md)) |

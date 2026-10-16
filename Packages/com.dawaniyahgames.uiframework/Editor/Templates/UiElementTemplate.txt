@@ -1,12 +1,11 @@
+using UiFramework.Core;
+
 namespace [UiElementNamespace]
 {
-    using UiFramework.Core;
-    using UnityEngine;
-    
     // Auto-generated: UI Element
     public class [UiElementName] : UiElement
     {
-        // If you need setup logic, uncomment and use:
+        // Populate can run more than once on the same instance (shared scenes), so keep it idempotent.
         // public override void Populate(object context = null)
         // {
         //     base.Populate(context);

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `CODING_STANDARDS.md`: a single source of truth for code style and project rules (formatting, naming, Unity null semantics, async, logging, assembly boundaries, versioning, templates), with a list of known deviations
+- `CLAUDE.md` pointing AI assistants at the standards and design docs
+
+### Changed
+- Rewrote `DESIGN.md` to match the current code: assembly graph, data model, runtime lifecycle, GUID ref-counted shared scenes, animation targets/presets, editor build pipeline, Addressables layout, invariants and known limitations
+- `README.md`: fixed the out-of-order structure and the outdated initialization API (`UiManager.InitializeAsync()` takes no config)
+- `CONTRIBUTING.md`: added a PR checklist, Conventional Commit types and the full release steps
+- `.github/copilot-instructions.md`: condensed to point at the authoritative docs (it previously listed the version as 1.0.31 and gave wrong paths)
+- Code templates now emit `using` directives outside the namespace, as the standards require, and document that `UiState` subclasses are type markers only
+- `.editorconfig`: added rules for JSON/asmdef/USS/UXML/YAML/Markdown and block-scoped namespaces; `.gitattributes` now normalizes line endings (`* text=auto`)
+
 ## [1.0.40] - 2026-03-09
 
 ### Fixed
