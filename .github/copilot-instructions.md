@@ -16,7 +16,8 @@ Don't restate or override those documents here. If they and this file disagree, 
 3. Private fields, including `const`, are `camelCase`, with no `_` or `m_`. Inspector fields are `[SerializeField] private`.
 4. Never use `?.` / `??` on `UnityEngine.Object` types. Use `== null`.
 5. Never `.Wait()` / `.Result` a Task. `async void` only for Unity messages and event handlers, with try/catch.
-6. Logs start with `[ClassName]` and contain no emoji.
+6. Logs start with `[ClassName]` (runtime) or `[UiFramework]` (editor tooling) and contain no emoji.
+9. UI element scenes follow the contract `<Name>Root → Canvas → one stretched Root` (DESIGN.md §7.1). Editor tools edit open scenes in place (Undo, no save), never delete objects, and never touch Canvas sorting.
 7. Assembly direction is `Tweening ← Core ← Runtime ← Editor`. Never reference upward, and never use `UnityEditor` in runtime code.
 8. Never rename a serialized field without `[FormerlySerializedAs]`. Never change `IUiElement.Populate(object context)`.
 

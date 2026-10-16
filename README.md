@@ -14,6 +14,7 @@ A Unity UI framework that builds screens from **Addressable scenes** loaded addi
 - 🌀 **Per-element animation presets**: Fade, Scale, Slide{Up,Down,Left,Right}, ClickPop, SettlePop, Shake
 - ⏩ **Overlapping transitions**: the new UI animates in while the old UI animates out, with no flash and no empty frame
 - 🛠️ **Editor tooling**: generate elements and states from templates and build the runtime config automatically
+- ✅ **Element scene contract**: new scenes are generated as `<Name>Root → Canvas → Root` with project-wide canvas settings, and existing scenes can be validated and fixed in one click (Elements and Canvas tabs)
 
 ## Installation
 
@@ -28,7 +29,7 @@ To pin a version, append `#vX.Y.Z` (see [Releases](https://github.com/dawaniyah-
 ```json
 {
   "dependencies": {
-    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.0.40"
+    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.0.41"
   }
 }
 ```

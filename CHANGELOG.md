@@ -7,7 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.41] - 2026-10-16
+
 ### Added
+- **UI element scene contract** (`<Name>Root → Canvas → one stretched Root`) with validation and one-click fixes (see DESIGN.md §7.1)
+  - `UiCanvasSettings` asset (`Assets/UiConfigs/UiCanvasSettings.asset`, auto-created with defaults: Screen Space Overlay, Scale With Screen Size 1080x1920, Expand, 100 PPU), referenced from `UiEditorConfig.CanvasSettings`
+  - New elements are generated with the full contract hierarchy and the project canvas settings; creating from an existing scene offers a structure fix
+  - Elements tab: per-scene Structure and Canvas status columns, Fix Structure / Reset Canvas buttons, and an Exclude toggle
+  - New Canvas tab: edit the settings, Apply Canvas Settings To All, Validate All Element Scenes, Fix Structure In All Scenes
+  - Menu: UiFramework → Element Scene → Validate Active Scene / Fix Active Scene Structure / Reset Active Scene Canvas
+  - Fixes only create and reparent objects (Undo-recorded, never delete). Non-stretched content roots are wrapped by default so the layout is unchanged; resetting them instead is offered as an option
+  - Canvas settings are applied at authoring time only; sorting order/layer, override sorting, world camera, plane distance and shader channels are never touched
+- EditMode tests for the contract under `Tests/Editor`
+- `com.unity.ugui` package dependency
+
+### Fixed
+- Elements tab no longer closes scenes the user already had open when reading or writing animation presets. Open scenes are edited in place and left unsaved
+- Creating a UI element now asks to save modified open scenes before replacing them
+- `UiFramework.Tweening` and `UiFramework.Editor` now reference `UnityEngine.UI` explicitly (required on Unity 2021.3/2022.3)
+
+### Documentation
 - `CODING_STANDARDS.md`: a single source of truth for code style and project rules (formatting, naming, Unity null semantics, async, logging, assembly boundaries, versioning, templates), with a list of known deviations
 - `CLAUDE.md` pointing AI assistants at the standards and design docs
 

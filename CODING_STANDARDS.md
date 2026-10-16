@@ -86,7 +86,7 @@ Enforced by `.editorconfig`.
 
 - Public framework API **SHOULD** log and return rather than throw on bad input or missing setup (unknown state key, UiManager not initialized, failed Addressables load). This matches the existing `UiManager` behaviour, and a UI failure should not take down the game loop.
 - Exceptions from user code (e.g. a `Populate` override) during a transition are caught and logged, and cleanup runs in `finally` (see `UiManager.LoadAndPushState`).
-- Every log message **MUST** start with a `[ClassName]` tag: `Debug.LogError("[UiManager] State 'X' not found.");`
+- Every log message **MUST** start with a tag. Runtime code uses `[ClassName]`: `Debug.LogError("[UiManager] State 'X' not found.");`. Editor tooling, whose messages are tool output for designers, uses `[UiFramework]`.
 - Use `Debug.LogError` for broken setup or failed operations, `Debug.LogWarning` for recoverable or suspicious states, and `Debug.Log` only for operations a developer would want traced. No log spam in per-frame code.
 - New log messages **MUST NOT** contain emoji. Older messages in the editor tools still do; replace them when you touch those lines.
 - Error messages **SHOULD** say what to do next, e.g. "Ensure the UI Editor Window generated the runtime config…".
@@ -230,5 +230,5 @@ The rules above apply to all new and modified code. These pre-existing violation
 | `Runtime/Tweening/TweenPresets.cs` | Private constants in `PascalCase` |
 | `Runtime/Manager/UiManager.cs` | `ResetUI()` blocks with `Task.Wait()` (deadlock risk, §5); emoji in log messages; `IsLastSceneActive<T>()` calls `Peek()` without checking for an empty stack |
 | `Editor/CodeGeneration/UiElementScriptBinder.cs` | Declared in the global namespace; uses `?.` on a `MonoScript` (§4.1) |
-| `Editor/**` | Emoji and missing `[ClassName]` tags in log messages |
+| `Editor/**` (pre-1.0.41 files) | Emoji and missing `[UiFramework]` tags in log messages |
 | Folder `Core/UiCompoenets/` | Misspelled; renaming moves GUIDs/paths for users, so it is deferred to a major version |

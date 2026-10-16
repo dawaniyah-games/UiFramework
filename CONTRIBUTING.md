@@ -51,7 +51,7 @@ Common scopes: `runtime`, `core`, `editor`, `tweening`, `sample`, `release`.
 
 ## Pull request checklist
 
-- [ ] Follows [CODING_STANDARDS.md](CODING_STANDARDS.md): no IDE errors from `.editorconfig`, and new log messages are tagged `[ClassName]`.
+- [ ] Follows [CODING_STANDARDS.md](CODING_STANDARDS.md): no IDE errors from `.editorconfig`, and new log messages are tagged (`[ClassName]` in runtime code, `[UiFramework]` in editor tooling).
 - [ ] Assembly direction respected (`Tweening ← Core ← Runtime ← Editor`), with no `UnityEditor` usage in runtime assemblies.
 - [ ] No serialized field renamed or removed without `[FormerlySerializedAs]`.
 - [ ] `.meta` files committed for every new file or folder.

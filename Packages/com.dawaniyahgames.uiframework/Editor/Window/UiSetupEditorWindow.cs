@@ -21,7 +21,7 @@ namespace UiFramework.Editor.Window
         private const string globalConfigsGroupName = "GlobalConfigs";
         private const string legacyGlobalConfigsGroupName = "Global Configs";
 
-        private const string configKey = "UiFramework.Editor.ConfigAssetGUID";
+        private const string configKey = UiEditorConfigUtility.ConfigAssetGuidPrefKey;
         private const string uiElementsGroupName = "UiElements";
         private static readonly string[] uiElementsLabels = new string[] { "UiElements" };
 
@@ -34,7 +34,8 @@ namespace UiFramework.Editor.Window
         {
             new GeneralTab(),
             new ElementsTab(),
-            new StatesTab()
+            new StatesTab(),
+            new CanvasTab()
         };
 
         [MenuItem("UiFramework/UI Setup Manager")]

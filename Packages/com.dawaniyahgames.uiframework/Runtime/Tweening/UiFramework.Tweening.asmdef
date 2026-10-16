@@ -1,7 +1,9 @@
 {
     "name": "UiFramework.Tweening",
     "rootNamespace": "UiFramework.Tweening",
-    "references": [],
+    "references": [
+        "UnityEngine.UI"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

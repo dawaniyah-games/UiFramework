@@ -1,6 +1,6 @@
 # UI Framework: System Design
 
-> Package `com.dawaniyahgames.uiframework` · describes **v1.0.40** · last reviewed 2026-10-16
+> Package `com.dawaniyahgames.uiframework` · describes **v1.0.41** · last reviewed 2026-10-16
 >
 > This document describes how the framework works *today*. If you change behaviour, update the matching section in the same PR ([CODING_STANDARDS.md §10](CODING_STANDARDS.md#10-comments--documentation)).
 
@@ -61,6 +61,7 @@ UiFramework.Editor ──► Unity.Addressables.Editor   (Editor platform only)
 | Asset | Type | Where it lives | Who writes it | Read at |
 | --- | --- | --- | --- | --- |
 | Editor config | `UiEditorConfig` (Editor SO) | `Assets/UiConfigs/UiEditorConfig.asset` | Developer, via the General tab | Edit time |
+| Canvas settings | `UiCanvasSettings` (Editor SO), referenced by `UiEditorConfig.CanvasSettings` | `Assets/UiConfigs/UiCanvasSettings.asset` (auto-created with defaults when missing) | Developer, via the Canvas tab | Edit time only. Written into scenes by explicit Apply/Fix/Reset actions |
 | State definition | `UiStateDefinition` (Editor SO), **one per state** | `UiEditorConfig.StateDefinitionsPath` (default `Assets/UiConfigs/UiStateDefinitions/`) | States tab | Edit time |
 | State registry *(legacy)* | `UiStateRegistry` (Editor SO) | `UiEditorConfig.StateRegistryPath` | Older versions | Edit time, only if no definitions exist |
 | **Runtime config** | `UiConfig` (runtime SO) | `UiEditorConfig.RuntimeConfigOutputPath` (default `Assets/UiConfigs/RuntimeUiConfig.asset`) | **Generated** by *Build Runtime UiConfig*. Do not hand-edit | Runtime, via Addressables |
@@ -172,14 +173,36 @@ When a new state uses an already-loaded scene, its elements are:
 1. The element's **first child**. If the element has no children, nothing animates.
 2. If that child has a `Canvas`, the target is the first descendant without a `Canvas` (depth-first) instead. This animates the content and never the Canvas root, so the layout and the animation do not fight.
 
-Recommended element scene hierarchy:
+Only that one object animates, so its siblings stay still. Slides move it by the canvas size, and scale/pop presets scale around its pivot. That is why every element scene must follow this **element scene contract**:
 
 ```
-<Name>Root            ← UiElement subclass lives here
-└── Canvas            ← Canvas / CanvasScaler / GraphicRaycaster
-    └── Content       ← animation target (RectTransform)
-        └── ...
+<Name>Root   plain Transform (no RectTransform) with the UiElement subclass; the ONLY root GameObject in the scene
+└─ Canvas    child index 0: root Canvas + CanvasScaler + GraphicRaycaster, values from UiCanvasSettings
+   └─ Root   the ONLY direct child of Canvas, active, no Canvas of its own; RectTransform anchors (0,0)-(1,1),
+      │      offsets 0, pivot (0.5,0.5), anchoredPosition 0, scale 1, rotation 0. This is the animation target
+      └─ ... all screen content (nested canvases are fine here)
 ```
+
+- The tools check **structure, not names**: `IngameRoot` or `ClubsUiParentGroup` are fine as the content root. Generated scenes use `Canvas` and `Root`.
+- The content root may carry a Graphic (e.g. a full-screen background Image).
+- Canvas values (render mode, pixel perfect, scaler mode, reference resolution, match mode/value, reference PPU) come from `UiCanvasSettings` and are written at **authoring time only**. Sorting order/layer, override sorting, world camera, plane distance and shader channels are never touched, because consumers use sorting order to stack popups.
+
+Validation issue codes (`UiElementStructureIssueCode`):
+
+| Code | Meaning | Auto-fix |
+| --- | --- | --- |
+| `NoUiElement` | No root GameObject has a `UiElement` | No |
+| `ExtraRootObjects` | Other root objects besides the element root (one issue per object, with active state) | No. Never deleted automatically |
+| `NoCanvas` | Child 0 of the element root is not a root Canvas | Yes, when the root has no children, only UI (RectTransform) children, or the Canvas is just not first |
+| `CanvasMissingComponents` | No CanvasScaler / GraphicRaycaster | Yes, adds them |
+| `NoContentRoot` | Canvas has 0 or 2+ children, or its only child is a prefab instance, has no RectTransform, or has its own Canvas | Yes, wraps the children in a new stretched `Root` (original order kept) |
+| `ContentRootNotStretched` | The content root's anchors/offsets/pivot/position/scale/rotation differ from the contract | Yes, see below |
+| `ContentRootInactive` | The content root is inactive | Warning only |
+| `CanvasInsidePrefab` | The Canvas is part of a prefab instance, so its children can't be restructured in the scene | No. Fix it in the prefab |
+
+`UiElementStructureFixer.FixStructure` only creates and reparents objects (Undo-recorded, never deletes), so serialized references survive. Reparenting keeps each child's local RectTransform values. The new `Root` is stretched with zero offsets, so the layout is unchanged. For `ContentRootNotStretched` there are two modes:
+- **Wrap (default, "keep layout")**: the existing content root is wrapped in a new stretched `Root`, so its own size and anchors still apply. The screen looks identical, and the whole screen now animates.
+- **Reset ("stretch existing")**: the existing content root's RectTransform is reset to the contract values. This changes its size/position, e.g. a top-anchored bar would fill the screen.
 
 ### 7.2 Presets
 
@@ -208,8 +231,13 @@ Menu: **UiFramework → UI Setup Manager** (`UiSetupEditorWindow`). The selected
 | Tab | What it does |
 | --- | --- |
 | **General** | Shows the configured paths. *Create Config* finds or creates `UiEditorConfig`. ***Build Runtime UiConfig*** generates the runtime config (below). |
-| **Elements** | Lists element scenes under `ElementsScenePath` with show/hide preset dropdowns (written straight into the scene's `UiElement`) and an Addressable toggle and labels. *Create* generates `<Name>.cs` from `UiElementTemplate.txt` (optionally `<Name>Params` / `<Name>Reference`), creates or opens the scene, reparents its roots under `<Name>Root`, and attaches the script after recompilation (`UiElementScriptBinder`, via `EditorPrefs` keys `UiElementAutoBind_*`). |
+| **Elements** | Lists element scenes under `ElementsScenePath`. Each row shows show/hide preset dropdowns (written straight into the scene's `UiElement`), **Structure** (✓ / ⚠ fixable or warning / ✖ needs manual work) and **Canvas** (✓ / ⚠ differs / — / Excluded) status with details in tooltips, **Fix Structure** and **Reset Canvas** buttons (both confirm first), an **Exclude** toggle, and Addressables toggle, group and labels. Each scene is opened once per refresh (`UiElementSceneUtility.InspectScene`). *Create* generates `<Name>.cs` from `UiElementTemplate.txt` (optionally `<Name>Params` / `<Name>Reference`). A **new** scene gets `<Name>Root → Canvas → Root` built per the contract. An **existing** scene has its roots reparented under `<Name>Root`, then the user is offered a structure fix. The script is attached after recompilation (`UiElementScriptBinder`, via `EditorPrefs` keys `UiElementAutoBind_*`). |
 | **States** | Creates and edits `UiStateDefinition` assets (key + element scene names) and generates `<Key>.cs` from `UiStateTemplate.txt` into `StatesPath`. |
+| **Canvas** | Edits the `UiCanvasSettings` asset. *Apply Canvas Settings To All* skips excluded and already-matching scenes, confirms with per-scene diffs, and logs updated / matching / excluded / no canvas. *Validate All Element Scenes* logs one line per scene with its issue codes and canvas status. *Fix Structure In All Scenes* confirms the planned changes, then fixes every scene with fixable issues and logs what still needs manual work. |
+
+Scene editing rules (`UiElementSceneUtility.WithScene`): a scene **already open** in the editor is edited in place with Undo and left dirty. It is never saved or closed for you. A scene that is **not open** is opened additively, saved if changed, and closed again. Bulk actions call `SaveCurrentModifiedScenesIfUserWantsTo()` first. No scene is modified on import, refresh or window open.
+
+Menu **UiFramework → Element Scene → Validate Active Scene / Fix Active Scene Structure / Reset Active Scene Canvas** run the same checks on the active scene in place (Undo, no auto-save). They are enabled only when the active scene has a root `UiElement`.
 
 **Build Runtime UiConfig**:
 1. Load or create `UiConfig` at `RuntimeConfigOutputPath` and **clear all entries**.
@@ -256,7 +284,7 @@ These hold today. A change that breaks one is a design change and needs this doc
 ## 12. Authoring a new screen (quick guide)
 
 1. **UiFramework → UI Setup Manager → General → Create Config** (first time only). Adjust the paths and namespaces on the `UiEditorConfig` asset. Set `ElementNamespace` / `StateNamespace` to your game's namespaces; the defaults (`UiFramework.Editor.*`) are placeholders.
-2. **Elements tab** → name it (e.g. `ProfileUiElement`) → *Create*. Build the UI under `ProfileUiElementRoot → Canvas → Content` (§7.1) and pick show/hide presets.
+2. **Elements tab** → name it (e.g. `ProfileUiElement`) → *Create*. The scene is generated as `ProfileUiElementRoot → Canvas → Root` with the project canvas settings. Put **all** content under `Root` (§7.1) and pick show/hide presets. The row's Structure column should stay ✓.
 3. Override `Populate`, cast `context`, and keep it idempotent:
    ```csharp
    public override void Populate(object context = null)
@@ -289,5 +317,11 @@ If nothing appears, check the following: the key matches the class name; *Build 
 | `Runtime/Tweening/TweenPresets.cs` | Preset catalogue and implementations |
 | `Editor/Window/UiSetupEditorWindow.cs` | Window host, *Build Runtime UiConfig*, config Addressables setup |
 | `Editor/Window/Tabs/ElementsTab.cs`, `StatesTab.cs` | Authoring UI |
+| `Editor/Window/Tabs/CanvasTab.cs` | Canvas settings and bulk validate / fix / apply |
+| `Editor/Config/UiCanvasSettings.cs`, `UiEditorConfigUtility.cs` | Canvas settings asset; find/create the active config and settings |
+| `Editor/Scenes/UiElementSceneUtility.cs` | Safe scene access, canvas compare/apply, structure validation, single-open inspection |
+| `Editor/Scenes/UiElementStructureFixer.cs` | Structure fixes and contract hierarchy for new scenes |
+| `Editor/Scenes/UiElementSceneBatchOperations.cs`, `UiElementSceneMenu.cs` | Bulk actions; active-scene menu items |
+| `Tests/Editor/*` | EditMode tests for the contract (validator codes, fixes, canvas settings, scene access) |
 | `Editor/CodeGeneration/*` | Script generation and auto-binding |
 | `Editor/Templates/*.txt` | Code templates (must follow [CODING_STANDARDS.md](CODING_STANDARDS.md)) |

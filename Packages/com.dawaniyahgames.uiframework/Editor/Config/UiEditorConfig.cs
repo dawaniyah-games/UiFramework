@@ -18,6 +18,9 @@ namespace UiFramework.Editor.Config
         public string ElementNamespace = "UiFramework.Editor.Elements";
         public string StateNamespace = "UiFramework.Editor.States";
 
+        [Tooltip("Canvas/CanvasScaler values for UI element scenes. Created at " + UiCanvasSettings.DefaultAssetPath + " when empty.")]
+        public UiCanvasSettings CanvasSettings;
+
 #if UNITY_EDITOR
         private void OnEnable()
         {
