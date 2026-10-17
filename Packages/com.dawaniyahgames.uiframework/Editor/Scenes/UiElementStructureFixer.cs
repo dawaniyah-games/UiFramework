@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace UiFramework.Editor.Scenes
 {
-    // Brings a UI element scene in line with the contract (see UiElementSceneUtility). Every change is
+    // Brings a UI element scene in line with the contract (see UiElementStructureValidator). Every change is
     // Undo-recorded. Objects are only created and reparented, never deleted, so serialized references survive.
     public static class UiElementStructureFixer
     {
@@ -24,7 +24,7 @@ namespace UiFramework.Editor.Scenes
         public static UiElementStructureReport FixStructure(Scene scene, UiGlobalCanvasSettings settings)
         {
             UiElementStructureReport report;
-            UiElementSceneUtility.ValidateStructure(scene, out report);
+            UiElementStructureValidator.ValidateStructure(scene, out report);
 
             if (report.ElementRoot == null || !report.HasFixableIssues)
             {
@@ -42,7 +42,7 @@ namespace UiFramework.Editor.Scenes
                     FixCanvasPlacement(report, settings);
 
                     // Content checks only run once a Canvas exists, so validate again before continuing.
-                    UiElementSceneUtility.ValidateStructure(scene, out report);
+                    UiElementStructureValidator.ValidateStructure(scene, out report);
                 }
 
                 Canvas canvas = report.Canvas;
@@ -68,7 +68,7 @@ namespace UiFramework.Editor.Scenes
             }
 
             UiElementStructureReport remaining;
-            UiElementSceneUtility.ValidateStructure(scene, out remaining);
+            UiElementStructureValidator.ValidateStructure(scene, out remaining);
             return remaining;
         }
 
@@ -200,7 +200,7 @@ namespace UiFramework.Editor.Scenes
             if (canvasObject.GetComponent<CanvasScaler>() == null)
             {
                 CanvasScaler scaler = Undo.AddComponent<CanvasScaler>(canvasObject);
-                UiElementSceneUtility.ApplyCanvasSettings(null, scaler, settings);
+                UiElementCanvasUtility.ApplyCanvasSettings(null, scaler, settings);
             }
 
             if (canvasObject.GetComponent<GraphicRaycaster>() == null)
@@ -231,7 +231,7 @@ namespace UiFramework.Editor.Scenes
         {
             GameObject canvasObject = CreateGameObject(CanvasObjectName, elementRoot, typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             Canvas canvas = canvasObject.GetComponent<Canvas>();
-            UiElementSceneUtility.ApplyCanvasSettings(canvas, canvasObject.GetComponent<CanvasScaler>(), settings);
+            UiElementCanvasUtility.ApplyCanvasSettings(canvas, canvasObject.GetComponent<CanvasScaler>(), settings);
             return canvas;
         }
 

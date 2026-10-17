@@ -1,34 +1,15 @@
 using System.Collections.Generic;
 using System.Text;
 using UiFramework.Editor.Config;
-using UiFramework.Editor.Window.Popups;
 using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace UiFramework.Editor.Scenes
 {
-    // Validate / Fix across element scenes. Each method returns a short summary for the editor UI and logs the
-    // full report to the Console. The IList overloads reuse scene info the caller already inspected (the Elements tab
-    // list), so scenes are not opened an extra time just to plan the operation.
+    // Validate / Fix across element scenes the caller has already inspected. Pure editor logic: no dialogs or prompts
+    // here, the UI decides what to ask. Each method returns a short summary and logs the full report to the Console.
     public static class UiElementSceneBatchOperations
     {
-        public static string ValidateAll(UiEditorConfig config, UiGlobalCanvasSettings settings)
-        {
-            List<UiElementSceneInfo> infos = InspectAll(config, settings, "Validating Element Scenes");
-            if (infos == null)
-            {
-                return "Validation cancelled.";
-            }
-
-            if (infos.Count == 0)
-            {
-                return LogNoScenes(config);
-            }
-
-            return LogValidationReport(infos);
-        }
-
         public static string LogValidationReport(IList<UiElementSceneInfo> infos)
         {
             int valid = 0;
@@ -79,85 +60,27 @@ namespace UiFramework.Editor.Scenes
             return summary;
         }
 
-        public static string FixStructureInAll(UiEditorConfig config, UiGlobalCanvasSettings settings)
+        public static List<UiElementSceneInfo> GetScenesToFix(IList<UiElementSceneInfo> infos)
         {
-            List<UiElementSceneInfo> infos = InspectAll(config, settings, "Checking Element Scene Structure");
-            if (infos == null)
-            {
-                return "Cancelled.";
-            }
-
-            if (infos.Count == 0)
-            {
-                return LogNoScenes(config);
-            }
-
-            return FixStructureInAll(infos, settings);
-        }
-
-        // FixStructure re-validates each scene before changing it, so slightly stale infos only affect the plan text.
-        public static string FixStructureInAll(IList<UiElementSceneInfo> infos, UiGlobalCanvasSettings settings)
-        {
-            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
-            {
-                return "Cancelled.";
-            }
-
             List<UiElementSceneInfo> toFix = new List<UiElementSceneInfo>();
 
             for (int i = 0; i < infos.Count; i++)
             {
-                UiElementSceneInfo info = infos[i];
-                if (info.IsAvailable && info.Structure.HasFixableIssues)
+                if (infos[i].IsAvailable && infos[i].Structure.HasFixableIssues)
                 {
-                    toFix.Add(info);
+                    toFix.Add(infos[i]);
                 }
             }
 
-            if (toFix.Count == 0)
-            {
-                string nothing = "Fix Structure: no scene has auto-fixable issues.";
-                Debug.Log("[UiFramework] " + nothing + DescribeRemaining(infos));
-                return nothing;
-            }
+            return toFix;
+        }
 
-            List<string> wrapPlan = BuildFixPlan(toFix);
-            Debug.Log("[UiFramework] Fix Structure plan:\n  " + string.Join("\n  ", wrapPlan.ToArray()));
-
-            UiElementChangeDialogModel dialogModel = new UiElementChangeDialogModel
-            {
-                WindowTitle = "Fix All Structure",
-                Heading = "Fix the structure of " + DescribeScenes(toFix.Count) + "?",
-                Description = "Each scene gets one full-screen Root under its Canvas, so the whole screen animates. Expand a scene to see its changes.",
-                Footer = "Nothing is deleted or resized. Scenes that aren't open are saved; open scenes stay unsaved so you can undo.",
-                ConfirmLabel = "Fix " + DescribeScenes(toFix.Count)
-            };
-
-            for (int i = 0; i < toFix.Count; i++)
-            {
-                UiElementStructureReport structure = toFix[i].Structure;
-                List<string> manualWork = UiElementStructureFixer.SummarizeManualWork(structure);
-                List<string> changes = UiElementStructureFixer.DescribePlannedChanges(structure);
-
-                UiElementChangeEntry entry = new UiElementChangeEntry
-                {
-                    Title = toFix[i].SceneName,
-                    Subtitle = (changes.Count == 1 ? "1 change" : changes.Count + " changes") + (manualWork.Count > 0 ? ", " + manualWork.Count + " manual" : string.Empty)
-                };
-                entry.Changes.AddRange(changes);
-                entry.ManualWork.AddRange(manualWork);
-
-                dialogModel.Entries.Add(entry);
-            }
-
-            if (!UiElementChangeDialog.Show(dialogModel))
-            {
-                return "Cancelled.";
-            }
-
+        // Fixes every given scene (FixStructure re-validates each one first, so slightly stale infos are safe) and
+        // updates each info's Structure with what is left afterwards.
+        public static string FixStructure(IList<UiElementSceneInfo> toFix, UiGlobalCanvasSettings settings)
+        {
             int fixedCount = 0;
             List<string> leftOpen = new List<string>();
-            Dictionary<string, UiElementStructureReport> afterReports = new Dictionary<string, UiElementStructureReport>();
 
             try
             {
@@ -166,10 +89,10 @@ namespace UiFramework.Editor.Scenes
                     UiElementSceneInfo info = toFix[i];
                     EditorUtility.DisplayProgressBar("Fixing Element Scene Structure", info.SceneName, (float)i / toFix.Count);
 
-                    bool isOpen = UiElementSceneUtility.IsSceneOpen(info.ScenePath);
-                    bool done = UiElementSceneUtility.WithScene(info.ScenePath, true, scene =>
+                    bool isOpen = UiElementSceneAccess.IsSceneOpen(info.ScenePath);
+                    bool done = UiElementSceneAccess.WithScene(info.ScenePath, true, scene =>
                     {
-                        afterReports[info.ScenePath] = UiElementStructureFixer.FixStructure(scene, settings);
+                        info.Structure = UiElementStructureFixer.FixStructure(scene, settings);
                     });
 
                     if (done)
@@ -187,21 +110,8 @@ namespace UiFramework.Editor.Scenes
                 EditorUtility.ClearProgressBar();
             }
 
-            List<UiElementSceneInfo> remainingInfos = new List<UiElementSceneInfo>();
-            for (int i = 0; i < infos.Count; i++)
-            {
-                UiElementSceneInfo info = infos[i];
-                UiElementStructureReport after;
-                if (afterReports.TryGetValue(info.ScenePath, out after))
-                {
-                    info.Structure = after;
-                }
-
-                remainingInfos.Add(info);
-            }
-
             string summary = "Fix Structure: fixed " + fixedCount + " scene(s).";
-            string remaining = DescribeRemaining(remainingInfos);
+            string remaining = DescribeRemaining(toFix);
 
             if (remaining.Length > 0)
             {
@@ -215,46 +125,15 @@ namespace UiFramework.Editor.Scenes
             return summary;
         }
 
-        public static List<string> BuildFixPlan(IList<UiElementSceneInfo> infos)
+        public static void LogFixResult(string sceneName, UiElementStructureReport remaining)
         {
-            List<string> plan = new List<string>();
-
-            for (int i = 0; i < infos.Count; i++)
+            if (remaining.HasIssues)
             {
-                List<string> changes = UiElementStructureFixer.DescribePlannedChanges(infos[i].Structure);
-                for (int c = 0; c < changes.Count; c++)
-                {
-                    plan.Add(infos[i].SceneName + ": " + changes[c]);
-                }
+                Debug.LogWarning("[UiFramework] Fixed structure of '" + sceneName + "'. Remaining issues:\n" + remaining.GetIssuesText());
+                return;
             }
 
-            return plan;
-        }
-
-        private static List<UiElementSceneInfo> InspectAll(UiEditorConfig config, UiGlobalCanvasSettings settings, string title)
-        {
-            List<string> scenePaths = UiElementSceneUtility.FindElementScenePaths(config);
-            List<UiElementSceneInfo> infos = new List<UiElementSceneInfo>(scenePaths.Count);
-
-            try
-            {
-                for (int i = 0; i < scenePaths.Count; i++)
-                {
-                    string name = System.IO.Path.GetFileNameWithoutExtension(scenePaths[i]);
-                    if (EditorUtility.DisplayCancelableProgressBar(title, name, (float)i / scenePaths.Count))
-                    {
-                        return null;
-                    }
-
-                    infos.Add(UiElementSceneUtility.InspectScene(scenePaths[i], settings));
-                }
-            }
-            finally
-            {
-                EditorUtility.ClearProgressBar();
-            }
-
-            return infos;
+            Debug.Log("[UiFramework] Fixed structure of '" + sceneName + "'; it now follows the UI element scene contract.");
         }
 
         private static string DescribeRemaining(IList<UiElementSceneInfo> infos)
@@ -286,19 +165,6 @@ namespace UiFramework.Editor.Scenes
             }
 
             return "\nEdited in place and left unsaved (they were open in the editor): " + string.Join(", ", sceneNames.ToArray());
-        }
-
-        private static string DescribeScenes(int count)
-        {
-            return count == 1 ? "1 scene" : count + " scenes";
-        }
-
-        private static string LogNoScenes(UiEditorConfig config)
-        {
-            string folder = config != null ? config.ElementsScenePath : "(no UiEditorConfig)";
-            string message = "No element scenes found under '" + folder + "'.";
-            Debug.LogWarning("[UiFramework] " + message);
-            return message;
         }
     }
 }

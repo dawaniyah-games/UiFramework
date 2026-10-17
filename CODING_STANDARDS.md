@@ -103,6 +103,7 @@ Background for each rule is in [DESIGN.md](DESIGN.md).
 6. **Identify scenes by GUID (`AssetReference.AssetGUID`), never by scene name.**
 7. **New tween presets** live entirely in `TweenPresets`: key constant + `presetKeys` list + `PlayAsync` branch + start pose in `PrepareShow` + text in `Describe`. Run them through `Tween.RunAsync` with a `UiTweenState` run so they can be interrupted, and start from / return to the base pose. Entrances ease out, exits ease in, and full-screen motion never overshoots or bounces.
 8. **The package stays dependency-light:** Unity built-ins plus `com.unity.addressables`. A new package dependency needs a `package.json` change and maintainer approval.
+9. **Editor layers:** `Editor/Scenes`, `Editor/Config`, `Editor/Data` and `Editor/CodeGeneration` hold editor *logic* and **MUST NOT** reference `Editor/Window` (UI). When logic needs a decision from the user, it takes a callback (e.g. `UiElementSceneCreator.Options.ConfirmStructureFix`); the window shows the dialog. Window classes stay small: one tab or panel per class, with popup wording in `UiElementChangeDialogs`.
 
 ## 8. Public API & versioning
 

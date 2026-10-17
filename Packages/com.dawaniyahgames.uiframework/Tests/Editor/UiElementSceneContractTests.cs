@@ -420,7 +420,7 @@ namespace UiFramework.Editor.Tests
             scaler.matchWidthOrHeight = 0.25f;
             scaler.referencePixelsPerUnit = 1.0f;
 
-            UiElementSceneUtility.ApplyCanvasSettings(canvas, scaler, settings);
+            UiElementCanvasUtility.ApplyCanvasSettings(canvas, scaler, settings);
 
             Assert.AreEqual(7, canvas.sortingOrder);
             Assert.AreEqual(42.0f, canvas.planeDistance);
@@ -434,12 +434,12 @@ namespace UiFramework.Editor.Tests
         {
             Canvas canvas = CreateCanvas(CreateElementRoot("DiffUiElementRoot", true));
             CanvasScaler scaler = canvas.GetComponent<CanvasScaler>();
-            UiElementSceneUtility.ApplyCanvasSettings(canvas, scaler, settings);
+            UiElementCanvasUtility.ApplyCanvasSettings(canvas, scaler, settings);
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             scaler.referenceResolution = new Vector2(800.0f, 600.0f);
 
             string diff;
-            bool matches = UiElementSceneUtility.CanvasSettingsMatch(canvas, scaler, settings, out diff);
+            bool matches = UiElementCanvasUtility.CanvasSettingsMatch(canvas, scaler, settings, out diff);
 
             Assert.IsFalse(matches);
             StringAssert.Contains("ScreenMatchMode: MatchWidthOrHeight → Expand", diff);
@@ -451,18 +451,18 @@ namespace UiFramework.Editor.Tests
         {
             Canvas canvas = CreateCanvas(CreateElementRoot("MatchUiElementRoot", true));
             CanvasScaler scaler = canvas.GetComponent<CanvasScaler>();
-            UiElementSceneUtility.ApplyCanvasSettings(canvas, scaler, settings);
+            UiElementCanvasUtility.ApplyCanvasSettings(canvas, scaler, settings);
             scaler.matchWidthOrHeight = 0.9f;
 
             string diff;
-            Assert.IsTrue(UiElementSceneUtility.CanvasSettingsMatch(canvas, scaler, settings, out diff), diff);
+            Assert.IsTrue(UiElementCanvasUtility.CanvasSettingsMatch(canvas, scaler, settings, out diff), diff);
 
             SerializedObject serializedSettings = new SerializedObject(settings);
             serializedSettings.FindProperty("screenMatchMode").enumValueIndex = (int)CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             serializedSettings.ApplyModifiedPropertiesWithoutUndo();
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
 
-            Assert.IsFalse(UiElementSceneUtility.CanvasSettingsMatch(canvas, scaler, settings, out diff));
+            Assert.IsFalse(UiElementCanvasUtility.CanvasSettingsMatch(canvas, scaler, settings, out diff));
             StringAssert.Contains("MatchWidthOrHeight: 0.9 → 0.5", diff);
         }
 
@@ -475,7 +475,7 @@ namespace UiFramework.Editor.Tests
             string path = SaveActiveScene("OpenUiElement");
             string fileBefore = System.IO.File.ReadAllText(path);
 
-            bool ran = UiElementSceneUtility.WithScene(path, true, target =>
+            bool ran = UiElementSceneAccess.WithScene(path, true, target =>
             {
                 UiElementStructureFixer.FixStructure(target, settings);
             });
@@ -494,7 +494,7 @@ namespace UiFramework.Editor.Tests
             string path = SaveActiveScene("ClosedUiElement");
             scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
-            bool ran = UiElementSceneUtility.WithScene(path, true, target =>
+            bool ran = UiElementSceneAccess.WithScene(path, true, target =>
             {
                 UiElementStructureFixer.FixStructure(target, settings);
             });
@@ -502,7 +502,7 @@ namespace UiFramework.Editor.Tests
             Assert.IsTrue(ran);
             Assert.IsFalse(SceneManager.GetSceneByPath(path).IsValid(), "Scene must be closed again.");
 
-            UiElementSceneInfo info = UiElementSceneUtility.InspectScene(path, settings);
+            UiElementSceneInfo info = UiElementSceneAccess.InspectScene(path, settings);
             Assert.IsTrue(info.IsAvailable);
             Assert.IsTrue(info.HasUiElement);
             AssertCodes(info.Structure);
@@ -516,11 +516,11 @@ namespace UiFramework.Editor.Tests
         {
             Canvas canvas = CreateCanvas(CreateElementRoot("PopupUiElementRoot", true));
             CreateStretched("Root", canvas.transform);
-            UiElementSceneUtility.ApplyCanvasSettings(canvas, canvas.GetComponent<CanvasScaler>(), settings);
+            UiElementCanvasUtility.ApplyCanvasSettings(canvas, canvas.GetComponent<CanvasScaler>(), settings);
             string path = SaveActiveScene("PopupUiElement");
             scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
-            bool edited = UiElementSceneUtility.EditCanvas(path, "Test", (c, s) =>
+            bool edited = UiElementCanvasUtility.EditCanvas(path, "Test", (c, s) =>
             {
                 c.sortingOrder = 50;
             });
@@ -528,7 +528,7 @@ namespace UiFramework.Editor.Tests
             Assert.IsTrue(edited);
             Assert.IsFalse(SceneManager.GetSceneByPath(path).IsValid(), "Scene must be closed again.");
 
-            UiElementSceneInfo info = UiElementSceneUtility.InspectScene(path, settings);
+            UiElementSceneInfo info = UiElementSceneAccess.InspectScene(path, settings);
             Assert.AreEqual(50, info.Canvas.SortingOrder);
             Assert.AreEqual(new Vector2(1080.0f, 1920.0f), info.Canvas.ReferenceResolution);
             Assert.AreEqual(0, info.CanvasDifferences.Count, "Sorting order is not part of the default settings.");
@@ -701,7 +701,7 @@ namespace UiFramework.Editor.Tests
         private UiElementStructureReport Validate()
         {
             UiElementStructureReport report;
-            UiElementSceneUtility.ValidateStructure(scene, out report);
+            UiElementStructureValidator.ValidateStructure(scene, out report);
             return report;
         }
 

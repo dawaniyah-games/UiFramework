@@ -1,375 +1,23 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using UiFramework.Core;
-using UiFramework.Editor.Config;
 using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace UiFramework.Editor.Scenes
 {
-    // Helpers for the UI element scene contract (see DESIGN.md §7.1):
+    // Checks a UI element scene against the contract (see DESIGN.md §7.1):
     //
     //   <Name>Root   plain Transform with the UiElement, the only root GameObject in the scene
-    //   └─ Canvas    child index 0: root Canvas + CanvasScaler + GraphicRaycaster, values from UiGlobalCanvasSettings
+    //   └─ Canvas    child index 0: root Canvas + CanvasScaler + GraphicRaycaster
     //      └─ Root   the only Canvas child: stretched RectTransform, the animation target
     //
     // Names are not checked, only structure.
-    public static class UiElementSceneUtility
+    public static class UiElementStructureValidator
     {
-        private const float positionTolerance = 0.01f;
-        private const float unitTolerance = 0.0001f;
-        private const float rotationToleranceDegrees = 0.01f;
         private const int maxListedNames = 6;
-
-        // ---------- Scene access ----------
-
-        public static bool IsSceneOpen(string scenePath)
-        {
-            if (string.IsNullOrEmpty(scenePath))
-            {
-                return false;
-            }
-
-            Scene scene = SceneManager.GetSceneByPath(scenePath);
-            return scene.IsValid() && scene.isLoaded;
-        }
-
-        // Runs action on the scene at scenePath.
-        // - Already loaded in the editor: runs in place. When save is true the scene is marked dirty but is not
-        //   saved or closed, so the user keeps control (and Undo) over their open scene.
-        // - Otherwise: opens it additively, runs action, saves when save is true, and always closes it again.
-        // Returns false when the scene could not be opened.
-        public static bool WithScene(string scenePath, bool save, Action<Scene> action)
-        {
-            if (string.IsNullOrEmpty(scenePath) || action == null)
-            {
-                return false;
-            }
-
-            Scene existing = SceneManager.GetSceneByPath(scenePath);
-            if (existing.IsValid() && existing.isLoaded)
-            {
-                action(existing);
-
-                if (save)
-                {
-                    EditorSceneManager.MarkSceneDirty(existing);
-                }
-
-                return true;
-            }
-
-            if (EditorApplication.isPlayingOrWillChangePlaymode)
-            {
-                Debug.LogWarning("[UiFramework] Cannot open scene '" + scenePath + "' while in Play Mode.");
-                return false;
-            }
-
-            // A scene can be listed in the Hierarchy but unloaded; keep it listed after we are done.
-            bool wasInHierarchy = existing.IsValid();
-
-            Scene scene;
-            try
-            {
-                scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
-            }
-            catch (Exception exception)
-            {
-                Debug.LogError("[UiFramework] Failed to open scene '" + scenePath + "': " + exception.Message);
-                return false;
-            }
-
-            try
-            {
-                action(scene);
-
-                if (save)
-                {
-                    EditorSceneManager.MarkSceneDirty(scene);
-                    EditorSceneManager.SaveScene(scene);
-                }
-            }
-            finally
-            {
-                EditorSceneManager.CloseScene(scene, !wasInHierarchy);
-            }
-
-            return true;
-        }
-
-        public static List<string> FindElementScenePaths(UiEditorConfig config)
-        {
-            List<string> scenes = new List<string>();
-
-            if (config == null || string.IsNullOrEmpty(config.ElementsScenePath) || !AssetDatabase.IsValidFolder(config.ElementsScenePath.TrimEnd('/')))
-            {
-                return scenes;
-            }
-
-            string[] guids = AssetDatabase.FindAssets("t:Scene", new string[] { config.ElementsScenePath.TrimEnd('/') });
-            for (int i = 0; i < guids.Length; i++)
-            {
-                string path = AssetDatabase.GUIDToAssetPath(guids[i]);
-                if (path.EndsWith(".unity", StringComparison.OrdinalIgnoreCase) && !scenes.Contains(path))
-                {
-                    scenes.Add(path);
-                }
-            }
-
-            scenes.Sort(StringComparer.Ordinal);
-            return scenes;
-        }
-
-        // Reads animation presets, structure and canvas status in a single scene open.
-        public static UiElementSceneInfo InspectScene(string scenePath, UiGlobalCanvasSettings settings)
-        {
-            UiElementSceneInfo info = new UiElementSceneInfo(scenePath);
-
-            bool opened = WithScene(scenePath, false, scene =>
-            {
-                string showPreset;
-                string hidePreset;
-                info.HasUiElement = TryReadAnimationPresets(scene, out showPreset, out hidePreset);
-                info.ShowPreset = showPreset;
-                info.HidePreset = hidePreset;
-
-                UiElementStructureReport report;
-                ValidateStructure(scene, out report);
-                info.Structure = report;
-
-                if (report.Canvas != null)
-                {
-                    info.Canvas = UiCanvasSnapshot.Capture(report.Canvas);
-                    info.CanvasDifferences = GetCanvasDifferences(report.Canvas, report.Canvas.GetComponent<CanvasScaler>(), settings).AsReadOnly();
-                }
-            });
-
-            info.IsAvailable = opened;
-            return info;
-        }
-
-        // ---------- Animation presets ----------
-
-        public static bool TryReadAnimationPresets(Scene scene, out string showPreset, out string hidePreset)
-        {
-            showPreset = null;
-            hidePreset = null;
-
-            GameObject[] roots = scene.GetRootGameObjects();
-            for (int i = 0; i < roots.Length; i++)
-            {
-                UiElement[] elements = roots[i].GetComponentsInChildren<UiElement>(true);
-                if (elements == null || elements.Length == 0)
-                {
-                    continue;
-                }
-
-                SerializedObject serializedElement = new SerializedObject(elements[0]);
-                SerializedProperty showProp = serializedElement.FindProperty("showAnimationPreset");
-                SerializedProperty hideProp = serializedElement.FindProperty("hideAnimationPreset");
-
-                showPreset = showProp != null ? showProp.stringValue : null;
-                hidePreset = hideProp != null ? hideProp.stringValue : null;
-                return true;
-            }
-
-            return false;
-        }
-
-        // Writes the presets to every UiElement in the scene. Returns false when the scene has none.
-        public static bool WriteAnimationPresets(Scene scene, string showPreset, string hidePreset)
-        {
-            bool wroteAny = false;
-            GameObject[] roots = scene.GetRootGameObjects();
-
-            for (int i = 0; i < roots.Length; i++)
-            {
-                UiElement[] elements = roots[i].GetComponentsInChildren<UiElement>(true);
-                for (int e = 0; e < elements.Length; e++)
-                {
-                    SerializedObject serializedElement = new SerializedObject(elements[e]);
-                    SerializedProperty showProp = serializedElement.FindProperty("showAnimationPreset");
-                    SerializedProperty hideProp = serializedElement.FindProperty("hideAnimationPreset");
-
-                    if (showProp != null)
-                    {
-                        showProp.stringValue = showPreset;
-                    }
-
-                    if (hideProp != null)
-                    {
-                        hideProp.stringValue = hidePreset;
-                    }
-
-                    serializedElement.ApplyModifiedProperties();
-                    wroteAny = true;
-                }
-            }
-
-            return wroteAny;
-        }
-
-        // ---------- Canvas settings ----------
-
-        // Writes only renderMode, pixelPerfect and the CanvasScaler scale values. Sorting, cameras, plane distance and
-        // shader channels are never touched. Either component may be null.
-        public static void ApplyCanvasSettings(Canvas canvas, CanvasScaler scaler, UiGlobalCanvasSettings settings)
-        {
-            if (settings == null)
-            {
-                return;
-            }
-
-            if (canvas != null)
-            {
-                Undo.RecordObject(canvas, "Apply Global Canvas Settings");
-                canvas.renderMode = settings.RenderMode;
-                canvas.pixelPerfect = settings.PixelPerfect;
-                RecordPrefabOverrides(canvas);
-                EditorUtility.SetDirty(canvas);
-            }
-
-            if (scaler != null)
-            {
-                Undo.RecordObject(scaler, "Apply Global Canvas Settings");
-                scaler.uiScaleMode = settings.UiScaleMode;
-                scaler.referenceResolution = settings.ReferenceResolution;
-                scaler.screenMatchMode = settings.ScreenMatchMode;
-
-                if (settings.ScreenMatchMode == CanvasScaler.ScreenMatchMode.MatchWidthOrHeight)
-                {
-                    scaler.matchWidthOrHeight = settings.MatchWidthOrHeight;
-                }
-
-                scaler.referencePixelsPerUnit = settings.ReferencePixelsPerUnit;
-                RecordPrefabOverrides(scaler);
-                EditorUtility.SetDirty(scaler);
-            }
-        }
-
-        public static bool CanvasSettingsMatch(Canvas canvas, CanvasScaler scaler, UiGlobalCanvasSettings settings, out string diff)
-        {
-            List<UiCanvasSettingDifference> differences = GetCanvasDifferences(canvas, scaler, settings);
-            diff = JoinDifferences(differences);
-            return differences.Count == 0;
-        }
-
-        public static List<UiCanvasSettingDifference> GetCanvasDifferences(Canvas canvas, CanvasScaler scaler, UiGlobalCanvasSettings settings)
-        {
-            List<UiCanvasSettingDifference> differences = new List<UiCanvasSettingDifference>();
-
-            if (settings == null)
-            {
-                differences.Add(new UiCanvasSettingDifference("GlobalCanvasSettings", "missing", "assign in the General tab"));
-                return differences;
-            }
-
-            if (canvas == null)
-            {
-                differences.Add(new UiCanvasSettingDifference("Canvas", "missing", "use Fix Structure"));
-                return differences;
-            }
-
-            if (canvas.renderMode != settings.RenderMode)
-            {
-                differences.Add(new UiCanvasSettingDifference("RenderMode", canvas.renderMode.ToString(), settings.RenderMode.ToString()));
-            }
-
-            if (canvas.pixelPerfect != settings.PixelPerfect)
-            {
-                differences.Add(new UiCanvasSettingDifference("PixelPerfect", canvas.pixelPerfect.ToString(), settings.PixelPerfect.ToString()));
-            }
-
-            if (scaler == null)
-            {
-                differences.Add(new UiCanvasSettingDifference("CanvasScaler", "missing", "use Fix Structure"));
-                return differences;
-            }
-
-            if (scaler.uiScaleMode != settings.UiScaleMode)
-            {
-                differences.Add(new UiCanvasSettingDifference("UiScaleMode", scaler.uiScaleMode.ToString(), settings.UiScaleMode.ToString()));
-            }
-
-            if (!Approximately(scaler.referenceResolution, settings.ReferenceResolution, positionTolerance))
-            {
-                differences.Add(new UiCanvasSettingDifference("ReferenceResolution", FormatResolution(scaler.referenceResolution), FormatResolution(settings.ReferenceResolution)));
-            }
-
-            if (scaler.screenMatchMode != settings.ScreenMatchMode)
-            {
-                differences.Add(new UiCanvasSettingDifference("ScreenMatchMode", scaler.screenMatchMode.ToString(), settings.ScreenMatchMode.ToString()));
-            }
-
-            if (settings.ScreenMatchMode == CanvasScaler.ScreenMatchMode.MatchWidthOrHeight &&
-                Mathf.Abs(scaler.matchWidthOrHeight - settings.MatchWidthOrHeight) > unitTolerance)
-            {
-                differences.Add(new UiCanvasSettingDifference("MatchWidthOrHeight", FormatNumber(scaler.matchWidthOrHeight), FormatNumber(settings.MatchWidthOrHeight)));
-            }
-
-            if (Mathf.Abs(scaler.referencePixelsPerUnit - settings.ReferencePixelsPerUnit) > unitTolerance)
-            {
-                differences.Add(new UiCanvasSettingDifference("ReferencePixelsPerUnit", FormatNumber(scaler.referencePixelsPerUnit), FormatNumber(settings.ReferencePixelsPerUnit)));
-            }
-
-            return differences;
-        }
-
-        private static string JoinDifferences(List<UiCanvasSettingDifference> differences)
-        {
-            List<string> parts = new List<string>(differences.Count);
-
-            for (int i = 0; i < differences.Count; i++)
-            {
-                parts.Add(differences[i].ToString());
-            }
-
-            return string.Join("; ", parts.ToArray());
-        }
-
-        // Changes the element scene's root Canvas / Canvas Scaler (Undo-recorded). Open scenes are edited in place and
-        // left unsaved; closed scenes are opened, saved and closed. Returns false when the scene has no root Canvas.
-        public static bool EditCanvas(string scenePath, string undoName, Action<Canvas, CanvasScaler> edit)
-        {
-            bool edited = false;
-
-            WithScene(scenePath, true, scene =>
-            {
-                UiElementStructureReport report;
-                ValidateStructure(scene, out report);
-                if (report.Canvas == null)
-                {
-                    return;
-                }
-
-                CanvasScaler scaler = report.Canvas.GetComponent<CanvasScaler>();
-                Undo.RecordObject(report.Canvas, undoName);
-                if (scaler != null)
-                {
-                    Undo.RecordObject(scaler, undoName);
-                }
-
-                edit(report.Canvas, scaler);
-
-                RecordPrefabOverrides(report.Canvas);
-                EditorUtility.SetDirty(report.Canvas);
-                if (scaler != null)
-                {
-                    RecordPrefabOverrides(scaler);
-                    EditorUtility.SetDirty(scaler);
-                }
-
-                edited = true;
-            });
-
-            return edited;
-        }
-
-        // ---------- Structure validation ----------
 
         public static bool ValidateStructure(Scene scene, out UiElementStructureReport report)
         {
@@ -433,35 +81,35 @@ namespace UiFramework.Editor.Scenes
         {
             List<string> diffs = new List<string>();
 
-            if (!Approximately(rectTransform.anchorMin, Vector2.zero, unitTolerance) || !Approximately(rectTransform.anchorMax, Vector2.one, unitTolerance))
+            if (!UiSceneValues.Approximately(rectTransform.anchorMin, Vector2.zero, UiSceneValues.UnitTolerance) || !UiSceneValues.Approximately(rectTransform.anchorMax, Vector2.one, UiSceneValues.UnitTolerance))
             {
-                diffs.Add("anchors " + FormatVector(rectTransform.anchorMin) + "-" + FormatVector(rectTransform.anchorMax));
+                diffs.Add("anchors " + UiSceneValues.FormatVector(rectTransform.anchorMin) + "-" + UiSceneValues.FormatVector(rectTransform.anchorMax));
             }
 
-            if (!Approximately(rectTransform.offsetMin, Vector2.zero, positionTolerance) || !Approximately(rectTransform.offsetMax, Vector2.zero, positionTolerance))
+            if (!UiSceneValues.Approximately(rectTransform.offsetMin, Vector2.zero, UiSceneValues.PositionTolerance) || !UiSceneValues.Approximately(rectTransform.offsetMax, Vector2.zero, UiSceneValues.PositionTolerance))
             {
-                diffs.Add("offsets min " + FormatVector(rectTransform.offsetMin) + " max " + FormatVector(rectTransform.offsetMax));
+                diffs.Add("offsets min " + UiSceneValues.FormatVector(rectTransform.offsetMin) + " max " + UiSceneValues.FormatVector(rectTransform.offsetMax));
             }
 
-            if (!Approximately(rectTransform.pivot, new Vector2(0.5f, 0.5f), unitTolerance))
+            if (!UiSceneValues.Approximately(rectTransform.pivot, new Vector2(0.5f, 0.5f), UiSceneValues.UnitTolerance))
             {
-                diffs.Add("pivot " + FormatVector(rectTransform.pivot));
+                diffs.Add("pivot " + UiSceneValues.FormatVector(rectTransform.pivot));
             }
 
-            if (!Approximately(rectTransform.anchoredPosition, Vector2.zero, positionTolerance))
+            if (!UiSceneValues.Approximately(rectTransform.anchoredPosition, Vector2.zero, UiSceneValues.PositionTolerance))
             {
-                diffs.Add("anchoredPosition " + FormatVector(rectTransform.anchoredPosition));
+                diffs.Add("anchoredPosition " + UiSceneValues.FormatVector(rectTransform.anchoredPosition));
             }
 
             Vector3 scale = rectTransform.localScale;
-            if (Mathf.Abs(scale.x - 1.0f) > unitTolerance || Mathf.Abs(scale.y - 1.0f) > unitTolerance || Mathf.Abs(scale.z - 1.0f) > unitTolerance)
+            if (Mathf.Abs(scale.x - 1.0f) > UiSceneValues.UnitTolerance || Mathf.Abs(scale.y - 1.0f) > UiSceneValues.UnitTolerance || Mathf.Abs(scale.z - 1.0f) > UiSceneValues.UnitTolerance)
             {
-                diffs.Add("scale " + FormatVector(scale));
+                diffs.Add("scale " + UiSceneValues.FormatVector(scale));
             }
 
-            if (Quaternion.Angle(rectTransform.localRotation, Quaternion.identity) > rotationToleranceDegrees)
+            if (Quaternion.Angle(rectTransform.localRotation, Quaternion.identity) > UiSceneValues.RotationToleranceDegrees)
             {
-                diffs.Add("rotation " + FormatVector(rectTransform.localEulerAngles));
+                diffs.Add("rotation " + UiSceneValues.FormatVector(rectTransform.localEulerAngles));
             }
 
             difference = string.Join(", ", diffs.ToArray());
@@ -796,13 +444,6 @@ namespace UiFramework.Editor.Scenes
             }
         }
 
-        private static void RecordPrefabOverrides(UnityEngine.Object target)
-        {
-            if (PrefabUtility.IsPartOfPrefabInstance(target))
-            {
-                PrefabUtility.RecordPrefabInstancePropertyModifications(target);
-            }
-        }
 
         private static string DescribeCount(int count)
         {
@@ -840,31 +481,6 @@ namespace UiFramework.Editor.Scenes
             }
 
             return path;
-        }
-
-        private static bool Approximately(Vector2 a, Vector2 b, float tolerance)
-        {
-            return Mathf.Abs(a.x - b.x) <= tolerance && Mathf.Abs(a.y - b.y) <= tolerance;
-        }
-
-        private static string FormatNumber(float value)
-        {
-            return value.ToString("0.###", CultureInfo.InvariantCulture);
-        }
-
-        private static string FormatResolution(Vector2 value)
-        {
-            return FormatNumber(value.x) + "x" + FormatNumber(value.y);
-        }
-
-        private static string FormatVector(Vector2 value)
-        {
-            return "(" + FormatNumber(value.x) + ", " + FormatNumber(value.y) + ")";
-        }
-
-        private static string FormatVector(Vector3 value)
-        {
-            return "(" + FormatNumber(value.x) + ", " + FormatNumber(value.y) + ", " + FormatNumber(value.z) + ")";
         }
     }
 }

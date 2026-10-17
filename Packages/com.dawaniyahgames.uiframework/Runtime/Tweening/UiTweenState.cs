@@ -102,20 +102,40 @@ namespace UiFramework.Tweening
         // Claims the given channels for a new animation; older animations on those channels stop on their next frame.
         public int BeginAnimation(UiTweenChannels channels)
         {
-            return BeginAnimation(channels, false);
+            if ((channels & UiTweenChannels.Position) != 0)
+            {
+                shaking = false;
+            }
+
+            return ClaimChannels(channels);
         }
 
-        public int BeginAnimation(UiTweenChannels channels, bool isShake)
+        // Starts a shake on the Position channel. A shake moves around its resting point; when a shake is
+        // re-triggered mid-shake it keeps the first resting point instead of the current (offset) position.
+        public int BeginShake(Vector3 currentLocalPosition, out Vector3 restingPosition)
+        {
+            if (!shaking)
+            {
+                shakeOrigin = currentLocalPosition;
+                shaking = true;
+            }
+
+            restingPosition = shakeOrigin;
+            return ClaimChannels(UiTweenChannels.Position);
+        }
+
+        public void EndShake()
+        {
+            shaking = false;
+        }
+
+        private int ClaimChannels(UiTweenChannels channels)
         {
             lastRun++;
 
             if ((channels & UiTweenChannels.Position) != 0)
             {
                 positionRun = lastRun;
-                if (!isShake)
-                {
-                    shaking = false;
-                }
             }
 
             if ((channels & UiTweenChannels.Scale) != 0)
@@ -149,24 +169,6 @@ namespace UiFramework.Tweening
             }
 
             return true;
-        }
-
-        // A shake moves around its resting point. If a shake is re-triggered mid-shake it keeps the first resting
-        // point instead of the current (offset) position.
-        public Vector3 BeginShake(Vector3 currentLocalPosition)
-        {
-            if (!shaking)
-            {
-                shakeOrigin = currentLocalPosition;
-                shaking = true;
-            }
-
-            return shakeOrigin;
-        }
-
-        public void EndShake()
-        {
-            shaking = false;
         }
     }
 }

@@ -197,8 +197,8 @@ namespace UiFramework.Tweening
             }
 
             UiTweenState state = GetOrCreateTweenState(t.gameObject);
-            Vector3 origin = state.BeginShake(t.localPosition);
-            int run = state.BeginAnimation(UiTweenChannels.Position, true);
+            Vector3 origin;
+            int run = state.BeginShake(t.localPosition, out origin);
 
             await Tween.RunAsync(t, duration, TweenCurves.Linear, true, ct, () => state != null && state.IsCurrent(run, UiTweenChannels.Position), p =>
             {

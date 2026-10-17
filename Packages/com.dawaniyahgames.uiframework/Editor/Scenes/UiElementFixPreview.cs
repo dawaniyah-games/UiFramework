@@ -79,7 +79,7 @@ namespace UiFramework.Editor.Scenes
             {
                 Name = transform.name,
                 IsCanvas = transform.GetComponent<Canvas>() != null,
-                FillsParent = rectTransform != null && UiElementSceneUtility.IsStretchedToParent(rectTransform, out unused),
+                FillsParent = rectTransform != null && UiElementStructureValidator.IsStretchedToParent(rectTransform, out unused),
                 CannotBeContentRoot = rectTransform == null || transform.GetComponent<Canvas>() != null || PrefabUtility.IsAnyPrefabInstanceRoot(transform.gameObject)
             };
 
