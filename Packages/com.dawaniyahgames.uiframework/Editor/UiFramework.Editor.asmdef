@@ -6,7 +6,8 @@
         "UiFramework.Runtime",
         "UiFramework.Tweening",
         "Unity.Addressables",
-        "Unity.Addressables.Editor"
+        "Unity.Addressables.Editor",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [
         "Editor"

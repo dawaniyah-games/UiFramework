@@ -1,9 +1,9 @@
+using System.Threading.Tasks;
+using UiFramework.Tweening;
+using UnityEngine;
+
 namespace UiFramework.Core
 {
-    using System.Threading.Tasks;
-    using UnityEngine;
-    using UiFramework.Tweening;
-
     public abstract class UiElement : MonoBehaviour, IUiElement
     {
         [SerializeField] private string showAnimationPreset;
@@ -38,7 +38,9 @@ namespace UiFramework.Core
             animationTarget = root;
         }
 
-        public virtual void Populate(object context = null) { }
+        public virtual void Populate(object context = null)
+        {
+        }
 
         public virtual Task ShowAsync(string presetKey = null)
         {
@@ -54,60 +56,8 @@ namespace UiFramework.Core
 
         public virtual void PrepareForShow()
         {
-            GameObject target = GetAnimationTargetGameObject();
-            if (target == null)
-            {
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(showAnimationPreset) || string.Equals(showAnimationPreset, TweenPresets.NoneKey, System.StringComparison.OrdinalIgnoreCase))
-            {
-                return;
-            }
-
-            if (string.Equals(showAnimationPreset, TweenPresets.FadeKey, System.StringComparison.OrdinalIgnoreCase))
-            {
-                CanvasGroup group = target.GetComponent<CanvasGroup>();
-                if (group == null)
-                {
-                    group = target.AddComponent<CanvasGroup>();
-                }
-
-                group.alpha = 0.0f;
-                return;
-            }
-
-            if (string.Equals(showAnimationPreset, TweenPresets.ScaleKey, System.StringComparison.OrdinalIgnoreCase))
-            {
-                UiTweenState tweenState = GetOrCreateTweenState(target);
-                Vector3 baseScale = tweenState.BaseLocalScale;
-                target.transform.localScale = baseScale * 0.9f;
-                return;
-            }
-
-            if (string.Equals(showAnimationPreset, TweenPresets.SlideLeftKey, System.StringComparison.OrdinalIgnoreCase))
-            {
-                PrepareSlideForShow(target, Vector2.left);
-                return;
-            }
-
-            if (string.Equals(showAnimationPreset, TweenPresets.SlideRightKey, System.StringComparison.OrdinalIgnoreCase))
-            {
-                PrepareSlideForShow(target, Vector2.right);
-                return;
-            }
-
-            if (string.Equals(showAnimationPreset, TweenPresets.SlideUpKey, System.StringComparison.OrdinalIgnoreCase))
-            {
-                PrepareSlideForShow(target, Vector2.up);
-                return;
-            }
-
-            if (string.Equals(showAnimationPreset, TweenPresets.SlideDownKey, System.StringComparison.OrdinalIgnoreCase))
-            {
-                PrepareSlideForShow(target, Vector2.down);
-                return;
-            }
+            // The start poses live in TweenPresets next to the animations, so show and prepare always agree.
+            TweenPresets.PrepareShow(showAnimationPreset, GetAnimationTargetGameObject());
         }
 
         private GameObject GetAnimationTargetGameObject()
@@ -149,108 +99,6 @@ namespace UiFramework.Core
             }
 
             return null;
-        }
-
-        private static UiTweenState GetOrCreateTweenState(GameObject target)
-        {
-            UiTweenState state = target.GetComponent<UiTweenState>();
-            if (state == null)
-            {
-                state = target.AddComponent<UiTweenState>();
-            }
-
-            state.EnsureInitialized();
-            return state;
-        }
-
-        private static RectTransform FindRectTransformForAnimation(GameObject target)
-        {
-            RectTransform self = target.GetComponent<RectTransform>();
-            if (self != null)
-            {
-                return self;
-            }
-
-            return target.GetComponentInChildren<RectTransform>(true);
-        }
-
-        private static float GetCanvasWidth(RectTransform rectTransform)
-        {
-            Canvas canvas = rectTransform.GetComponentInParent<Canvas>();
-            if (canvas == null)
-            {
-                return 0.0f;
-            }
-
-            RectTransform canvasRect = canvas.transform as RectTransform;
-            if (canvasRect == null)
-            {
-                return 0.0f;
-            }
-
-            return canvasRect.rect.width;
-        }
-
-        private static float GetCanvasHeight(RectTransform rectTransform)
-        {
-            Canvas canvas = rectTransform.GetComponentInParent<Canvas>();
-            if (canvas == null)
-            {
-                return 0.0f;
-            }
-
-            RectTransform canvasRect = canvas.transform as RectTransform;
-            if (canvasRect == null)
-            {
-                return 0.0f;
-            }
-
-            return canvasRect.rect.height;
-        }
-
-        private static void PrepareSlideForShow(GameObject target, Vector2 direction)
-        {
-            RectTransform rectTransform = FindRectTransformForAnimation(target);
-            UiTweenState tweenState = GetOrCreateTweenState(rectTransform != null ? rectTransform.gameObject : target);
-
-            Vector2 offscreenDirection = -direction;
-
-            if (rectTransform != null)
-            {
-                float canvasWidth = GetCanvasWidth(rectTransform);
-                float canvasHeight = GetCanvasHeight(rectTransform);
-
-                Vector2 basePos = tweenState.BaseAnchoredPosition;
-                Vector2 offset;
-
-                if (Mathf.Abs(offscreenDirection.x) > 0.0f)
-                {
-                    float w = canvasWidth;
-                    if (w <= 0.0f)
-                    {
-                        w = Screen.width;
-                    }
-
-                    offset = new Vector2(offscreenDirection.x * w, 0.0f);
-                }
-                else
-                {
-                    float h = canvasHeight;
-                    if (h <= 0.0f)
-                    {
-                        h = Screen.height;
-                    }
-
-                    offset = new Vector2(0.0f, offscreenDirection.y * h);
-                }
-
-                rectTransform.anchoredPosition = basePos + offset;
-                return;
-            }
-
-            Vector3 baseLocal = tweenState.BaseLocalPosition;
-            Vector3 localOffset = new Vector3(offscreenDirection.x, offscreenDirection.y, 0.0f) * 10.0f;
-            target.transform.localPosition = baseLocal + localOffset;
         }
     }
 }

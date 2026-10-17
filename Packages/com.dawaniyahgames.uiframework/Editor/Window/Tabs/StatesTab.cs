@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UiFramework.Editor.CodeGeneration;
@@ -27,6 +28,7 @@ namespace UiFramework.Editor.Window.Tabs
         private readonly List<MonoScript> stateScripts = new List<MonoScript>();
         private readonly Dictionary<string, UiStateDefinition> definitionsByKey = new Dictionary<string, UiStateDefinition>(StringComparer.Ordinal);
         private MonoScript selectedStateScript;
+        private string searchQuery = string.Empty;
 
         public void SetRegistry(UiStateRegistry registryInstance)
         {
@@ -183,8 +185,39 @@ namespace UiFramework.Editor.Window.Tabs
                 RebuildStateList();
             };
 
+            ToolbarSearchField searchField = new ToolbarSearchField();
+            searchField.tooltip = "Search states by name or part of the name. Press Enter to select the first result.";
+            searchField.style.flexGrow = 1;
+            searchField.style.maxWidth = 360;
+            searchField.style.marginRight = 12;
+            searchField.value = searchQuery;
+            searchField.RegisterValueChangedCallback(evt =>
+            {
+                searchQuery = evt.newValue ?? string.Empty;
+                RebuildStateList();
+            });
+            searchField.RegisterCallback<KeyDownEvent>(evt =>
+            {
+                if (evt.keyCode != KeyCode.Return && evt.keyCode != KeyCode.KeypadEnter)
+                {
+                    return;
+                }
+
+                List<MonoScript> results = GetVisibleStateScripts();
+                if (results.Count > 0)
+                {
+                    selectedStateScript = results[0];
+                    RebuildStateList();
+                }
+            });
+
+            Label newLabel = new Label("New state:");
+            newLabel.style.marginRight = 4;
+
             root.Add(topBar);
             topBar.Add(titleLabel);
+            topBar.Add(searchField);
+            topBar.Add(newLabel);
             topBar.Add(nameField);
             topBar.Add(createButton);
             topBar.Add(deleteButton);
@@ -237,9 +270,28 @@ namespace UiFramework.Editor.Window.Tabs
                 selectedStateScript = stateScripts[0];
             }
 
-            for (int i = 0; i < stateScripts.Count; i++)
+            List<MonoScript> visible = GetVisibleStateScripts();
+
+            if (!string.IsNullOrWhiteSpace(searchQuery))
             {
-                MonoScript script = stateScripts[i];
+                Label count = new Label(visible.Count + " of " + stateScripts.Count);
+                count.style.color = new Color(0.6f, 0.6f, 0.6f);
+                count.style.fontSize = 11;
+                count.style.marginBottom = 4;
+                stateListView.Add(count);
+
+                if (visible.Count == 0)
+                {
+                    Label none = new Label("No states match '" + searchQuery.Trim() + "'.");
+                    none.style.whiteSpace = WhiteSpace.Normal;
+                    none.style.color = new Color(0.6f, 0.6f, 0.6f);
+                    stateListView.Add(none);
+                }
+            }
+
+            for (int i = 0; i < visible.Count; i++)
+            {
+                MonoScript script = visible[i];
                 if (script == null)
                 {
                     continue;
@@ -267,6 +319,11 @@ namespace UiFramework.Editor.Window.Tabs
             }
 
             PopulateElementDetails();
+        }
+
+        private List<MonoScript> GetVisibleStateScripts()
+        {
+            return UiSearchFilter.Filter(stateScripts, GetScriptClassName, searchQuery);
         }
 
         private void RefreshStateSelectionVisuals()
@@ -392,52 +449,108 @@ namespace UiFramework.Editor.Window.Tabs
 
             if (availableScenes.Count > 0)
             {
-                string selectedScene = availableScenes[0];
-
-                VisualElement addRow = new VisualElement
-                {
-                    style =
-                    {
-                        flexDirection = FlexDirection.Row,
-                        alignItems = Align.Center,
-                        marginTop = 10
-                    }
-                };
-
-                PopupField<string> dropdown = new PopupField<string>(availableScenes, 0);
-                dropdown.style.flexGrow = 1;
-                dropdown.style.marginRight = 6;
-                dropdown.RegisterValueChangedCallback(evt =>
-                {
-                    selectedScene = evt.newValue;
-                });
-
-                Button addButton = new Button(() =>
-                {
-                    if (!selectedDefinition.ElementSceneNames.Contains(selectedScene))
-                    {
-                        selectedDefinition.ElementSceneNames.Add(selectedScene);
-                        EditorUtility.SetDirty(selectedDefinition);
-                        AssetDatabase.SaveAssets();
-                        PopulateElementDetails();
-                    }
-                })
-                {
-                    text = "Add",
-                    tooltip = "Add selected scene"
-                };
-                addButton.style.height = 24;
-                addButton.style.minWidth = 60;
-
-                addRow.Add(dropdown);
-                addRow.Add(addButton);
-                elementDetailView.Add(addRow);
+                elementDetailView.Add(CreateAddSceneSearch(selectedDefinition, availableScenes));
             }
             else
             {
                 Label allAssigned = new Label("✅ All available scenes already assigned.");
                 elementDetailView.Add(allAssigned);
             }
+        }
+
+        // "Add element scene" search box: type part of a name, matching scenes are suggested below; click one to add it.
+        private VisualElement CreateAddSceneSearch(UiStateDefinition definition, List<string> availableScenes)
+        {
+            const int maxSuggestions = 8;
+
+            VisualElement container = new VisualElement();
+            container.style.marginTop = 12;
+
+            Label caption = new Label("Add element scene");
+            caption.style.unityFontStyleAndWeight = FontStyle.Bold;
+            caption.style.marginBottom = 2;
+            container.Add(caption);
+
+            ToolbarSearchField sceneSearch = new ToolbarSearchField();
+            sceneSearch.tooltip = "Type part of a scene name, then click a suggestion (or press Enter to add the first one).";
+            sceneSearch.style.width = StyleKeyword.Auto;
+            sceneSearch.style.marginLeft = 0;
+            container.Add(sceneSearch);
+
+            VisualElement suggestions = new VisualElement();
+            suggestions.style.marginTop = 2;
+            container.Add(suggestions);
+
+            Action<string> addScene = sceneName =>
+            {
+                if (!definition.ElementSceneNames.Contains(sceneName))
+                {
+                    definition.ElementSceneNames.Add(sceneName);
+                    EditorUtility.SetDirty(definition);
+                    AssetDatabase.SaveAssets();
+                }
+
+                PopulateElementDetails();
+            };
+
+            Action<string> showSuggestions = query =>
+            {
+                suggestions.Clear();
+                List<string> matches = UiSearchFilter.Filter(availableScenes, name => name, query);
+
+                if (matches.Count == 0)
+                {
+                    Label none = new Label("No unassigned scene matches '" + query.Trim() + "'.");
+                    none.style.color = new Color(0.6f, 0.6f, 0.6f);
+                    suggestions.Add(none);
+                    return;
+                }
+
+                for (int i = 0; i < matches.Count && i < maxSuggestions; i++)
+                {
+                    string sceneName = matches[i];
+                    Button suggestion = new Button(() =>
+                    {
+                        addScene(sceneName);
+                    })
+                    {
+                        text = "➕  " + sceneName,
+                        tooltip = "Add " + sceneName + " to this state"
+                    };
+                    suggestion.style.unityTextAlign = TextAnchor.MiddleLeft;
+                    suggestions.Add(suggestion);
+                }
+
+                if (matches.Count > maxSuggestions)
+                {
+                    Label more = new Label("+" + (matches.Count - maxSuggestions) + " more, keep typing to narrow down");
+                    more.style.color = new Color(0.6f, 0.6f, 0.6f);
+                    more.style.fontSize = 11;
+                    suggestions.Add(more);
+                }
+            };
+
+            sceneSearch.RegisterValueChangedCallback(evt =>
+            {
+                showSuggestions(evt.newValue ?? string.Empty);
+            });
+
+            sceneSearch.RegisterCallback<KeyDownEvent>(evt =>
+            {
+                if (evt.keyCode != KeyCode.Return && evt.keyCode != KeyCode.KeypadEnter)
+                {
+                    return;
+                }
+
+                List<string> matches = UiSearchFilter.Filter(availableScenes, name => name, sceneSearch.value);
+                if (matches.Count > 0)
+                {
+                    addScene(matches[0]);
+                }
+            });
+
+            showSuggestions(string.Empty);
+            return container;
         }
 
         private void ReloadStateScriptsAndDefinitions()

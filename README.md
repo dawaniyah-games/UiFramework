@@ -1,243 +1,128 @@
-## Features
-
-- 🎯 **Addressables Integration** - Load UI screens as additive scenes for efficient memory management
-- 📚 **LIFO State Stack** - Push/pop UI states with automatic scene lifecycle management
-- 🔄 **Context-Based Population** - Pass runtime data to UI elements via `IUiElement.Populate()`
-- 🌀 **Per-Element Animation System** - Each UI element can have its own show/hide animation preset (Fade, Scale, Slide, etc.)
-- 🧭 **Correct Slide Directions** - SlideUp/Down/Left/Right now match movement direction (e.g. SlideUp moves up from below)
-- 🔗 **Shared Element Deduplication** - Shared UI elements (e.g. NavBar) animate only once, not on every state switch
-- ⏩ **Overlapping Transitions** - New UI animates in while old UI animates out (no empty gap)
-- 🧠 **Animation Target Auto-Detection** - Animations run on the first child under a Canvas, so layout and animation never fight
-### 2. Create UI Element (with Animation)
-
-```csharp
-using UiFramework.Core;
-using UnityEngine;
-
-public class MainMenuUiElement : UiElement
-{
-    public override void Populate(object context = null)
-    {
-        if (context is MenuData data)
-        {
-            // Use data to configure UI
-        }
-    }
-}
-// In the Editor, select your element scene and choose show/hide animation presets (e.g. SlideUp, Fade, etc.)
-// Animation will run on the first child under a Canvas automatically.
-```
-### Animation & Transition Notes
-
-- **Per-element animation**: Each UI element can have its own show/hide preset (set in the Editor Elements tab).
-- **Slide direction**: SlideUp means "move up from below" (not "appear from above").
-- **No UI flash**: Show pose is prepared immediately after scene load, so UI never flashes before animating in.
-- **Overlapping transitions**: New UI animates in while old UI animates out; the screen is never empty.
-- **Shared UI elements**: Elements present in both old and new states (e.g. NavBar) animate only once, not on every state switch.
-- **Animation target**: Animations run on the first child under a Canvas, so layout and animation never fight.
-## Documentation
-
-- [Design Documentation](DESIGN.md) - Detailed architecture, animation, and transition system
-- [Copilot Instructions](.github/copilot-instructions.md) - Guide for AI coding assistants
 # UI Framework
 
 [![Unity Version](https://img.shields.io/badge/Unity-2021.3%2B-blue.svg)](https://unity.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.md)
 
-A flexible Unity UI Framework using **Addressables-based scene composition** with LIFO state stack management. Build UI screens as additive scenes and populate them with runtime data through a simple contract-based system.
+A Unity UI framework that builds screens from **Addressable scenes** loaded additively and managed on a **LIFO state stack**. Elements receive runtime data through a single `Populate(object context)` contract, and an editor window generates the scripts, scenes and runtime config for you.
 
 ## Features
 
-- 🎯 **Addressables Integration** - Load UI screens as additive scenes for efficient memory management
-- 📚 **LIFO State Stack** - Push/pop UI states with automatic scene lifecycle management
-- 🔄 **Context-Based Population** - Pass runtime data to UI elements via `IUiElement.Populate()`
-- 🛠️ **Editor Tools** - Code generation and visual setup manager for rapid development
-- 🎨 **Template System** - Generate UI elements and states from customizable templates
-- ⚡ **Type-Safe API** - Generic `ShowState<T>()` with reflection-based type resolution
+- 🎯 **Addressables scene composition**: each UI element is its own scene, loaded and unloaded on demand
+- 📚 **LIFO state stack**: replace the whole UI, or push modal/overlay states additively
+- 🔗 **Shared elements**: scenes used by consecutive states (e.g. a NavBar) stay loaded and don't re-animate
+- 🔄 **Context-based population**: pass any data object to every element in a state
+- 🌀 **Per-element animation presets**: Fade, Scale, Slide{Up,Down,Left,Right}, ClickPop, SettlePop, Shake
+- ⏩ **Overlapping transitions**: the new UI animates in while the old UI animates out, with no flash and no empty frame
+- 🛠️ **Editor tooling**: generate elements and states from templates and build the runtime config automatically
+- ✅ **Element scene contract**: new scenes are generated as `<Name>Root → Canvas → Root` with the global canvas settings, and existing scenes can be validated and fixed in one click from the Elements tab (Global Canvas Settings live in the General tab)
 
 ## Installation
 
-### Via Package Manager (Git URL)
+**Package Manager → + → Add package from git URL…**
 
-1. Open Unity Package Manager (Window → Package Manager)
-2. Click the + button and select Add package from git URL...
-3. Enter: `https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework`
-4. Click Add
+```
+https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework
+```
 
-### Via manifest.json
-
-Add this to your Packages/manifest.json:
+To pin a version, append `#vX.Y.Z` (see [Releases](https://github.com/dawaniyah-games/UiFramework/releases)). Or add it to `Packages/manifest.json`:
 
 ```json
 {
   "dependencies": {
-        "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework"
+    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.1.0"
   }
 }
 ```
 
-## Usage
+**Requirements:** Unity 2021.3+, Addressables 1.21.0+ (installed as a dependency).
 
-### Initialize `UiManager` in Code
+## Quick start
 
-You no longer need to add `UiManager` to a scene. Create and persist it in code using your `UiConfig`.
+### 1. Author your UI in the editor
 
-Basic bootstrap example:
+1. Open **UiFramework → UI Setup Manager**.
+2. **General** → *Create Config*. Set your script/scene paths and namespaces on the created `UiEditorConfig`.
+3. **Elements** → enter a name (e.g. `MainMenuUiElement`) → *Create*. This generates the script and scene. Build your UI under `MainMenuUiElementRoot → Canvas → Content` and pick show/hide animation presets in the list.
+4. **States** → create a state key (e.g. `MainMenuUiState`), add its element scenes, and generate the state class.
+5. **General** → ***Build Runtime UiConfig***. Re-run it after every state or scene change.
+
+### 2. Initialize and show a state
+
+`UiManager` creates itself. Don't add it to a scene. It loads the generated `UiConfig` from Addressables (address `UiConfig`).
 
 ```csharp
-using System.Threading.Tasks;
-using UnityEngine;
-using UiFramework.Core;
 using UiFramework.Runtime.Manager;
+using UnityEngine;
 
 public class GameBootstrap : MonoBehaviour
 {
-    [SerializeField] private UiConfig runtimeUiConfig;
-
     private async void Start()
     {
         if (!UiManager.IsInitialized)
         {
-            await UiManager.InitializeAsync(runtimeUiConfig);
+            await UiManager.InitializeAsync();
         }
 
-        // Show your first UI state after init
-        await UiManager.ShowStateByKey("MainMenuUiState", null);
+        await UiManager.ShowState<MainMenuUiState>();
     }
 }
 ```
 
-Alternatively, initialize synchronously (e.g., in `Awake()`):
-
-```csharp
-void Awake()
-{
-    UiManager.Initialize(runtimeUiConfig);
-}
-```
-
-Internally, `UiManager.Initialize*` will:
-- Create a `GameObject` named `UiManager`
-- Add the `UiManager` component
-- Assign your `UiConfig`
-- Mark it `DontDestroyOnLoad`
-
-### Showing UI States
-
-- By type: `await UiManager.ShowState<MyMenuState>(context)`
-- By key: `await UiManager.ShowStateByKey("MyMenuState", context)`
-
-Ensure your `UiConfig` has a state entry whose `stateKey` matches the `UiState` class name when using `ShowState<T>()`.
-
-### Hiding UI
-
-Call `await UiManager.HideUI()` to pop the current state and restore the previous one (if any).
-
-### Common Pitfalls
-
-- Make sure scenes referenced in `UiConfig` are Addressable.
-- `stateKey` must match `UiState` class name if calling `ShowState<T>()`.
-- Use `UiManager.IsInitialized` to avoid duplicate initialization.
-
-## Quick Start
-
-### 1. Setup UI Manager
-
-```csharp
-using UiFramework.Runtime.Manager;
-using UnityEngine;
-
-public class GameBootstrap : MonoBehaviour
-{
-    [SerializeField] private UiManager uiManager;
-
-    private async void Start()
-    {
-        await uiManager.Init();
-        await UiManager.ShowStateByKey("MainMenuUiState");
-    }
-}
-```
-
-### 2. Create UI Element
+### 3. Receive data in an element
 
 ```csharp
 using UiFramework.Core;
-using UnityEngine;
 
 public class MainMenuUiElement : UiElement
 {
     public override void Populate(object context = null)
     {
-        if (context is MenuData data)
+        base.Populate(context);
+
+        MenuData data = context as MenuData;
+        if (data == null)
         {
-            // Use data to configure UI
+            return;
         }
+
+        // Configure the UI from data. May run more than once: keep it idempotent.
     }
 }
 ```
 
-### 3. Configure in Editor
+## API at a glance
 
-1. Open `Window → UiFramework/UI Setup Manager`
-2. Use **Elements** tab to generate UI element scripts
-3. Create addressable scene with your UI elements
-4. Use **States** tab to register scenes under a state key
-5. Call `UiManager.ShowStateByKey("YourStateKey", context)` at runtime
+| Call | Effect |
+| --- | --- |
+| `await UiManager.InitializeAsync()` | Create the manager and load `UiConfig` (no-op if already initialized) |
+| `await UiManager.ShowState<T>(context, additive)` | Show the state whose key equals `T`'s class name |
+| `await UiManager.ShowStateByKey("Key", context, additive)` | Show a state by its key |
+| `await UiManager.HideUI()` | Pop and unload the top state |
+| `UiManager.GetCurrentState()` | Current (or currently loading) state |
+| `UiManager.IsLastSceneActive<T>()` | Whether `T` is the top state |
+| `await UiManager.ResetUIAsync()` | Hide and unload every state |
 
-## Core Architecture
+`additive: false` (default) replaces the stack. `additive: true` pushes on top, for modals and overlays.
 
-```
-UiManager (Singleton)
-├── LIFO State Stack
-│   └── UiState (Scene Loader)
-│       ├── Addressables.LoadSceneAsync()
-│       └── IUiElement.Populate(context)
-│
-├── UiConfig (ScriptableObject)
-│   └── stateKey → List<AssetReference>
-│
-└── Type Resolution
-    └── Reflection: Class Name → stateKey
-```
+## Common pitfalls
 
-## Key Components
-
-| Component    | Path                              | Purpose                                    |
-| ------------ | --------------------------------- | ------------------------------------------ |
-| `UiManager`  | `Runtime/Manager/UiManager.cs`    | Orchestrates state stack and scene loading |
-| `UiState`    | `Core/UiCompoenets/UiState.cs`    | Loads scenes and holds UI elements     |
-| `UiConfig`   | `Core/Config/UiConfig.cs`         | Maps state keys to scene references        |
-| `IUiElement` | `Core/UiCompoenets/IUiElement.cs` | Contract for UI data population            |
+- **`ShowState<T>()` logs "No UI state key registered"**: the `UiState` class name must exactly match the state key.
+- **"Failed to locate UiConfig"**: run *Build Runtime UiConfig*, and make sure Addressables content is built (or play mode uses the Asset Database).
+- **Logic in a `UiState` subclass never runs**: subclasses are only type markers for `ShowState<T>()`, and the runtime uses the base `UiState`.
+- **Element data duplicated after switching screens**: `Populate` runs again when a state reuses a shared scene, so make it idempotent.
 
 ## Documentation
 
-- [Design Documentation](DESIGN.md) - Detailed architecture and system design
-- [Copilot Instructions](.github/copilot-instructions.md) - Guide for AI coding assistants
-
-## Requirements
-
-- Unity 2021.3 or later
-- Addressables package (1.21.0+)
-
-## Code Standards
-
-This project enforces strict C# coding standards via `.editorconfig`:
-
-- ✅ No `var` keyword - always explicit types
-- ✅ No target-typed `new()` - always specify type
-- ✅ Braces required for all control blocks
-- ✅ No expression-bodied members
-- ✅ `camelCase` for private fields (no underscore prefix)
-- ✅ Using directives outside namespace
+| Doc | For |
+| --- | --- |
+| [DESIGN.md](DESIGN.md) | How the framework works: lifecycle, scene ref counting, animation, editor pipeline, limitations |
+| [CODING_STANDARDS.md](CODING_STANDARDS.md) | Code style and project rules (required for all contributions) |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Branching, PRs, releases |
+| [CHANGELOG.md](CHANGELOG.md) | Version history |
 
 ## License
 
-MIT License - see [LICENSE.md](LICENSE.md) file for details
-
-## Contributing
-
-Contributions are welcome! Please ensure code follows the `.editorconfig` standards.
+MIT. See [LICENSE.md](LICENSE.md).
 
 ## Support
 

@@ -1,23 +1,21 @@
-# UI Framework - Final Workflow Test
+# UI Framework: Release Workflow Check
 
-This file verifies the complete automated release workflow is functioning correctly.
+Use this after merging a release PR into `main` to confirm the automated release worked.
 
-## Expected Behavior
+## Expected result
 
-When this commit is merged from `dev` to `main` via Pull Request:
+1. The **Auto release on main** run for the merge commit succeeds (`gh run list --workflow release.yml`).
+2. The tag `vX.Y.Z` exists and matches `Packages/com.dawaniyahgames.uiframework/package.json` (`git ls-remote --tags origin`).
+3. The GitHub Release `vX.Y.Z` is marked **Latest** (`gh release view vX.Y.Z`).
+4. A project can install it with the Git URL ending in `#vX.Y.Z`.
 
-1. ✅ GitHub Actions workflow triggers automatically
-2. ✅ Reads version from `Packages/com.dawaniyahgames.uiframework/package.json`
-3. ✅ Creates git tag `vX.Y.Z` (if missing)
-4. ✅ Creates GitHub Release (auto-generated notes)
-6. ✅ Release appears at releases page
+## Last verified
 
-## Test Date
+- Version: v1.1.0
+- Date: 2026-10-17
 
-2025-12-05
+## Package info
 
-## Package Info
-
-- Name: com.dawaniyahgames.uiframework
+- Name: `com.dawaniyahgames.uiframework`
 - Repository: https://github.com/dawaniyah-games/UiFramework
-- Installation: Via UPM Git URL
+- Installation: UPM Git URL (`?path=Packages/com.dawaniyahgames.uiframework#vX.Y.Z`)
