@@ -31,24 +31,24 @@ namespace UiFramework.Editor.Config
             return null;
         }
 
-        // Returns config.CanvasSettings, assigning an existing UiCanvasSettings asset or creating one with defaults
-        // at UiCanvasSettings.DefaultAssetPath when the field is empty. Returns null only while the AssetDatabase
+        // Returns config.GlobalCanvasSettings, assigning an existing UiGlobalCanvasSettings asset or creating one with defaults
+        // at UiGlobalCanvasSettings.DefaultAssetPath when the field is empty. Returns null only while the AssetDatabase
         // is busy (importing/compiling) and no asset exists yet.
-        public static UiCanvasSettings GetOrCreateCanvasSettings(UiEditorConfig config)
+        public static UiGlobalCanvasSettings GetOrCreateCanvasSettings(UiEditorConfig config)
         {
-            if (config != null && config.CanvasSettings != null)
+            if (config != null && config.GlobalCanvasSettings != null)
             {
-                return config.CanvasSettings;
+                return config.GlobalCanvasSettings;
             }
 
-            UiCanvasSettings settings = AssetDatabase.LoadAssetAtPath<UiCanvasSettings>(UiCanvasSettings.DefaultAssetPath);
+            UiGlobalCanvasSettings settings = AssetDatabase.LoadAssetAtPath<UiGlobalCanvasSettings>(UiGlobalCanvasSettings.DefaultAssetPath);
 
             if (settings == null)
             {
-                string[] guids = AssetDatabase.FindAssets("t:UiCanvasSettings");
+                string[] guids = AssetDatabase.FindAssets("t:UiGlobalCanvasSettings");
                 if (guids.Length > 0)
                 {
-                    settings = AssetDatabase.LoadAssetAtPath<UiCanvasSettings>(AssetDatabase.GUIDToAssetPath(guids[0]));
+                    settings = AssetDatabase.LoadAssetAtPath<UiGlobalCanvasSettings>(AssetDatabase.GUIDToAssetPath(guids[0]));
                 }
             }
 
@@ -59,16 +59,16 @@ namespace UiFramework.Editor.Config
                     return null;
                 }
 
-                EnsureFolderExists(Path.GetDirectoryName(UiCanvasSettings.DefaultAssetPath));
-                settings = ScriptableObject.CreateInstance<UiCanvasSettings>();
-                AssetDatabase.CreateAsset(settings, UiCanvasSettings.DefaultAssetPath);
+                EnsureFolderExists(Path.GetDirectoryName(UiGlobalCanvasSettings.DefaultAssetPath));
+                settings = ScriptableObject.CreateInstance<UiGlobalCanvasSettings>();
+                AssetDatabase.CreateAsset(settings, UiGlobalCanvasSettings.DefaultAssetPath);
                 AssetDatabase.SaveAssets();
-                Debug.Log("[UiFramework] Created UiCanvasSettings with default values at " + UiCanvasSettings.DefaultAssetPath);
+                Debug.Log("[UiFramework] Created UiGlobalCanvasSettings with default values at " + UiGlobalCanvasSettings.DefaultAssetPath);
             }
 
             if (config != null)
             {
-                config.CanvasSettings = settings;
+                config.GlobalCanvasSettings = settings;
                 EditorUtility.SetDirty(config);
                 AssetDatabase.SaveAssets();
             }
@@ -77,15 +77,15 @@ namespace UiFramework.Editor.Config
         }
 
         // Like GetOrCreateCanvasSettings, but falls back to an unsaved instance with default values instead of null.
-        public static UiCanvasSettings GetCanvasSettingsOrDefaults(UiEditorConfig config)
+        public static UiGlobalCanvasSettings GetCanvasSettingsOrDefaults(UiEditorConfig config)
         {
-            UiCanvasSettings settings = GetOrCreateCanvasSettings(config);
+            UiGlobalCanvasSettings settings = GetOrCreateCanvasSettings(config);
             if (settings != null)
             {
                 return settings;
             }
 
-            UiCanvasSettings transientSettings = ScriptableObject.CreateInstance<UiCanvasSettings>();
+            UiGlobalCanvasSettings transientSettings = ScriptableObject.CreateInstance<UiGlobalCanvasSettings>();
             transientSettings.hideFlags = HideFlags.DontSave;
             return transientSettings;
         }

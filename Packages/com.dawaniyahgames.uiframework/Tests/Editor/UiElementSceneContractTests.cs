@@ -17,13 +17,13 @@ namespace UiFramework.Editor.Tests
         private const string tempFolder = "Assets/UiFrameworkContractTestTemp";
 
         private Scene scene;
-        private UiCanvasSettings settings;
+        private UiGlobalCanvasSettings settings;
 
         [SetUp]
         public void SetUp()
         {
             scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            settings = ScriptableObject.CreateInstance<UiCanvasSettings>();
+            settings = ScriptableObject.CreateInstance<UiGlobalCanvasSettings>();
 
             // Single-mode scene loads unload unreferenced assets; keep the transient settings alive.
             settings.hideFlags = HideFlags.DontSave;

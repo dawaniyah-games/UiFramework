@@ -123,7 +123,7 @@ namespace UiFramework.Editor.Window.Tabs
             })
             {
                 text = "Validate All",
-                tooltip = "Re-check every element scene against the scene contract and the canvas settings, and log a report to the Console."
+                tooltip = "Re-check every element scene against the scene contract and the global canvas settings, and log a report to the Console."
             };
             toolbar.Add(validateButton);
 
@@ -147,7 +147,7 @@ namespace UiFramework.Editor.Window.Tabs
             })
             {
                 text = "Apply Canvas To All…",
-                tooltip = "Write the canvas settings (General tab) into every scene whose Canvas differs. Excluded scenes are skipped. Shows the changes first."
+                tooltip = "Write the global canvas settings (General tab) into every scene whose Canvas differs. Excluded scenes are skipped. Shows the changes first."
             };
             toolbar.Add(applyAllButton);
 
@@ -182,7 +182,7 @@ namespace UiFramework.Editor.Window.Tabs
             body.style.unityFontStyleAndWeight = FontStyle.Normal;
             foldout.Add(body);
 
-            Label hint = new Label("Generates the UiElement script and a scene laid out as <Name>Root → Canvas → Root, using the canvas settings from the General tab. Put all content under Root.");
+            Label hint = new Label("Generates the UiElement script and a scene laid out as <Name>Root → Canvas → Root, using the global canvas settings from the General tab. Put all content under Root.");
             hint.style.whiteSpace = WhiteSpace.Normal;
             hint.style.fontSize = 11;
             hint.style.marginBottom = 6;
@@ -262,7 +262,7 @@ namespace UiFramework.Editor.Window.Tabs
             sceneInfos.Clear();
 
             List<string> scenePaths = GetElementScenePaths();
-            UiCanvasSettings canvasSettings = GetCanvasSettings();
+            UiGlobalCanvasSettings canvasSettings = GetCanvasSettings();
 
             try
             {
@@ -333,7 +333,7 @@ namespace UiFramework.Editor.Window.Tabs
                 groupNames.Insert(0, defaultUiElementsGroupName);
             }
 
-            UiCanvasSettings canvasSettings = GetCanvasSettings();
+            UiGlobalCanvasSettings canvasSettings = GetCanvasSettings();
             sceneListScrollView.Add(CreateSceneListHeaderRow());
 
             int shown = 0;
@@ -351,7 +351,7 @@ namespace UiFramework.Editor.Window.Tabs
 
             if (shown == 0)
             {
-                Label allGood = new Label("✓ All " + sceneInfos.Count + " scenes follow the scene contract and match the canvas settings.");
+                Label allGood = new Label("✓ All " + sceneInfos.Count + " scenes follow the scene contract and match the global canvas settings.");
                 allGood.style.color = okColor;
                 allGood.style.marginTop = 6;
                 sceneListScrollView.Add(allGood);
@@ -437,7 +437,7 @@ namespace UiFramework.Editor.Window.Tabs
             }
         }
 
-        private UiCanvasSettings GetCanvasSettings()
+        private UiGlobalCanvasSettings GetCanvasSettings()
         {
             return UiEditorConfigUtility.GetCanvasSettingsOrDefaults(editorConfig);
         }
@@ -457,7 +457,7 @@ namespace UiFramework.Editor.Window.Tabs
             row.Add(CreateHeaderLabel("Show", "Animation preset to play when this UI element is shown.", 110));
             row.Add(CreateHeaderLabel("Hide", "Animation preset to play when this UI element is hidden/unloaded.", 110));
             row.Add(CreateHeaderLabel("Structure", "Scene contract: <Name>Root → Canvas → one stretched Root.\n✓ OK   ⚠ Fix = click to fix   ✖ = needs manual work (click for details)", statusColumnWidth));
-            row.Add(CreateHeaderLabel("Canvas", "Canvas/Canvas Scaler compared to the canvas settings (General tab).\n✓ matches   ⚠ Reset = click to reset   — no canvas   Excluded = skipped by Apply Canvas To All", statusColumnWidth));
+            row.Add(CreateHeaderLabel("Canvas", "Canvas/Canvas Scaler compared to the global canvas settings (General tab).\n✓ matches   ⚠ Reset = click to reset   — no canvas   Excluded = skipped by Apply Canvas To All", statusColumnWidth));
             row.Add(CreateHeaderLabel("Addressable", "If enabled, the scene will be registered in Addressables for loading at runtime.", 90));
             row.Add(CreateHeaderLabel("Group", null, 140));
 
@@ -487,7 +487,7 @@ namespace UiFramework.Editor.Window.Tabs
             return label;
         }
 
-        private VisualElement CreateSceneRow(string sceneName, string sceneAssetPath, bool hasAddressables, AddressableAssetSettings settings, List<string> groupNames, UiElementSceneInfo info, UiCanvasSettings canvasSettings)
+        private VisualElement CreateSceneRow(string sceneName, string sceneAssetPath, bool hasAddressables, AddressableAssetSettings settings, List<string> groupNames, UiElementSceneInfo info, UiGlobalCanvasSettings canvasSettings)
         {
             VisualElement row = new VisualElement();
             row.style.flexDirection = FlexDirection.Row;
@@ -732,7 +732,7 @@ namespace UiFramework.Editor.Window.Tabs
             return nameLabel;
         }
 
-        private VisualElement CreateStructureCell(string sceneAssetPath, UiElementSceneInfo info, UiCanvasSettings canvasSettings)
+        private VisualElement CreateStructureCell(string sceneAssetPath, UiElementSceneInfo info, UiGlobalCanvasSettings canvasSettings)
         {
             UiElementStructureReport structure = info.Structure;
 
@@ -768,7 +768,7 @@ namespace UiFramework.Editor.Window.Tabs
                 });
         }
 
-        private VisualElement CreateCanvasCell(string sceneAssetPath, UiElementSceneInfo info, UiCanvasSettings canvasSettings)
+        private VisualElement CreateCanvasCell(string sceneAssetPath, UiElementSceneInfo info, UiGlobalCanvasSettings canvasSettings)
         {
             if (!info.IsAvailable)
             {
@@ -794,16 +794,16 @@ namespace UiFramework.Editor.Window.Tabs
 
             if (info.CanvasStatus == UiCanvasStatus.Excluded)
             {
-                string tooltip = "Excluded from 'Apply Canvas To All' (change this in the ⋯ menu)." + (differs ? "\nDiffers:\n" + diffText + "\n\nClick to reset this scene anyway." : " Matches the canvas settings.");
+                string tooltip = "Excluded from 'Apply Canvas To All' (change this in the ⋯ menu)." + (differs ? "\nDiffers:\n" + diffText + "\n\nClick to reset this scene anyway." : " Matches the global canvas settings.");
                 return CreateStatusCell("Excluded", tooltip, Color.gray, reset);
             }
 
             if (!differs)
             {
-                return CreateStatusCell("✓", "Matches the canvas settings.", okColor, null);
+                return CreateStatusCell("✓", "Matches the global canvas settings.", okColor, null);
             }
 
-            return CreateStatusCell("⚠ Reset", diffText + "\n\nClick to write the canvas settings into this scene (you'll see the changes first).", warningColor, reset);
+            return CreateStatusCell("⚠ Reset", diffText + "\n\nClick to write the global canvas settings into this scene (you'll see the changes first).", warningColor, reset);
         }
 
         // A clickable cell looks like a button; a read-only one looks like plain text.
@@ -835,7 +835,7 @@ namespace UiFramework.Editor.Window.Tabs
             return cell;
         }
 
-        private void ShowRowMenu(string sceneAssetPath, UiElementSceneInfo info, UiCanvasSettings canvasSettings, bool isAddressable)
+        private void ShowRowMenu(string sceneAssetPath, UiElementSceneInfo info, UiGlobalCanvasSettings canvasSettings, bool isAddressable)
         {
             GenericMenu menu = new GenericMenu();
 
@@ -904,7 +904,7 @@ namespace UiFramework.Editor.Window.Tabs
             }
         }
 
-        private void SetExcluded(UiElementSceneInfo info, UiCanvasSettings canvasSettings, bool excluded)
+        private void SetExcluded(UiElementSceneInfo info, UiGlobalCanvasSettings canvasSettings, bool excluded)
         {
             if (canvasSettings.SetExcluded(info.ScenePath, excluded))
             {
@@ -991,7 +991,7 @@ namespace UiFramework.Editor.Window.Tabs
             }
         }
 
-        private void FixSceneStructure(string sceneAssetPath, UiElementSceneInfo info, UiCanvasSettings canvasSettings)
+        private void FixSceneStructure(string sceneAssetPath, UiElementSceneInfo info, UiGlobalCanvasSettings canvasSettings)
         {
             List<string> lines = UiElementStructureFixer.DescribePlannedChanges(info.Structure, UiElementStructureFixMode.WrapContent);
             UiElementSceneDialogs.AppendUnfixable(lines, UiElementStructureFixer.DescribeUnfixableIssues(info.Structure));
@@ -1021,11 +1021,11 @@ namespace UiFramework.Editor.Window.Tabs
             RefreshScene(sceneAssetPath);
         }
 
-        private void ResetSceneCanvas(string sceneAssetPath, UiElementSceneInfo info, UiCanvasSettings canvasSettings)
+        private void ResetSceneCanvas(string sceneAssetPath, UiElementSceneInfo info, UiGlobalCanvasSettings canvasSettings)
         {
             List<string> lines = new List<string>(info.CanvasDiff.Split(new string[] { "; " }, StringSplitOptions.RemoveEmptyEntries));
             bool isOpen = UiElementSceneUtility.IsSceneOpen(sceneAssetPath);
-            string intro = "Reset the canvas in '" + info.SceneName + "' to the canvas settings? Sorting order and cameras are not changed." +
+            string intro = "Reset the canvas in '" + info.SceneName + "' to the global canvas settings? Sorting order and cameras are not changed." +
                 (isOpen ? " The scene is open, so it is edited in place (with Undo) and not saved." : string.Empty);
 
             if (!UiElementSceneDialogs.Confirm("Reset Canvas", intro, lines, "Reset"))
@@ -1049,7 +1049,7 @@ namespace UiFramework.Editor.Window.Tabs
 
             if (applied)
             {
-                Debug.Log("[UiFramework] Reset canvas settings in '" + info.SceneName + "' (" + info.CanvasDiff + ").");
+                Debug.Log("[UiFramework] Reset global canvas settings in '" + info.SceneName + "' (" + info.CanvasDiff + ").");
                 SetActionStatus("Reset canvas in " + info.SceneName + ".");
             }
 
@@ -1135,7 +1135,7 @@ namespace UiFramework.Editor.Window.Tabs
                 }
             }
 
-            UiCanvasSettings canvasSettings = UiEditorConfigUtility.GetCanvasSettingsOrDefaults(editorConfig);
+            UiGlobalCanvasSettings canvasSettings = UiEditorConfigUtility.GetCanvasSettingsOrDefaults(editorConfig);
 
             if (sceneAsset == null)
             {
@@ -1155,7 +1155,7 @@ namespace UiFramework.Editor.Window.Tabs
         }
 
         // Never restructures silently: fixable issues are listed and applied only after confirmation.
-        private void OfferStructureFixForExistingScene(Scene scene, string elementName, UiCanvasSettings canvasSettings)
+        private void OfferStructureFixForExistingScene(Scene scene, string elementName, UiGlobalCanvasSettings canvasSettings)
         {
             UiElementStructureReport report;
             UiElementSceneUtility.ValidateStructure(scene, out report);

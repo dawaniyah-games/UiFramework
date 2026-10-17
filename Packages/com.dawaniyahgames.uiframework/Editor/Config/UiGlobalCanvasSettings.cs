@@ -8,10 +8,10 @@ namespace UiFramework.Editor.Config
 {
     // Project-wide Canvas/CanvasScaler values for UI element scenes. Written into scenes at authoring time only
     // (Fix / Reset / Apply actions); nothing enforces them at runtime.
-    [CreateAssetMenu(fileName = "UiCanvasSettings", menuName = "Scripts/UiFramework/Canvas Settings")]
-    public sealed class UiCanvasSettings : ScriptableObject
+    [CreateAssetMenu(fileName = "UiGlobalCanvasSettings", menuName = "Scripts/UiFramework/Global Canvas Settings")]
+    public sealed class UiGlobalCanvasSettings : ScriptableObject
     {
-        public const string DefaultAssetPath = "Assets/UiConfigs/UiCanvasSettings.asset";
+        public const string DefaultAssetPath = "Assets/UiConfigs/UiGlobalCanvasSettings.asset";
 
         [Header("Canvas")]
         [SerializeField] private RenderMode renderMode = RenderMode.ScreenSpaceOverlay;
@@ -27,7 +27,7 @@ namespace UiFramework.Editor.Config
         [SerializeField] private float referencePixelsPerUnit = 100.0f;
 
         [Header("Apply To All")]
-        [Tooltip("Skipped by 'Apply Canvas Settings To All'. Structure checks and the per-scene 'Reset Canvas' still apply to these scenes.")]
+        [Tooltip("Skipped by 'Apply Canvas To All'. Structure checks and the per-scene 'Reset Canvas' still apply to these scenes.")]
         [SerializeField] private List<SceneAsset> excludedScenes = new List<SceneAsset>();
 
         public RenderMode RenderMode
@@ -137,7 +137,7 @@ namespace UiFramework.Editor.Config
                 return false;
             }
 
-            Undo.RecordObject(this, excluded ? "Exclude Scene From Canvas Settings" : "Include Scene In Canvas Settings");
+            Undo.RecordObject(this, excluded ? "Exclude Scene From Global Canvas Settings" : "Include Scene In Global Canvas Settings");
 
             if (excludedScenes == null)
             {

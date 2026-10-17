@@ -18,13 +18,13 @@ namespace UiFramework.Editor.Scenes
         private const string undoName = "Fix UI Element Structure";
         private const string uiLayerName = "UI";
 
-        public static UiElementStructureReport FixStructure(Scene scene, UiCanvasSettings settings)
+        public static UiElementStructureReport FixStructure(Scene scene, UiGlobalCanvasSettings settings)
         {
             return FixStructure(scene, settings, UiElementStructureFixMode.WrapContent);
         }
 
         // Applies every fixable issue, then re-validates and returns the report of what remains.
-        public static UiElementStructureReport FixStructure(Scene scene, UiCanvasSettings settings, UiElementStructureFixMode mode)
+        public static UiElementStructureReport FixStructure(Scene scene, UiGlobalCanvasSettings settings, UiElementStructureFixMode mode)
         {
             UiElementStructureReport report;
             UiElementSceneUtility.ValidateStructure(scene, out report);
@@ -148,7 +148,7 @@ namespace UiFramework.Editor.Scenes
         }
 
         // Builds Canvas -> Root under an element root that has no children yet (new element scenes).
-        public static RectTransform BuildContractHierarchy(GameObject elementRoot, UiCanvasSettings settings)
+        public static RectTransform BuildContractHierarchy(GameObject elementRoot, UiGlobalCanvasSettings settings)
         {
             if (elementRoot == null)
             {
@@ -159,7 +159,7 @@ namespace UiFramework.Editor.Scenes
             return CreateContentRoot(canvas.transform, ContentRootObjectName);
         }
 
-        private static void FixCanvasPlacement(UiElementStructureReport report, UiCanvasSettings settings)
+        private static void FixCanvasPlacement(UiElementStructureReport report, UiGlobalCanvasSettings settings)
         {
             Transform elementRoot = report.ElementRoot.transform;
 
@@ -179,7 +179,7 @@ namespace UiFramework.Editor.Scenes
             }
         }
 
-        private static void AddMissingCanvasComponents(Canvas canvas, UiCanvasSettings settings)
+        private static void AddMissingCanvasComponents(Canvas canvas, UiGlobalCanvasSettings settings)
         {
             GameObject canvasObject = canvas.gameObject;
 
@@ -217,7 +217,7 @@ namespace UiFramework.Editor.Scenes
             }
         }
 
-        private static Canvas CreateCanvas(Transform elementRoot, UiCanvasSettings settings)
+        private static Canvas CreateCanvas(Transform elementRoot, UiGlobalCanvasSettings settings)
         {
             GameObject canvasObject = CreateGameObject(CanvasObjectName, elementRoot, typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             Canvas canvas = canvasObject.GetComponent<Canvas>();

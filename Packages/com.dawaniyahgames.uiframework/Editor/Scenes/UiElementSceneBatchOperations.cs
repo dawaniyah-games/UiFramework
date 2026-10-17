@@ -13,7 +13,7 @@ namespace UiFramework.Editor.Scenes
     // list), so scenes are not opened an extra time just to plan the operation.
     public static class UiElementSceneBatchOperations
     {
-        public static string ValidateAll(UiEditorConfig config, UiCanvasSettings settings)
+        public static string ValidateAll(UiEditorConfig config, UiGlobalCanvasSettings settings)
         {
             List<UiElementSceneInfo> infos = InspectAll(config, settings, "Validating Element Scenes");
             if (infos == null)
@@ -65,7 +65,7 @@ namespace UiFramework.Editor.Scenes
                 }
             }
 
-            string summary = "Validated " + infos.Count + " element scene(s): " + valid + " follow the contract, " + withIssues + " have structure issues, " + canvasDiffers + " have different canvas settings.";
+            string summary = "Validated " + infos.Count + " element scene(s): " + valid + " follow the contract, " + withIssues + " have structure issues, " + canvasDiffers + " differ from the global canvas settings.";
             string message = "[UiFramework] " + summary + lines;
 
             if (details.Length > 0)
@@ -85,14 +85,14 @@ namespace UiFramework.Editor.Scenes
             return summary;
         }
 
-        public static string ApplyCanvasSettingsToAll(UiEditorConfig config, UiCanvasSettings settings)
+        public static string ApplyCanvasSettingsToAll(UiEditorConfig config, UiGlobalCanvasSettings settings)
         {
             if (settings == null)
             {
-                return "No UiCanvasSettings asset.";
+                return "No UiGlobalCanvasSettings asset.";
             }
 
-            List<UiElementSceneInfo> infos = InspectAll(config, settings, "Checking Canvas Settings");
+            List<UiElementSceneInfo> infos = InspectAll(config, settings, "Checking Global Canvas Settings");
             if (infos == null)
             {
                 return "Cancelled.";
@@ -106,11 +106,11 @@ namespace UiFramework.Editor.Scenes
             return ApplyCanvasSettingsToAll(infos, settings);
         }
 
-        public static string ApplyCanvasSettingsToAll(IList<UiElementSceneInfo> infos, UiCanvasSettings settings)
+        public static string ApplyCanvasSettingsToAll(IList<UiElementSceneInfo> infos, UiGlobalCanvasSettings settings)
         {
             if (settings == null)
             {
-                return "No UiCanvasSettings asset.";
+                return "No UiGlobalCanvasSettings asset.";
             }
 
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
@@ -154,14 +154,14 @@ namespace UiFramework.Editor.Scenes
 
             if (toUpdate.Count == 0)
             {
-                string nothing = "Apply Canvas Settings: nothing to update (matching " + matching + ", excluded " + excluded + ", no canvas " + noCanvas + ").";
+                string nothing = "Apply Global Canvas Settings: nothing to update (matching " + matching + ", excluded " + excluded + ", no canvas " + noCanvas + ").";
                 Debug.Log("[UiFramework] " + nothing);
                 return nothing;
             }
 
-            Debug.Log("[UiFramework] Apply Canvas Settings plan:\n  " + string.Join("\n  ", plan.ToArray()));
+            Debug.Log("[UiFramework] Apply Global Canvas Settings plan:\n  " + string.Join("\n  ", plan.ToArray()));
 
-            if (!UiElementSceneDialogs.Confirm("Apply Canvas Settings", "Update the Canvas/CanvasScaler in " + toUpdate.Count + " scene(s)? Sorting order, cameras and other Canvas fields are not changed.", plan, "Apply"))
+            if (!UiElementSceneDialogs.Confirm("Apply Global Canvas Settings", "Update the Canvas/CanvasScaler in " + toUpdate.Count + " scene(s)? Sorting order, cameras and other Canvas fields are not changed.", plan, "Apply"))
             {
                 return "Cancelled.";
             }
@@ -174,7 +174,7 @@ namespace UiFramework.Editor.Scenes
                 for (int i = 0; i < toUpdate.Count; i++)
                 {
                     UiElementSceneInfo info = toUpdate[i];
-                    EditorUtility.DisplayProgressBar("Applying Canvas Settings", info.SceneName, (float)i / toUpdate.Count);
+                    EditorUtility.DisplayProgressBar("Applying Global Canvas Settings", info.SceneName, (float)i / toUpdate.Count);
 
                     bool isOpen = UiElementSceneUtility.IsSceneOpen(info.ScenePath);
                     bool applied = false;
@@ -211,12 +211,12 @@ namespace UiFramework.Editor.Scenes
                 EditorUtility.ClearProgressBar();
             }
 
-            string summary = "Apply Canvas Settings: updated " + updated + ", already matching " + matching + ", excluded " + excluded + ", no canvas " + noCanvas + (unavailable > 0 ? ", could not open " + unavailable : string.Empty) + ".";
+            string summary = "Apply Global Canvas Settings: updated " + updated + ", already matching " + matching + ", excluded " + excluded + ", no canvas " + noCanvas + (unavailable > 0 ? ", could not open " + unavailable : string.Empty) + ".";
             Debug.Log("[UiFramework] " + summary + DescribeLeftOpen(leftOpen));
             return summary;
         }
 
-        public static string FixStructureInAll(UiEditorConfig config, UiCanvasSettings settings)
+        public static string FixStructureInAll(UiEditorConfig config, UiGlobalCanvasSettings settings)
         {
             List<UiElementSceneInfo> infos = InspectAll(config, settings, "Checking Element Scene Structure");
             if (infos == null)
@@ -233,7 +233,7 @@ namespace UiFramework.Editor.Scenes
         }
 
         // FixStructure re-validates each scene before changing it, so slightly stale infos only affect the plan text.
-        public static string FixStructureInAll(IList<UiElementSceneInfo> infos, UiCanvasSettings settings)
+        public static string FixStructureInAll(IList<UiElementSceneInfo> infos, UiGlobalCanvasSettings settings)
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
             {
@@ -361,7 +361,7 @@ namespace UiFramework.Editor.Scenes
             }
         }
 
-        private static List<UiElementSceneInfo> InspectAll(UiEditorConfig config, UiCanvasSettings settings, string title)
+        private static List<UiElementSceneInfo> InspectAll(UiEditorConfig config, UiGlobalCanvasSettings settings, string title)
         {
             List<string> scenePaths = UiElementSceneUtility.FindElementScenePaths(config);
             List<UiElementSceneInfo> infos = new List<UiElementSceneInfo>(scenePaths.Count);

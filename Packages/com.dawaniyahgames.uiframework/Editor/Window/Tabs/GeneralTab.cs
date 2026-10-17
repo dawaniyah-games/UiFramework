@@ -123,7 +123,7 @@ namespace UiFramework.Editor.Window.Tabs
 
         private void AddCanvasSettingsSection(VisualElement root, UiEditorConfig config)
         {
-            root.Add(new Label("Canvas Settings")
+            root.Add(new Label("Global Canvas Settings")
             {
                 style =
                 {
@@ -135,7 +135,7 @@ namespace UiFramework.Editor.Window.Tabs
                 }
             });
 
-            Label hint = new Label("Canvas and Canvas Scaler values for every UI element scene. New elements are created with them, and the Elements tab checks each scene against them (Fix Structure, Reset Canvas, Apply Canvas To All). Scenes are only changed by those actions, and sorting order and cameras are never touched.");
+            Label hint = new Label("One set of Canvas and Canvas Scaler values shared by every UI element scene in the project. New elements are created with them, and the Elements tab checks each scene against them (Fix Structure, Reset Canvas, Apply Canvas To All). Scenes are only changed by those actions, and sorting order and cameras are never touched.");
             hint.style.whiteSpace = WhiteSpace.Normal;
             hint.style.fontSize = 11;
             hint.style.marginLeft = 10;
@@ -145,18 +145,18 @@ namespace UiFramework.Editor.Window.Tabs
 
             if (config == null)
             {
-                Label missing = new Label("Create or select a UI Config above to edit canvas settings.");
+                Label missing = new Label("Create or select a UI Config above to edit the global canvas settings.");
                 missing.style.color = Color.yellow;
                 missing.style.marginLeft = 10;
                 root.Add(missing);
                 return;
             }
 
-            UiCanvasSettings settings = UiEditorConfigUtility.GetOrCreateCanvasSettings(config);
+            UiGlobalCanvasSettings settings = UiEditorConfigUtility.GetOrCreateCanvasSettings(config);
 
             ObjectField settingsField = new ObjectField("Settings Asset")
             {
-                objectType = typeof(UiCanvasSettings),
+                objectType = typeof(UiGlobalCanvasSettings),
                 allowSceneObjects = false,
                 value = settings
             };
@@ -164,9 +164,9 @@ namespace UiFramework.Editor.Window.Tabs
             settingsField.style.marginRight = 6;
             settingsField.RegisterValueChangedCallback(evt =>
             {
-                UiCanvasSettings picked = evt.newValue as UiCanvasSettings;
-                Undo.RecordObject(editorConfig, "Change Canvas Settings Asset");
-                editorConfig.CanvasSettings = picked;
+                UiGlobalCanvasSettings picked = evt.newValue as UiGlobalCanvasSettings;
+                Undo.RecordObject(editorConfig, "Change Global Canvas Settings Asset");
+                editorConfig.GlobalCanvasSettings = picked;
                 EditorUtility.SetDirty(editorConfig);
                 AssetDatabase.SaveAssets();
                 RebuildCanvasInspector(picked);
@@ -179,7 +179,7 @@ namespace UiFramework.Editor.Window.Tabs
             RebuildCanvasInspector(settings);
         }
 
-        private void RebuildCanvasInspector(UiCanvasSettings settings)
+        private void RebuildCanvasInspector(UiGlobalCanvasSettings settings)
         {
             if (canvasInspectorContainer == null)
             {
@@ -190,7 +190,7 @@ namespace UiFramework.Editor.Window.Tabs
 
             if (settings == null)
             {
-                Label empty = new Label("No settings asset assigned. One is created at " + UiCanvasSettings.DefaultAssetPath + " the next time it is needed.");
+                Label empty = new Label("No settings asset assigned. One is created at " + UiGlobalCanvasSettings.DefaultAssetPath + " the next time it is needed.");
                 empty.style.marginLeft = 10;
                 canvasInspectorContainer.Add(empty);
                 return;

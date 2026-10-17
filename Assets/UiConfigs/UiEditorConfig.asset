@@ -21,4 +21,4 @@ MonoBehaviour:
   RuntimeConfigOutputPath: Assets/UiConfigs/RuntimeUiConfig.asset
   ElementNamespace: UiFramework.Editor.Elements
   StateNamespace: UiFramework.Editor.States
-  CanvasSettings: {fileID: 11400000, guid: 493e7d57dd049294e9107ab8e8d421f8, type: 2}
+  GlobalCanvasSettings: {fileID: 11400000, guid: 493e7d57dd049294e9107ab8e8d421f8, type: 2}

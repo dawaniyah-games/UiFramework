@@ -14,7 +14,7 @@ namespace UiFramework.Editor.Scenes
     // Helpers for the UI element scene contract (see DESIGN.md §7.1):
     //
     //   <Name>Root   plain Transform with the UiElement, the only root GameObject in the scene
-    //   └─ Canvas    child index 0: root Canvas + CanvasScaler + GraphicRaycaster, values from UiCanvasSettings
+    //   └─ Canvas    child index 0: root Canvas + CanvasScaler + GraphicRaycaster, values from UiGlobalCanvasSettings
     //      └─ Root   the only Canvas child: stretched RectTransform, the animation target
     //
     // Names are not checked, only structure.
@@ -125,7 +125,7 @@ namespace UiFramework.Editor.Scenes
         }
 
         // Reads animation presets, structure and canvas status in a single scene open.
-        public static UiElementSceneInfo InspectScene(string scenePath, UiCanvasSettings settings)
+        public static UiElementSceneInfo InspectScene(string scenePath, UiGlobalCanvasSettings settings)
         {
             UiElementSceneInfo info = new UiElementSceneInfo(scenePath);
 
@@ -215,7 +215,7 @@ namespace UiFramework.Editor.Scenes
 
         // Writes only renderMode, pixelPerfect and the CanvasScaler scale values. Sorting, cameras, plane distance and
         // shader channels are never touched. Either component may be null.
-        public static void ApplyCanvasSettings(Canvas canvas, CanvasScaler scaler, UiCanvasSettings settings)
+        public static void ApplyCanvasSettings(Canvas canvas, CanvasScaler scaler, UiGlobalCanvasSettings settings)
         {
             if (settings == null)
             {
@@ -224,7 +224,7 @@ namespace UiFramework.Editor.Scenes
 
             if (canvas != null)
             {
-                Undo.RecordObject(canvas, "Apply Canvas Settings");
+                Undo.RecordObject(canvas, "Apply Global Canvas Settings");
                 canvas.renderMode = settings.RenderMode;
                 canvas.pixelPerfect = settings.PixelPerfect;
                 RecordPrefabOverrides(canvas);
@@ -233,7 +233,7 @@ namespace UiFramework.Editor.Scenes
 
             if (scaler != null)
             {
-                Undo.RecordObject(scaler, "Apply Canvas Settings");
+                Undo.RecordObject(scaler, "Apply Global Canvas Settings");
                 scaler.uiScaleMode = settings.UiScaleMode;
                 scaler.referenceResolution = settings.ReferenceResolution;
                 scaler.screenMatchMode = settings.ScreenMatchMode;
@@ -249,13 +249,13 @@ namespace UiFramework.Editor.Scenes
             }
         }
 
-        public static bool CanvasSettingsMatch(Canvas canvas, CanvasScaler scaler, UiCanvasSettings settings, out string diff)
+        public static bool CanvasSettingsMatch(Canvas canvas, CanvasScaler scaler, UiGlobalCanvasSettings settings, out string diff)
         {
             List<string> diffs = new List<string>();
 
             if (settings == null)
             {
-                diff = "No UiCanvasSettings";
+                diff = "No UiGlobalCanvasSettings";
                 return false;
             }
 
@@ -313,7 +313,7 @@ namespace UiFramework.Editor.Scenes
         }
 
         // Uses the Canvas found by ValidateStructure, so the scene must still be open.
-        public static UiCanvasStatus GetCanvasStatus(UiElementStructureReport report, UiCanvasSettings settings, string scenePath, out string diff)
+        public static UiCanvasStatus GetCanvasStatus(UiElementStructureReport report, UiGlobalCanvasSettings settings, string scenePath, out string diff)
         {
             diff = string.Empty;
 
@@ -551,7 +551,7 @@ namespace UiFramework.Editor.Scenes
                     !rootIsInPrefab,
                     false,
                     rootName,
-                    "Create 'Canvas' (with the canvas settings) and an empty stretched 'Root' under '" + rootName + "'."));
+                    "Create 'Canvas' (with the global canvas settings) and an empty stretched 'Root' under '" + rootName + "'."));
                 return null;
             }
 
@@ -610,7 +610,7 @@ namespace UiFramework.Editor.Scenes
                     !rootIsInPrefab,
                     false,
                     rootName,
-                    "Create 'Canvas' (with the canvas settings) under '" + rootName + "' and move its " + count + " UI child(ren) into it, keeping their order; they are wrapped in a stretched 'Root' if there is more than one."));
+                    "Create 'Canvas' (with the global canvas settings) under '" + rootName + "' and move its " + count + " UI child(ren) into it, keeping their order; they are wrapped in a stretched 'Root' if there is more than one."));
                 return null;
             }
 
@@ -653,7 +653,7 @@ namespace UiFramework.Editor.Scenes
                     true,
                     false,
                     canvasName,
-                    "Add " + missing + " to '" + canvasName + "'" + (missingScaler ? " (the CanvasScaler gets the canvas settings)." : ".")));
+                    "Add " + missing + " to '" + canvasName + "'" + (missingScaler ? " (the CanvasScaler gets the global canvas settings)." : ".")));
             }
 
             Transform canvasTransform = canvas.transform;

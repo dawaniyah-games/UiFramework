@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -18,8 +19,9 @@ namespace UiFramework.Editor.Config
         public string ElementNamespace = "UiFramework.Editor.Elements";
         public string StateNamespace = "UiFramework.Editor.States";
 
-        [Tooltip("Canvas/CanvasScaler values for UI element scenes. Created at " + UiCanvasSettings.DefaultAssetPath + " when empty.")]
-        public UiCanvasSettings CanvasSettings;
+        [Tooltip("Global Canvas/CanvasScaler values for every UI element scene. Created at " + UiGlobalCanvasSettings.DefaultAssetPath + " when empty.")]
+        [FormerlySerializedAs("CanvasSettings")]
+        public UiGlobalCanvasSettings GlobalCanvasSettings;
 
 #if UNITY_EDITOR
         private void OnEnable()
