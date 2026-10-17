@@ -14,7 +14,6 @@ using UnityEditor.AddressableAssets.Settings;
 using UiFramework.Editor.Addressables;
 using UiFramework.Editor.Scenes;
 using UiFramework.Editor.Window.Popups;
-using UiFramework.Core;
 using UiFramework.Tweening;
 
 namespace UiFramework.Editor.Window.Tabs
@@ -23,10 +22,12 @@ namespace UiFramework.Editor.Window.Tabs
     {
         private const string defaultUiElementsGroupName = "UiElements";
         private const string defaultUiElementsLabel = "UiElements";
-        private const float structureColumnWidth = 64.0f;
-        private const float canvasColumnWidth = 64.0f;
-        private const float actionsColumnWidth = 196.0f;
-        private const float excludeColumnWidth = 52.0f;
+        private const float nameColumnWidth = 200.0f;
+        private const float statusColumnWidth = 72.0f;
+
+        private static readonly Color okColor = new Color(0.4f, 0.8f, 0.4f);
+        private static readonly Color warningColor = new Color(0.95f, 0.75f, 0.3f);
+        private static readonly Color errorColor = new Color(0.9f, 0.35f, 0.35f);
 
         public override string TabName
         {
@@ -38,6 +39,12 @@ namespace UiFramework.Editor.Window.Tabs
 
         private UiEditorConfig editorConfig;
         private ScrollView sceneListScrollView;
+        private Label summaryLabel;
+        private Label actionStatusLabel;
+        private ToolbarButton fixAllButton;
+        private ToolbarButton applyAllButton;
+        private bool showOnlyIssues = false;
+        private readonly List<UiElementSceneInfo> sceneInfos = new List<UiElementSceneInfo>();
         private bool includeParams = false;
         private bool includeReference = false;
 
@@ -59,17 +66,127 @@ namespace UiFramework.Editor.Window.Tabs
                     unityFontStyleAndWeight = FontStyle.Bold,
                     fontSize = 18,
                     marginTop = 18,
-                    marginBottom = 18
+                    marginBottom = 8
                 }
             };
             root.Add(header);
+
+            root.Add(CreateToolbar());
+
+            VisualElement summaryRow = new VisualElement();
+            summaryRow.style.flexDirection = FlexDirection.Row;
+            summaryRow.style.flexWrap = Wrap.Wrap;
+            summaryRow.style.marginTop = 4;
+            summaryRow.style.marginBottom = 6;
+
+            summaryLabel = new Label(string.Empty);
+            summaryLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            summaryLabel.style.marginRight = 12;
+            summaryRow.Add(summaryLabel);
+
+            actionStatusLabel = new Label(string.Empty);
+            actionStatusLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
+            actionStatusLabel.style.whiteSpace = WhiteSpace.Normal;
+            summaryRow.Add(actionStatusLabel);
+            root.Add(summaryRow);
 
             sceneListScrollView = new ScrollView();
             sceneListScrollView.mode = ScrollViewMode.VerticalAndHorizontal;
             sceneListScrollView.style.flexGrow = 1;
             sceneListScrollView.style.minHeight = 0;
             root.Add(sceneListScrollView);
+
+            root.Add(CreateNewElementSection());
+
             RefreshSceneList();
+        }
+
+        private Toolbar CreateToolbar()
+        {
+            Toolbar toolbar = new Toolbar();
+
+            ToolbarButton refreshButton = new ToolbarButton(() =>
+            {
+                RefreshSceneList();
+                SetActionStatus(string.Empty);
+            })
+            {
+                text = "Refresh",
+                tooltip = "Re-read every element scene."
+            };
+            toolbar.Add(refreshButton);
+
+            ToolbarButton validateButton = new ToolbarButton(() =>
+            {
+                RefreshSceneList();
+                SetActionStatus(UiElementSceneBatchOperations.LogValidationReport(sceneInfos) + " Details in the Console.");
+            })
+            {
+                text = "Validate All",
+                tooltip = "Re-check every element scene against the scene contract and the canvas settings, and log a report to the Console."
+            };
+            toolbar.Add(validateButton);
+
+            fixAllButton = new ToolbarButton(() =>
+            {
+                string result = UiElementSceneBatchOperations.FixStructureInAll(sceneInfos, GetCanvasSettings());
+                RefreshSceneList();
+                SetActionStatus(result);
+            })
+            {
+                text = "Fix All Structure…",
+                tooltip = "Fix every structure issue that can be fixed automatically, in all scenes. Shows the planned changes first. Never deletes objects."
+            };
+            toolbar.Add(fixAllButton);
+
+            applyAllButton = new ToolbarButton(() =>
+            {
+                string result = UiElementSceneBatchOperations.ApplyCanvasSettingsToAll(sceneInfos, GetCanvasSettings());
+                RefreshSceneList();
+                SetActionStatus(result);
+            })
+            {
+                text = "Apply Canvas To All…",
+                tooltip = "Write the canvas settings (General tab) into every scene whose Canvas differs. Excluded scenes are skipped. Shows the changes first."
+            };
+            toolbar.Add(applyAllButton);
+
+            toolbar.Add(new ToolbarSpacer { flex = true });
+
+            ToolbarToggle onlyIssuesToggle = new ToolbarToggle
+            {
+                text = "Only show scenes with issues",
+                value = showOnlyIssues
+            };
+            onlyIssuesToggle.RegisterValueChangedCallback(evt =>
+            {
+                showOnlyIssues = evt.newValue;
+                RenderSceneList();
+            });
+            toolbar.Add(onlyIssuesToggle);
+
+            return toolbar;
+        }
+
+        private VisualElement CreateNewElementSection()
+        {
+            Foldout foldout = new Foldout
+            {
+                text = "Create New UI Element",
+                value = true
+            };
+            foldout.style.marginTop = 8;
+            foldout.style.unityFontStyleAndWeight = FontStyle.Bold;
+
+            VisualElement body = new VisualElement();
+            body.style.unityFontStyleAndWeight = FontStyle.Normal;
+            foldout.Add(body);
+
+            Label hint = new Label("Generates the UiElement script and a scene laid out as <Name>Root → Canvas → Root, using the canvas settings from the General tab. Put all content under Root.");
+            hint.style.whiteSpace = WhiteSpace.Normal;
+            hint.style.fontSize = 11;
+            hint.style.marginBottom = 6;
+            body.Add(hint);
 
             SceneAsset selectedScene = null;
 
@@ -77,19 +194,20 @@ namespace UiFramework.Editor.Window.Tabs
             {
                 objectType = typeof(SceneAsset),
                 allowSceneObjects = false,
+                tooltip = "Turn an existing scene into an element. Its root objects are moved under <Name>Root, and you are offered a structure fix.",
                 style = { marginBottom = 6 }
             };
             sceneField.RegisterValueChangedCallback(evt =>
             {
                 selectedScene = evt.newValue as SceneAsset;
             });
-            root.Add(sceneField);
+            body.Add(sceneField);
 
             TextField nameField = new TextField("New Element Name")
             {
-                style = { marginTop = 10, marginBottom = 4 }
+                style = { marginTop = 4, marginBottom = 4 }
             };
-            root.Add(nameField);
+            body.Add(nameField);
 
             Toggle paramsToggle = new Toggle("Include Parameters Class") { value = false };
 
@@ -97,7 +215,7 @@ namespace UiFramework.Editor.Window.Tabs
             {
                 includeParams = evt.newValue;
             });
-            root.Add(paramsToggle);
+            body.Add(paramsToggle);
 
             Toggle referenceToggle = new Toggle("Include Reference Class") { value = false };
 
@@ -106,7 +224,7 @@ namespace UiFramework.Editor.Window.Tabs
                 includeReference = evt.newValue;
             });
 
-            root.Add(referenceToggle);
+            body.Add(referenceToggle);
 
             Button createButton = new Button(() =>
             {
@@ -130,12 +248,58 @@ namespace UiFramework.Editor.Window.Tabs
                 }
             })
             {
-                text = "\u2795 Create UI Element"
+                text = "➕ Create UI Element"
             };
-            root.Add(createButton);
+            createButton.style.marginTop = 6;
+            body.Add(createButton);
+
+            return foldout;
         }
 
+        // Opens every element scene once and caches what the list shows.
         private void RefreshSceneList()
+        {
+            sceneInfos.Clear();
+
+            List<string> scenePaths = GetElementScenePaths();
+            UiCanvasSettings canvasSettings = GetCanvasSettings();
+
+            try
+            {
+                for (int i = 0; i < scenePaths.Count; i++)
+                {
+                    string sceneName = Path.GetFileNameWithoutExtension(scenePaths[i]);
+                    EditorUtility.DisplayProgressBar("UI Elements", "Reading " + sceneName, (float)i / scenePaths.Count);
+
+                    // One scene open per row: presets, structure and canvas status are read together.
+                    sceneInfos.Add(UiElementSceneUtility.InspectScene(scenePaths[i], canvasSettings));
+                }
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+
+            RenderSceneList();
+        }
+
+        // Re-reads a single scene after a per-row action instead of reopening the whole list.
+        private void RefreshScene(string scenePath)
+        {
+            for (int i = 0; i < sceneInfos.Count; i++)
+            {
+                if (sceneInfos[i].ScenePath == scenePath)
+                {
+                    sceneInfos[i] = UiElementSceneUtility.InspectScene(scenePath, GetCanvasSettings());
+                    break;
+                }
+            }
+
+            RenderSceneList();
+        }
+
+        // Rebuilds the rows from the cached scene info; does not open any scene.
+        private void RenderSceneList()
         {
             if (sceneListScrollView == null)
             {
@@ -143,53 +307,139 @@ namespace UiFramework.Editor.Window.Tabs
             }
 
             sceneListScrollView.Clear();
+            UpdateSummary();
 
-            List<string> scenePaths = GetElementScenePaths();
-            if (scenePaths.Count == 0)
+            if (sceneInfos.Count == 0)
             {
-                Label noSceneLabel = new Label("\u26a0\ufe0f No UI element scenes found.")
+                string folder = editorConfig != null ? editorConfig.ElementsScenePath : "(no UI Config selected)";
+                Label noSceneLabel = new Label("⚠️ No UI element scenes found in '" + folder + "'. Create one below.")
                 {
                     style = { color = Color.yellow, marginBottom = 6 }
                 };
                 sceneListScrollView.Add(noSceneLabel);
+                return;
             }
-            else
+
+            AddressableAssetSettings settings;
+            bool hasAddressables = AddressablesAssetUtility.TryGetSettings(out settings);
+            List<string> groupNames = hasAddressables ? AddressablesAssetUtility.GetGroupNames(settings) : new List<string>();
+
+            if (groupNames.Count == 0)
             {
-                AddressableAssetSettings settings;
-                bool hasAddressables = AddressablesAssetUtility.TryGetSettings(out settings);
-                List<string> groupNames = hasAddressables ? AddressablesAssetUtility.GetGroupNames(settings) : new List<string>();
+                groupNames.Add(defaultUiElementsGroupName);
+            }
+            else if (!groupNames.Contains(defaultUiElementsGroupName))
+            {
+                groupNames.Insert(0, defaultUiElementsGroupName);
+            }
 
-                sceneListScrollView.Add(CreateSceneListHeaderRow());
+            UiCanvasSettings canvasSettings = GetCanvasSettings();
+            sceneListScrollView.Add(CreateSceneListHeaderRow());
 
-                if (groupNames.Count == 0)
+            int shown = 0;
+            for (int i = 0; i < sceneInfos.Count; i++)
+            {
+                UiElementSceneInfo info = sceneInfos[i];
+                if (showOnlyIssues && !NeedsAttention(info))
                 {
-                    groupNames.Add(defaultUiElementsGroupName);
+                    continue;
                 }
-                else if (!groupNames.Contains(defaultUiElementsGroupName))
+
+                sceneListScrollView.Add(CreateSceneRow(info.SceneName, info.ScenePath, hasAddressables, settings, groupNames, info, canvasSettings));
+                shown++;
+            }
+
+            if (shown == 0)
+            {
+                Label allGood = new Label("✓ All " + sceneInfos.Count + " scenes follow the scene contract and match the canvas settings.");
+                allGood.style.color = okColor;
+                allGood.style.marginTop = 6;
+                sceneListScrollView.Add(allGood);
+            }
+        }
+
+        private void UpdateSummary()
+        {
+            int ok = 0;
+            int fixable = 0;
+            int manual = 0;
+            int canvasDiffers = 0;
+
+            for (int i = 0; i < sceneInfos.Count; i++)
+            {
+                UiElementSceneInfo info = sceneInfos[i];
+                UiElementStructureReport structure = info.Structure;
+
+                if (info.IsAvailable && !NeedsAttention(info))
                 {
-                    groupNames.Insert(0, defaultUiElementsGroupName);
+                    ok++;
                 }
 
-                UiCanvasSettings canvasSettings = UiEditorConfigUtility.GetCanvasSettingsOrDefaults(editorConfig);
-
-                try
+                if (structure.HasFixableIssues)
                 {
-                    for (int i = 0; i < scenePaths.Count; i++)
-                    {
-                        string scenePath = scenePaths[i];
-                        string sceneName = Path.GetFileNameWithoutExtension(scenePath);
-                        EditorUtility.DisplayProgressBar("UI Elements", "Reading " + sceneName, (float)i / scenePaths.Count);
-
-                        // One scene open per row: presets, structure and canvas status are read together.
-                        UiElementSceneInfo info = UiElementSceneUtility.InspectScene(scenePath, canvasSettings);
-                        sceneListScrollView.Add(CreateSceneRow(sceneName, scenePath, hasAddressables, settings, groupNames, info, canvasSettings));
-                    }
+                    fixable++;
                 }
-                finally
+
+                if (structure.HasUnfixableIssues)
                 {
-                    EditorUtility.ClearProgressBar();
+                    manual++;
+                }
+
+                if (info.CanvasStatus == UiCanvasStatus.Differs)
+                {
+                    canvasDiffers++;
                 }
             }
+
+            if (summaryLabel != null)
+            {
+                summaryLabel.text = sceneInfos.Count + " scene(s) · " + ok + " OK · " + fixable + " fixable · " + manual + " need manual work · " + canvasDiffers + " canvas differ";
+
+                if (sceneInfos.Count > 0 && ok == sceneInfos.Count)
+                {
+                    summaryLabel.style.color = okColor;
+                }
+                else if (manual > 0)
+                {
+                    summaryLabel.style.color = errorColor;
+                }
+                else if (fixable + canvasDiffers > 0)
+                {
+                    summaryLabel.style.color = warningColor;
+                }
+                else
+                {
+                    summaryLabel.style.color = StyleKeyword.Null;
+                }
+            }
+
+            if (fixAllButton != null)
+            {
+                fixAllButton.SetEnabled(fixable > 0);
+            }
+
+            if (applyAllButton != null)
+            {
+                applyAllButton.SetEnabled(canvasDiffers > 0);
+            }
+        }
+
+        private static bool NeedsAttention(UiElementSceneInfo info)
+        {
+            return !info.IsAvailable || info.Structure.HasIssues || info.CanvasStatus == UiCanvasStatus.Differs;
+        }
+
+        private void SetActionStatus(string text)
+        {
+            if (actionStatusLabel != null)
+            {
+                actionStatusLabel.text = text ?? string.Empty;
+            }
+        }
+
+        private UiCanvasSettings GetCanvasSettings()
+        {
+            return UiEditorConfigUtility.GetCanvasSettingsOrDefaults(editorConfig);
         }
 
         private VisualElement CreateSceneListHeaderRow()
@@ -203,73 +453,38 @@ namespace UiFramework.Editor.Window.Tabs
             row.style.paddingTop = 4;
             row.style.paddingBottom = 4;
 
-            Label nameLabel = new Label("Scene");
-            nameLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            nameLabel.style.minWidth = 180;
-            nameLabel.style.flexGrow = 0;
-            row.Add(nameLabel);
+            row.Add(CreateHeaderLabel("Scene", "Click a scene name to select it, double-click to open it.", nameColumnWidth));
+            row.Add(CreateHeaderLabel("Show", "Animation preset to play when this UI element is shown.", 110));
+            row.Add(CreateHeaderLabel("Hide", "Animation preset to play when this UI element is hidden/unloaded.", 110));
+            row.Add(CreateHeaderLabel("Structure", "Scene contract: <Name>Root → Canvas → one stretched Root.\n✓ OK   ⚠ Fix = click to fix   ✖ = needs manual work (click for details)", statusColumnWidth));
+            row.Add(CreateHeaderLabel("Canvas", "Canvas/Canvas Scaler compared to the canvas settings (General tab).\n✓ matches   ⚠ Reset = click to reset   — no canvas   Excluded = skipped by Apply Canvas To All", statusColumnWidth));
+            row.Add(CreateHeaderLabel("Addressable", "If enabled, the scene will be registered in Addressables for loading at runtime.", 90));
+            row.Add(CreateHeaderLabel("Group", null, 140));
 
-            Label showLabel = new Label("Show");
-            showLabel.tooltip = "Animation preset to play when this UI element is shown.";
-            showLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            showLabel.style.minWidth = 110;
-            showLabel.style.marginRight = 8;
-            row.Add(showLabel);
-
-            Label hideLabel = new Label("Hide");
-            hideLabel.tooltip = "Animation preset to play when this UI element is hidden/unloaded.";
-            hideLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            hideLabel.style.minWidth = 110;
-            hideLabel.style.marginRight = 8;
-            row.Add(hideLabel);
-
-            Label structureLabel = new Label("Structure");
-            structureLabel.tooltip = "Whether the scene follows the UI element scene contract: <Name>Root → Canvas → one stretched Root.\n✓ valid  ⚠ fixable issues or warnings  ✖ issues that need manual work";
-            structureLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            structureLabel.style.minWidth = structureColumnWidth;
-            structureLabel.style.marginRight = 8;
-            row.Add(structureLabel);
-
-            Label canvasLabel = new Label("Canvas");
-            canvasLabel.tooltip = "Whether the Canvas/CanvasScaler match the canvas settings (Canvas tab).\n✓ matches  ⚠ differs  — no canvas  Excluded = skipped by Apply To All";
-            canvasLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            canvasLabel.style.minWidth = canvasColumnWidth;
-            canvasLabel.style.marginRight = 8;
-            row.Add(canvasLabel);
-
-            Label actionsLabel = new Label("Contract");
-            actionsLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            actionsLabel.style.minWidth = actionsColumnWidth;
-            actionsLabel.style.marginRight = 8;
-            row.Add(actionsLabel);
-
-            Label excludeLabel = new Label("Exclude");
-            excludeLabel.tooltip = "Skip this scene in 'Apply Canvas Settings To All'.";
-            excludeLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            excludeLabel.style.minWidth = excludeColumnWidth;
-            excludeLabel.style.marginRight = 8;
-            row.Add(excludeLabel);
-
-            Label addressableLabel = new Label("Addressable");
-            addressableLabel.tooltip = "If enabled, the scene will be registered in Addressables for loading at runtime.";
-            addressableLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            addressableLabel.style.minWidth = 90;
-            addressableLabel.style.marginRight = 8;
-            row.Add(addressableLabel);
-
-            Label groupLabel = new Label("Group");
-            groupLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            groupLabel.style.minWidth = 140;
-            groupLabel.style.marginRight = 8;
-            row.Add(groupLabel);
-
-            Label labelsLabel = new Label("Labels");
-            labelsLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            Label labelsLabel = CreateHeaderLabel("Labels", null, 0);
             labelsLabel.style.flexGrow = 1;
-            labelsLabel.style.marginRight = 8;
             row.Add(labelsLabel);
 
             return row;
+        }
+
+        private static Label CreateHeaderLabel(string text, string tooltip, float minWidth)
+        {
+            Label label = new Label(text);
+            label.style.unityFontStyleAndWeight = FontStyle.Bold;
+            label.style.marginRight = 8;
+
+            if (minWidth > 0.0f)
+            {
+                label.style.minWidth = minWidth;
+            }
+
+            if (!string.IsNullOrEmpty(tooltip))
+            {
+                label.tooltip = tooltip;
+            }
+
+            return label;
         }
 
         private VisualElement CreateSceneRow(string sceneName, string sceneAssetPath, bool hasAddressables, AddressableAssetSettings settings, List<string> groupNames, UiElementSceneInfo info, UiCanvasSettings canvasSettings)
@@ -286,11 +501,7 @@ namespace UiFramework.Editor.Window.Tabs
             row.style.borderBottomWidth = 1;
             row.style.borderBottomColor = Color.gray;
 
-            Label nameLabel = new Label(sceneName);
-            nameLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            nameLabel.style.minWidth = 180;
-            nameLabel.style.flexGrow = 0;
-            row.Add(nameLabel);
+            row.Add(CreateSceneNameLabel(sceneName, sceneAssetPath));
 
             List<string> presetKeys = new List<string>(TweenPresets.GetPresetKeys());
             if (presetKeys.Count == 0)
@@ -334,7 +545,7 @@ namespace UiFramework.Editor.Window.Tabs
                 }
 
                 WriteElementAnimationPresets(sceneAssetPath, evt.newValue, hideDropdown.value);
-                RefreshSceneList();
+                info.ShowPreset = evt.newValue;
             });
 
             hideDropdown.RegisterValueChangedCallback(evt =>
@@ -345,10 +556,11 @@ namespace UiFramework.Editor.Window.Tabs
                 }
 
                 WriteElementAnimationPresets(sceneAssetPath, showDropdown.value, evt.newValue);
-                RefreshSceneList();
+                info.HidePreset = evt.newValue;
             });
 
-            AddContractColumns(row, sceneAssetPath, info, canvasSettings);
+            row.Add(CreateStructureCell(sceneAssetPath, info, canvasSettings));
+            row.Add(CreateCanvasCell(sceneAssetPath, info, canvasSettings));
 
             AddressableAssetEntry entry = null;
             bool isAddressable = hasAddressables && AddressablesAssetUtility.IsAssetAddressable(sceneAssetPath, out entry);
@@ -384,7 +596,7 @@ namespace UiFramework.Editor.Window.Tabs
             {
                 selectedGroup = defaultUiElementsGroupName;
             }
-            
+
             if (isAddressable && entry != null && entry.parentGroup != null)
             {
                 selectedGroup = entry.parentGroup.Name;
@@ -422,7 +634,7 @@ namespace UiFramework.Editor.Window.Tabs
                 string groupName = evt.newValue;
                 string[] labels = selectedLabels.ToArray();
                 AddressablesAssetUtility.EnsureAssetIsAddressable(sceneAssetPath, groupName, address, labels);
-                RefreshSceneList();
+                RenderSceneList();
             });
 
             Label labelsSummary = new Label(BuildLabelsSummary(selectedLabels));
@@ -449,7 +661,7 @@ namespace UiFramework.Editor.Window.Tabs
                         string groupName = groupDropdown.value;
                         string[] labels = selectedLabels.ToArray();
                         AddressablesAssetUtility.EnsureAssetIsAddressable(sceneAssetPath, groupName, address, labels);
-                        RefreshSceneList();
+                        RenderSceneList();
                     }
                 }));
             });
@@ -458,14 +670,16 @@ namespace UiFramework.Editor.Window.Tabs
             labelsButton.style.marginRight = 8;
             row.Add(labelsButton);
 
-            Button removeButton = new Button(() =>
+            Button moreButton = new Button(() =>
             {
-                AddressablesAssetUtility.RemoveAssetFromAddressables(sceneAssetPath);
-                RefreshSceneList();
-            });
-            removeButton.text = "Remove";
-            removeButton.SetEnabled(hasAddressables && isAddressable);
-            row.Add(removeButton);
+                ShowRowMenu(sceneAssetPath, info, canvasSettings, hasAddressables && isAddressable);
+            })
+            {
+                text = "⋯",
+                tooltip = "More actions for this scene"
+            };
+            moreButton.style.width = 28;
+            row.Add(moreButton);
 
             addressableToggle.RegisterValueChangedCallback(evt =>
             {
@@ -486,10 +700,274 @@ namespace UiFramework.Editor.Window.Tabs
                     AddressablesAssetUtility.RemoveAssetFromAddressables(sceneAssetPath);
                 }
 
-                RefreshSceneList();
+                RenderSceneList();
             });
 
             return row;
+        }
+
+        private Label CreateSceneNameLabel(string sceneName, string sceneAssetPath)
+        {
+            bool isOpen = UiElementSceneUtility.IsSceneOpen(sceneAssetPath);
+
+            Label nameLabel = new Label(isOpen ? sceneName + "  (open)" : sceneName);
+            nameLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            nameLabel.style.minWidth = nameColumnWidth;
+            nameLabel.style.marginRight = 8;
+            nameLabel.style.flexGrow = 0;
+            nameLabel.tooltip = sceneAssetPath + "\nClick to select the scene asset, double-click to open it." +
+                (isOpen ? "\nOpen in the editor: fixes are applied in place (with Undo) and not saved automatically." : string.Empty);
+
+            nameLabel.RegisterCallback<MouseDownEvent>(evt =>
+            {
+                if (evt.clickCount >= 2)
+                {
+                    OpenScene(sceneAssetPath);
+                    return;
+                }
+
+                SelectSceneAsset(sceneAssetPath);
+            });
+
+            return nameLabel;
+        }
+
+        private VisualElement CreateStructureCell(string sceneAssetPath, UiElementSceneInfo info, UiCanvasSettings canvasSettings)
+        {
+            UiElementStructureReport structure = info.Structure;
+
+            if (!info.IsAvailable)
+            {
+                return CreateStatusCell("?", "The scene could not be opened (e.g. in Play Mode).", null, null);
+            }
+
+            if (!structure.HasIssues)
+            {
+                return CreateStatusCell("✓", "Follows the UI element scene contract.", okColor, null);
+            }
+
+            if (structure.HasFixableIssues)
+            {
+                return CreateStatusCell(
+                    structure.HasUnfixableIssues ? "✖ Fix" : "⚠ Fix",
+                    structure.GetIssuesText() + "\n\nClick to fix what can be fixed automatically (you'll see the changes first).",
+                    structure.HasUnfixableIssues ? errorColor : warningColor,
+                    () =>
+                    {
+                        FixSceneStructure(sceneAssetPath, info, canvasSettings);
+                    });
+            }
+
+            return CreateStatusCell(
+                structure.HasUnfixableIssues ? "✖" : "⚠",
+                structure.GetIssuesText() + "\n\nClick for details.",
+                structure.HasUnfixableIssues ? errorColor : warningColor,
+                () =>
+                {
+                    ShowManualIssues(sceneAssetPath, info);
+                });
+        }
+
+        private VisualElement CreateCanvasCell(string sceneAssetPath, UiElementSceneInfo info, UiCanvasSettings canvasSettings)
+        {
+            if (!info.IsAvailable)
+            {
+                return CreateStatusCell("?", "The scene could not be opened.", null, null);
+            }
+
+            if (info.CanvasStatus == UiCanvasStatus.NoCanvas)
+            {
+                return CreateStatusCell("—", "No root Canvas under the element root. Use Fix Structure to create one.", null, null);
+            }
+
+            bool differs = !string.IsNullOrEmpty(info.CanvasDiff);
+            string diffText = differs ? info.CanvasDiff.Replace("; ", "\n") : string.Empty;
+            Action reset = null;
+
+            if (differs)
+            {
+                reset = () =>
+                {
+                    ResetSceneCanvas(sceneAssetPath, info, canvasSettings);
+                };
+            }
+
+            if (info.CanvasStatus == UiCanvasStatus.Excluded)
+            {
+                string tooltip = "Excluded from 'Apply Canvas To All' (change this in the ⋯ menu)." + (differs ? "\nDiffers:\n" + diffText + "\n\nClick to reset this scene anyway." : " Matches the canvas settings.");
+                return CreateStatusCell("Excluded", tooltip, Color.gray, reset);
+            }
+
+            if (!differs)
+            {
+                return CreateStatusCell("✓", "Matches the canvas settings.", okColor, null);
+            }
+
+            return CreateStatusCell("⚠ Reset", diffText + "\n\nClick to write the canvas settings into this scene (you'll see the changes first).", warningColor, reset);
+        }
+
+        // A clickable cell looks like a button; a read-only one looks like plain text.
+        private static VisualElement CreateStatusCell(string text, string tooltip, Color? color, Action onClick)
+        {
+            VisualElement cell;
+
+            if (onClick != null)
+            {
+                cell = new Button(onClick) { text = text };
+            }
+            else
+            {
+                Label label = new Label(text);
+                label.style.unityTextAlign = TextAnchor.MiddleCenter;
+                cell = label;
+            }
+
+            cell.tooltip = tooltip;
+            cell.style.width = statusColumnWidth;
+            cell.style.marginRight = 8;
+            cell.style.unityFontStyleAndWeight = FontStyle.Bold;
+
+            if (color.HasValue)
+            {
+                cell.style.color = color.Value;
+            }
+
+            return cell;
+        }
+
+        private void ShowRowMenu(string sceneAssetPath, UiElementSceneInfo info, UiCanvasSettings canvasSettings, bool isAddressable)
+        {
+            GenericMenu menu = new GenericMenu();
+
+            menu.AddItem(new GUIContent("Open Scene"), false, () =>
+            {
+                OpenScene(sceneAssetPath);
+            });
+            menu.AddItem(new GUIContent("Select Scene Asset"), false, () =>
+            {
+                SelectSceneAsset(sceneAssetPath);
+            });
+            menu.AddSeparator(string.Empty);
+
+            AddMenuItem(menu, "Fix Structure…", info.IsAvailable && info.Structure.HasFixableIssues, () =>
+            {
+                FixSceneStructure(sceneAssetPath, info, canvasSettings);
+            });
+
+            bool canResetCanvas = info.IsAvailable && info.CanvasStatus != UiCanvasStatus.NoCanvas && !string.IsNullOrEmpty(info.CanvasDiff);
+            AddMenuItem(menu, "Reset Canvas To Settings…", canResetCanvas, () =>
+            {
+                ResetSceneCanvas(sceneAssetPath, info, canvasSettings);
+            });
+
+            bool canExclude = canvasSettings != null && EditorUtility.IsPersistent(canvasSettings);
+            bool excluded = canExclude && canvasSettings.IsExcluded(sceneAssetPath);
+            GUIContent excludeContent = new GUIContent("Exclude From 'Apply Canvas To All'");
+            if (canExclude)
+            {
+                menu.AddItem(excludeContent, excluded, () =>
+                {
+                    SetExcluded(info, canvasSettings, !excluded);
+                });
+            }
+            else
+            {
+                menu.AddDisabledItem(excludeContent, excluded);
+            }
+
+            AddMenuItem(menu, "Log Validation Details", info.IsAvailable, () =>
+            {
+                Debug.Log("[UiFramework] " + info.SceneName + ": " + (info.Structure.HasIssues ? "\n" + info.Structure.GetIssuesText() : "structure OK") + "\nCanvas: " + UiElementSceneBatchOperations.DescribeCanvasStatus(info));
+            });
+
+            menu.AddSeparator(string.Empty);
+            AddMenuItem(menu, "Remove From Addressables", isAddressable, () =>
+            {
+                AddressablesAssetUtility.RemoveAssetFromAddressables(sceneAssetPath);
+                RenderSceneList();
+            });
+
+            menu.ShowAsContext();
+        }
+
+        private static void AddMenuItem(GenericMenu menu, string text, bool enabled, GenericMenu.MenuFunction action)
+        {
+            GUIContent content = new GUIContent(text);
+
+            if (enabled)
+            {
+                menu.AddItem(content, false, action);
+            }
+            else
+            {
+                menu.AddDisabledItem(content);
+            }
+        }
+
+        private void SetExcluded(UiElementSceneInfo info, UiCanvasSettings canvasSettings, bool excluded)
+        {
+            if (canvasSettings.SetExcluded(info.ScenePath, excluded))
+            {
+                AssetDatabase.SaveAssets();
+            }
+
+            if (info.CanvasStatus != UiCanvasStatus.NoCanvas)
+            {
+                if (excluded)
+                {
+                    info.CanvasStatus = UiCanvasStatus.Excluded;
+                }
+                else
+                {
+                    info.CanvasStatus = string.IsNullOrEmpty(info.CanvasDiff) ? UiCanvasStatus.Matches : UiCanvasStatus.Differs;
+                }
+            }
+
+            RenderSceneList();
+        }
+
+        private void OpenScene(string sceneAssetPath)
+        {
+            if (UiElementSceneUtility.IsSceneOpen(sceneAssetPath))
+            {
+                SelectSceneAsset(sceneAssetPath);
+                return;
+            }
+
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            {
+                return;
+            }
+
+            EditorSceneManager.OpenScene(sceneAssetPath, OpenSceneMode.Single);
+            RenderSceneList();
+        }
+
+        private static void SelectSceneAsset(string sceneAssetPath)
+        {
+            SceneAsset sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(sceneAssetPath);
+            if (sceneAsset == null)
+            {
+                return;
+            }
+
+            Selection.activeObject = sceneAsset;
+            EditorGUIUtility.PingObject(sceneAsset);
+        }
+
+        private void ShowManualIssues(string sceneAssetPath, UiElementSceneInfo info)
+        {
+            List<string> lines = UiElementStructureFixer.DescribeUnfixableIssues(info.Structure);
+            bool open = EditorUtility.DisplayDialog(
+                "Structure: " + info.SceneName,
+                UiElementSceneDialogs.BuildMessage("These need to be fixed by hand in the scene:", lines),
+                "Open Scene",
+                "Close");
+
+            if (open)
+            {
+                OpenScene(sceneAssetPath);
+            }
         }
 
         private void WriteElementAnimationPresets(string sceneAssetPath, string showPreset, string hidePreset)
@@ -511,135 +989,6 @@ namespace UiFramework.Editor.Window.Tabs
             {
                 Debug.LogWarning("[UiFramework] No UiElement found in scene: " + sceneAssetPath);
             }
-        }
-
-        private void AddContractColumns(VisualElement row, string sceneAssetPath, UiElementSceneInfo info, UiCanvasSettings canvasSettings)
-        {
-            UiElementStructureReport structure = info.Structure;
-
-            Label structureStatus = new Label();
-            structureStatus.style.minWidth = structureColumnWidth;
-            structureStatus.style.marginRight = 8;
-            structureStatus.style.unityTextAlign = TextAnchor.MiddleCenter;
-            structureStatus.style.unityFontStyleAndWeight = FontStyle.Bold;
-
-            if (!info.IsAvailable)
-            {
-                structureStatus.text = "?";
-                structureStatus.tooltip = "The scene could not be opened (e.g. in Play Mode).";
-            }
-            else if (!structure.HasIssues)
-            {
-                structureStatus.text = "✓";
-                structureStatus.tooltip = "Follows the UI element scene contract.";
-                structureStatus.style.color = new Color(0.4f, 0.8f, 0.4f);
-            }
-            else if (structure.HasUnfixableIssues)
-            {
-                structureStatus.text = "✖";
-                structureStatus.tooltip = structure.GetIssuesText();
-                structureStatus.style.color = new Color(0.9f, 0.35f, 0.35f);
-            }
-            else
-            {
-                structureStatus.text = "⚠";
-                structureStatus.tooltip = structure.GetIssuesText();
-                structureStatus.style.color = new Color(0.95f, 0.75f, 0.3f);
-            }
-
-            row.Add(structureStatus);
-
-            Label canvasStatus = new Label();
-            canvasStatus.style.minWidth = canvasColumnWidth;
-            canvasStatus.style.marginRight = 8;
-            canvasStatus.style.unityTextAlign = TextAnchor.MiddleCenter;
-            UpdateCanvasStatusLabel(canvasStatus, info, info.CanvasStatus == UiCanvasStatus.Excluded);
-            row.Add(canvasStatus);
-
-            VisualElement actions = new VisualElement();
-            actions.style.flexDirection = FlexDirection.Row;
-            actions.style.minWidth = actionsColumnWidth;
-            actions.style.marginRight = 8;
-
-            Button fixButton = new Button(() =>
-            {
-                FixSceneStructure(sceneAssetPath, info, canvasSettings);
-            })
-            {
-                text = "Fix Structure",
-                tooltip = structure.HasFixableIssues ? "Fix the structure issues that can be fixed automatically (asks first)." : "Nothing to fix automatically."
-            };
-            fixButton.SetEnabled(info.IsAvailable && structure.HasFixableIssues);
-            actions.Add(fixButton);
-
-            bool canResetCanvas = info.IsAvailable && info.CanvasStatus != UiCanvasStatus.NoCanvas && !string.IsNullOrEmpty(info.CanvasDiff);
-            Button resetButton = new Button(() =>
-            {
-                ResetSceneCanvas(sceneAssetPath, info, canvasSettings);
-            })
-            {
-                text = "Reset Canvas",
-                tooltip = canResetCanvas ? "Write the canvas settings into this scene's Canvas/CanvasScaler (asks first). Works on excluded scenes too." : "Nothing to reset."
-            };
-            resetButton.SetEnabled(canResetCanvas);
-            actions.Add(resetButton);
-            row.Add(actions);
-
-            Toggle excludeToggle = new Toggle();
-            excludeToggle.tooltip = "Skip this scene in 'Apply Canvas Settings To All'.";
-            excludeToggle.value = canvasSettings != null && canvasSettings.IsExcluded(sceneAssetPath);
-            excludeToggle.style.minWidth = excludeColumnWidth;
-            excludeToggle.style.marginRight = 8;
-            excludeToggle.SetEnabled(canvasSettings != null && EditorUtility.IsPersistent(canvasSettings));
-            excludeToggle.RegisterValueChangedCallback(evt =>
-            {
-                if (canvasSettings.SetExcluded(sceneAssetPath, evt.newValue))
-                {
-                    AssetDatabase.SaveAssets();
-                }
-
-                UpdateCanvasStatusLabel(canvasStatus, info, evt.newValue);
-            });
-            row.Add(excludeToggle);
-        }
-
-        private static void UpdateCanvasStatusLabel(Label label, UiElementSceneInfo info, bool excluded)
-        {
-            label.style.color = StyleKeyword.Null;
-
-            if (!info.IsAvailable)
-            {
-                label.text = "?";
-                label.tooltip = "The scene could not be opened.";
-                return;
-            }
-
-            if (info.CanvasStatus == UiCanvasStatus.NoCanvas)
-            {
-                label.text = "—";
-                label.tooltip = "No root Canvas found under the element root.";
-                return;
-            }
-
-            if (excluded)
-            {
-                label.text = "Excluded";
-                label.tooltip = "Skipped by 'Apply Canvas Settings To All'." + (string.IsNullOrEmpty(info.CanvasDiff) ? " Matches the canvas settings." : "\nDiffers: " + info.CanvasDiff.Replace("; ", "\n"));
-                label.style.color = Color.gray;
-                return;
-            }
-
-            if (string.IsNullOrEmpty(info.CanvasDiff))
-            {
-                label.text = "✓";
-                label.tooltip = "Matches the canvas settings.";
-                label.style.color = new Color(0.4f, 0.8f, 0.4f);
-                return;
-            }
-
-            label.text = "⚠";
-            label.tooltip = info.CanvasDiff.Replace("; ", "\n");
-            label.style.color = new Color(0.95f, 0.75f, 0.3f);
         }
 
         private void FixSceneStructure(string sceneAssetPath, UiElementSceneInfo info, UiCanvasSettings canvasSettings)
@@ -666,9 +1015,10 @@ namespace UiFramework.Editor.Window.Tabs
             if (remaining != null)
             {
                 UiElementSceneDialogs.LogRemaining(info.SceneName, remaining);
+                SetActionStatus(remaining.HasIssues ? "Fixed " + info.SceneName + "; some issues need manual work (see the row)." : "Fixed " + info.SceneName + ".");
             }
 
-            RefreshSceneList();
+            RefreshScene(sceneAssetPath);
         }
 
         private void ResetSceneCanvas(string sceneAssetPath, UiElementSceneInfo info, UiCanvasSettings canvasSettings)
@@ -700,9 +1050,10 @@ namespace UiFramework.Editor.Window.Tabs
             if (applied)
             {
                 Debug.Log("[UiFramework] Reset canvas settings in '" + info.SceneName + "' (" + info.CanvasDiff + ").");
+                SetActionStatus("Reset canvas in " + info.SceneName + ".");
             }
 
-            RefreshSceneList();
+            RefreshScene(sceneAssetPath);
         }
 
         private string BuildLabelsSummary(HashSet<string> selectedLabels)

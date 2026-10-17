@@ -61,7 +61,7 @@ UiFramework.Editor ──► Unity.Addressables.Editor   (Editor platform only)
 | Asset | Type | Where it lives | Who writes it | Read at |
 | --- | --- | --- | --- | --- |
 | Editor config | `UiEditorConfig` (Editor SO) | `Assets/UiConfigs/UiEditorConfig.asset` | Developer, via the General tab | Edit time |
-| Canvas settings | `UiCanvasSettings` (Editor SO), referenced by `UiEditorConfig.CanvasSettings` | `Assets/UiConfigs/UiCanvasSettings.asset` (auto-created with defaults when missing) | Developer, via the Canvas tab | Edit time only. Written into scenes by explicit Apply/Fix/Reset actions |
+| Canvas settings | `UiCanvasSettings` (Editor SO), referenced by `UiEditorConfig.CanvasSettings` | `Assets/UiConfigs/UiCanvasSettings.asset` (auto-created with defaults when missing) | Developer, via the General tab (Canvas Settings section) | Edit time only. Written into scenes by explicit Apply/Fix/Reset actions |
 | State definition | `UiStateDefinition` (Editor SO), **one per state** | `UiEditorConfig.StateDefinitionsPath` (default `Assets/UiConfigs/UiStateDefinitions/`) | States tab | Edit time |
 | State registry *(legacy)* | `UiStateRegistry` (Editor SO) | `UiEditorConfig.StateRegistryPath` | Older versions | Edit time, only if no definitions exist |
 | **Runtime config** | `UiConfig` (runtime SO) | `UiEditorConfig.RuntimeConfigOutputPath` (default `Assets/UiConfigs/RuntimeUiConfig.asset`) | **Generated** by *Build Runtime UiConfig*. Do not hand-edit | Runtime, via Addressables |
@@ -230,14 +230,11 @@ Menu: **UiFramework → UI Setup Manager** (`UiSetupEditorWindow`). The selected
 
 | Tab | What it does |
 | --- | --- |
-| **General** | Shows the configured paths. *Create Config* finds or creates `UiEditorConfig`. ***Build Runtime UiConfig*** generates the runtime config (below). |
-| **Elements** | Lists element scenes under `ElementsScenePath`. Each row shows show/hide preset dropdowns (written straight into the scene's `UiElement`), **Structure** (✓ / ⚠ fixable or warning / ✖ needs manual work) and **Canvas** (✓ / ⚠ differs / — / Excluded) status with details in tooltips, **Fix Structure** and **Reset Canvas** buttons (both confirm first), an **Exclude** toggle, and Addressables toggle, group and labels. Each scene is opened once per refresh (`UiElementSceneUtility.InspectScene`). *Create* generates `<Name>.cs` from `UiElementTemplate.txt` (optionally `<Name>Params` / `<Name>Reference`). A **new** scene gets `<Name>Root → Canvas → Root` built per the contract. An **existing** scene has its roots reparented under `<Name>Root`, then the user is offered a structure fix. The script is attached after recompilation (`UiElementScriptBinder`, via `EditorPrefs` keys `UiElementAutoBind_*`). |
+| **General** | Project configuration. Shows the configured paths. *Create Config* finds or creates `UiEditorConfig`. ***Build Runtime UiConfig*** generates the runtime config (below). **Canvas Settings** section: pick and edit the `UiCanvasSettings` asset inline. |
+| **Elements** | Everything about element scenes. **Toolbar**: *Refresh*, *Validate All* (logs one line per scene with issue codes and canvas status), *Fix All Structure…* (confirms the planned changes, fixes every scene with fixable issues, logs what still needs manual work), *Apply Canvas To All…* (skips excluded and matching scenes, confirms with per-scene diffs, logs updated / matching / excluded / no canvas), and an *Only show scenes with issues* filter. A **summary** shows OK / fixable / manual / canvas-differs counts. **Rows**: scene name (click = select, double-click = open, "(open)" when loaded), show/hide presets (written straight into the scene's `UiElement`), **Structure** cell (✓, or a clickable *⚠ Fix* / *✖ Fix* that confirms and fixes; *✖* alone opens a details dialog), **Canvas** cell (✓, clickable *⚠ Reset*, — no canvas, Excluded), Addressables toggle/group/labels, and a **⋯** menu (Open Scene, Select Scene Asset, Fix Structure…, Reset Canvas To Settings…, Exclude From 'Apply Canvas To All', Log Validation Details, Remove From Addressables). Each scene is opened once per refresh (`UiElementSceneUtility.InspectScene`). Per-row actions re-read only that scene. **Create New UI Element** foldout: *Create* generates `<Name>.cs` from `UiElementTemplate.txt` (optionally `<Name>Params` / `<Name>Reference`). A **new** scene gets `<Name>Root → Canvas → Root` built per the contract. An **existing** scene has its roots reparented under `<Name>Root`, then the user is offered a structure fix. The script is attached after recompilation (`UiElementScriptBinder`, via `EditorPrefs` keys `UiElementAutoBind_*`). |
 | **States** | Creates and edits `UiStateDefinition` assets (key + element scene names) and generates `<Key>.cs` from `UiStateTemplate.txt` into `StatesPath`. |
-| **Canvas** | Edits the `UiCanvasSettings` asset. *Apply Canvas Settings To All* skips excluded and already-matching scenes, confirms with per-scene diffs, and logs updated / matching / excluded / no canvas. *Validate All Element Scenes* logs one line per scene with its issue codes and canvas status. *Fix Structure In All Scenes* confirms the planned changes, then fixes every scene with fixable issues and logs what still needs manual work. |
 
 Scene editing rules (`UiElementSceneUtility.WithScene`): a scene **already open** in the editor is edited in place with Undo and left dirty. It is never saved or closed for you. A scene that is **not open** is opened additively, saved if changed, and closed again. Bulk actions call `SaveCurrentModifiedScenesIfUserWantsTo()` first. No scene is modified on import, refresh or window open.
-
-Menu **UiFramework → Element Scene → Validate Active Scene / Fix Active Scene Structure / Reset Active Scene Canvas** run the same checks on the active scene in place (Undo, no auto-save). They are enabled only when the active scene has a root `UiElement`.
 
 **Build Runtime UiConfig**:
 1. Load or create `UiConfig` at `RuntimeConfigOutputPath` and **clear all entries**.
@@ -316,12 +313,11 @@ If nothing appears, check the following: the key matches the class name; *Build 
 | `Core/Config/UiConfig.cs` | Runtime state key → scenes map |
 | `Runtime/Tweening/TweenPresets.cs` | Preset catalogue and implementations |
 | `Editor/Window/UiSetupEditorWindow.cs` | Window host, *Build Runtime UiConfig*, config Addressables setup |
-| `Editor/Window/Tabs/ElementsTab.cs`, `StatesTab.cs` | Authoring UI |
-| `Editor/Window/Tabs/CanvasTab.cs` | Canvas settings and bulk validate / fix / apply |
+| `Editor/Window/Tabs/GeneralTab.cs`, `ElementsTab.cs`, `StatesTab.cs` | Authoring UI: configuration and canvas settings; element list with contract tools; states |
 | `Editor/Config/UiCanvasSettings.cs`, `UiEditorConfigUtility.cs` | Canvas settings asset; find/create the active config and settings |
 | `Editor/Scenes/UiElementSceneUtility.cs` | Safe scene access, canvas compare/apply, structure validation, single-open inspection |
 | `Editor/Scenes/UiElementStructureFixer.cs` | Structure fixes and contract hierarchy for new scenes |
-| `Editor/Scenes/UiElementSceneBatchOperations.cs`, `UiElementSceneMenu.cs` | Bulk actions; active-scene menu items |
+| `Editor/Scenes/UiElementSceneBatchOperations.cs`, `UiElementSceneDialogs.cs` | Bulk validate / fix / apply (Elements toolbar); confirmation dialogs |
 | `Tests/Editor/*` | EditMode tests for the contract (validator codes, fixes, canvas settings, scene access) |
 | `Editor/CodeGeneration/*` | Script generation and auto-binding |
 | `Editor/Templates/*.txt` | Code templates (must follow [CODING_STANDARDS.md](CODING_STANDARDS.md)) |

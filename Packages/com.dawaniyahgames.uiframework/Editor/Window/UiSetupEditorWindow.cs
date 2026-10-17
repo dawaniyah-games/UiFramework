@@ -34,8 +34,7 @@ namespace UiFramework.Editor.Window
         {
             new GeneralTab(),
             new ElementsTab(),
-            new StatesTab(),
-            new CanvasTab()
+            new StatesTab()
         };
 
         [MenuItem("UiFramework/UI Setup Manager")]

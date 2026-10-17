@@ -14,7 +14,7 @@ A Unity UI framework that builds screens from **Addressable scenes** loaded addi
 - 🌀 **Per-element animation presets**: Fade, Scale, Slide{Up,Down,Left,Right}, ClickPop, SettlePop, Shake
 - ⏩ **Overlapping transitions**: the new UI animates in while the old UI animates out, with no flash and no empty frame
 - 🛠️ **Editor tooling**: generate elements and states from templates and build the runtime config automatically
-- ✅ **Element scene contract**: new scenes are generated as `<Name>Root → Canvas → Root` with project-wide canvas settings, and existing scenes can be validated and fixed in one click (Elements and Canvas tabs)
+- ✅ **Element scene contract**: new scenes are generated as `<Name>Root → Canvas → Root` with project-wide canvas settings, and existing scenes can be validated and fixed in one click from the Elements tab (canvas settings live in the General tab)
 
 ## Installation
 

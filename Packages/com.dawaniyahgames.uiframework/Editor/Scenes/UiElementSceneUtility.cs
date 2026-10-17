@@ -449,25 +449,6 @@ namespace UiFramework.Editor.Scenes
             return true;
         }
 
-        public static bool HasUiElementOnRoot(Scene scene)
-        {
-            if (!scene.IsValid() || !scene.isLoaded)
-            {
-                return false;
-            }
-
-            GameObject[] roots = scene.GetRootGameObjects();
-            for (int i = 0; i < roots.Length; i++)
-            {
-                if (roots[i].GetComponent<UiElement>() != null)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         private static GameObject FindElementRoot(string sceneName, GameObject[] roots, out bool hasUiElement)
         {
             hasUiElement = false;

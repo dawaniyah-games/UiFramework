@@ -13,9 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **UI element scene contract** (`<Name>Root → Canvas → one stretched Root`) with validation and one-click fixes (see DESIGN.md §7.1)
   - `UiCanvasSettings` asset (`Assets/UiConfigs/UiCanvasSettings.asset`, auto-created with defaults: Screen Space Overlay, Scale With Screen Size 1080x1920, Expand, 100 PPU), referenced from `UiEditorConfig.CanvasSettings`
   - New elements are generated with the full contract hierarchy and the project canvas settings; creating from an existing scene offers a structure fix
-  - Elements tab: per-scene Structure and Canvas status columns, Fix Structure / Reset Canvas buttons, and an Exclude toggle
-  - New Canvas tab: edit the settings, Apply Canvas Settings To All, Validate All Element Scenes, Fix Structure In All Scenes
-  - Menu: UiFramework → Element Scene → Validate Active Scene / Fix Active Scene Structure / Reset Active Scene Canvas
+  - All tools live in the UI Setup Manager window. No separate menu items are added
+  - General tab: new Canvas Settings section to pick and edit the settings asset
+  - Elements tab toolbar: Refresh, Validate All, Fix All Structure…, Apply Canvas To All…, an "Only show scenes with issues" filter, and a status summary
+  - Elements tab rows: clickable Structure (⚠ Fix / ✖ details) and Canvas (⚠ Reset) status cells, and a ⋯ menu (Open Scene, Select Scene Asset, Fix Structure…, Reset Canvas…, Exclude From Apply To All, Log Validation Details, Remove From Addressables)
+  - Click a scene name to select it, double-click to open it; open scenes are marked "(open)"
+  - "Create New UI Element" grouped in a foldout below the list
   - Fixes only create and reparent objects (Undo-recorded, never delete). Non-stretched content roots are wrapped by default so the layout is unchanged; resetting them instead is offered as an option
   - Canvas settings are applied at authoring time only; sorting order/layer, override sorting, world camera, plane distance and shader channels are never touched
 - EditMode tests for the contract under `Tests/Editor`

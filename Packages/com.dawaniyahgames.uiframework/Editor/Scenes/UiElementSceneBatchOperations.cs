@@ -8,8 +8,9 @@ using UnityEngine.UI;
 
 namespace UiFramework.Editor.Scenes
 {
-    // Validate / Fix / Apply across every scene under UiEditorConfig.ElementsScenePath. Each method returns a short
-    // summary for the editor UI and logs the full report to the Console.
+    // Validate / Fix / Apply across element scenes. Each method returns a short summary for the editor UI and logs the
+    // full report to the Console. The IList overloads reuse scene info the caller already inspected (the Elements tab
+    // list), so scenes are not opened an extra time just to plan the operation.
     public static class UiElementSceneBatchOperations
     {
         public static string ValidateAll(UiEditorConfig config, UiCanvasSettings settings)
@@ -25,6 +26,11 @@ namespace UiFramework.Editor.Scenes
                 return LogNoScenes(config);
             }
 
+            return LogValidationReport(infos);
+        }
+
+        public static string LogValidationReport(IList<UiElementSceneInfo> infos)
+        {
             int valid = 0;
             int withIssues = 0;
             int canvasDiffers = 0;
@@ -86,11 +92,6 @@ namespace UiFramework.Editor.Scenes
                 return "No UiCanvasSettings asset.";
             }
 
-            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
-            {
-                return "Cancelled.";
-            }
-
             List<UiElementSceneInfo> infos = InspectAll(config, settings, "Checking Canvas Settings");
             if (infos == null)
             {
@@ -100,6 +101,21 @@ namespace UiFramework.Editor.Scenes
             if (infos.Count == 0)
             {
                 return LogNoScenes(config);
+            }
+
+            return ApplyCanvasSettingsToAll(infos, settings);
+        }
+
+        public static string ApplyCanvasSettingsToAll(IList<UiElementSceneInfo> infos, UiCanvasSettings settings)
+        {
+            if (settings == null)
+            {
+                return "No UiCanvasSettings asset.";
+            }
+
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            {
+                return "Cancelled.";
             }
 
             List<UiElementSceneInfo> toUpdate = new List<UiElementSceneInfo>();
@@ -202,11 +218,6 @@ namespace UiFramework.Editor.Scenes
 
         public static string FixStructureInAll(UiEditorConfig config, UiCanvasSettings settings)
         {
-            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
-            {
-                return "Cancelled.";
-            }
-
             List<UiElementSceneInfo> infos = InspectAll(config, settings, "Checking Element Scene Structure");
             if (infos == null)
             {
@@ -216,6 +227,17 @@ namespace UiFramework.Editor.Scenes
             if (infos.Count == 0)
             {
                 return LogNoScenes(config);
+            }
+
+            return FixStructureInAll(infos, settings);
+        }
+
+        // FixStructure re-validates each scene before changing it, so slightly stale infos only affect the plan text.
+        public static string FixStructureInAll(IList<UiElementSceneInfo> infos, UiCanvasSettings settings)
+        {
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            {
+                return "Cancelled.";
             }
 
             List<UiElementSceneInfo> toFix = new List<UiElementSceneInfo>();
