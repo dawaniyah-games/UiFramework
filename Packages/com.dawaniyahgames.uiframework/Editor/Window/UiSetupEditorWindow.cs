@@ -21,7 +21,7 @@ namespace UiFramework.Editor.Window
         private const string globalConfigsGroupName = "GlobalConfigs";
         private const string legacyGlobalConfigsGroupName = "Global Configs";
 
-        private const string configKey = "UiFramework.Editor.ConfigAssetGUID";
+        private const string configKey = UiEditorConfigUtility.ConfigAssetGuidPrefKey;
         private const string uiElementsGroupName = "UiElements";
         private static readonly string[] uiElementsLabels = new string[] { "UiElements" };
 
@@ -30,7 +30,7 @@ namespace UiFramework.Editor.Window
         private VisualElement tabContent;
         private Dictionary<IVisualElementTab, Button> tabButtonMap;
 
-        private readonly List<IVisualElementTab> tabs = new()
+        private readonly List<IVisualElementTab> tabs = new List<IVisualElementTab>
         {
             new GeneralTab(),
             new ElementsTab(),
@@ -72,7 +72,7 @@ namespace UiFramework.Editor.Window
             }
             else
             {
-                Debug.LogError("❌ Stylesheet 'UiSetupTabs.uss' not found in Packages or Assets.");
+                Debug.LogError("[UiFramework] Stylesheet 'UiSetupTabs.uss' not found in Packages or Assets.");
             }
 
             configField = new ObjectField("UI Config")
@@ -213,7 +213,7 @@ namespace UiFramework.Editor.Window
                 config = CreateInstance<UiEditorConfig>();
                 AssetDatabase.CreateAsset(config, path);
                 AssetDatabase.SaveAssets();
-                Debug.Log($"✅ Created new UiEditorConfig at {path}");
+                Debug.Log($"[UiFramework] Created new UiEditorConfig at {path}");
             }
 
             configAsset = config;
@@ -243,7 +243,7 @@ namespace UiFramework.Editor.Window
         {
             if (configAsset == null)
             {
-                Debug.LogError("❌ No config asset loaded to build runtime UI config.");
+                Debug.LogError("[UiFramework] No config asset loaded to build runtime UI config.");
                 return;
             }
 
@@ -251,7 +251,7 @@ namespace UiFramework.Editor.Window
             bool hasAddressables = AddressablesAssetUtility.TryGetSettings(out addressableSettings);
             if (!hasAddressables)
             {
-                Debug.LogWarning("⚠️ Addressables settings not found. Element scenes will not be auto-registered as Addressables.");
+                Debug.LogWarning("[UiFramework] Addressables settings not found. Element scenes will not be auto-registered as Addressables.");
             }
 
             string configOutputPath = configAsset.RuntimeConfigOutputPath;
@@ -262,7 +262,7 @@ namespace UiFramework.Editor.Window
                 config = CreateInstance<Runtime.UiConfig>();
                 EnsureUnityFolderExists(Path.GetDirectoryName(configOutputPath));
                 AssetDatabase.CreateAsset(config, configOutputPath);
-                Debug.Log($"🆕 Created new UiConfig at {configOutputPath}");
+                Debug.Log($"[UiFramework] Created new UiConfig at {configOutputPath}");
             }
 
             config.entries.Clear();
@@ -282,7 +282,7 @@ namespace UiFramework.Editor.Window
 
                     if (!seenKeys.Add(definition.StateKey))
                     {
-                        Debug.LogWarning("⚠️ Duplicate state key found in UiStateDefinition assets: '" + definition.StateKey + "'. Skipping.");
+                        Debug.LogWarning("[UiFramework] Duplicate state key found in UiStateDefinition assets: '" + definition.StateKey + "'. Skipping.");
                         continue;
                     }
 
@@ -305,7 +305,7 @@ namespace UiFramework.Editor.Window
                         }
                         else
                         {
-                            Debug.LogWarning("⚠️ Scene '" + sceneName + "' not found.");
+                            Debug.LogWarning("[UiFramework] Scene '" + sceneName + "' not found.");
                         }
                     }
 
@@ -314,7 +314,7 @@ namespace UiFramework.Editor.Window
 
                 EditorUtility.SetDirty(config);
                 AssetDatabase.SaveAssets();
-                Debug.Log("✅ Built runtime UiConfig from UiStateDefinition assets.");
+                Debug.Log("[UiFramework] Built runtime UiConfig from UiStateDefinition assets.");
 
                 EnsureConfigIsAddressable(configOutputPath, new string[] { "UiConfig", "RuntimeUiConfig" }, globalConfigsGroupName);
                 return;
@@ -329,11 +329,11 @@ namespace UiFramework.Editor.Window
                 EnsureUnityFolderExists(Path.GetDirectoryName(registryPath));
                 AssetDatabase.CreateAsset(registry, registryPath);
                 AssetDatabase.SaveAssets();
-                Debug.Log($"🆕 Created new UiStateRegistry at: {registryPath}");
+                Debug.Log($"[UiFramework] Created new UiStateRegistry at: {registryPath}");
             }
             else
             {
-                Debug.Log($"🔄 Using existing UiStateRegistry at: {registryPath}");
+                Debug.Log($"[UiFramework] Using existing UiStateRegistry at: {registryPath}");
             }
 
             for (int i = 0; i < registry.States.Count; i++)
@@ -359,7 +359,7 @@ namespace UiFramework.Editor.Window
                     }
                     else
                     {
-                        Debug.LogWarning($"⚠️ Scene '{sceneName}' not found.");
+                        Debug.LogWarning($"[UiFramework] Scene '{sceneName}' not found.");
                     }
                 }
 
@@ -368,7 +368,7 @@ namespace UiFramework.Editor.Window
 
             EditorUtility.SetDirty(config);
             AssetDatabase.SaveAssets();
-            Debug.Log("✅ Built runtime UiConfig from UiStateRegistry.");
+            Debug.Log("[UiFramework] Built runtime UiConfig from UiStateRegistry.");
 
             // Ensure Addressables setup: add to GlobalConfigs group and assign labels
             EnsureConfigIsAddressable(configOutputPath, new string[] { "UiConfig", "RuntimeUiConfig" }, globalConfigsGroupName);
@@ -411,7 +411,7 @@ namespace UiFramework.Editor.Window
             AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
             if (settings == null)
             {
-                Debug.LogWarning("⚠️ Addressables settings not found. Please enable Addressables in your project.");
+                Debug.LogWarning("[UiFramework] Addressables settings not found. Please enable Addressables in your project.");
                 return;
             }
 
@@ -428,21 +428,21 @@ namespace UiFramework.Editor.Window
                         group = legacyGroup;
                         EditorUtility.SetDirty(settings);
                         AssetDatabase.SaveAssets();
-                        Debug.Log("🔄 Renamed Addressables group '" + legacyGlobalConfigsGroupName + "' to '" + globalConfigsGroupName + "'.");
+                        Debug.Log("[UiFramework] Renamed Addressables group '" + legacyGlobalConfigsGroupName + "' to '" + globalConfigsGroupName + "'.");
                     }
                 }
 
                 if (group == null)
                 {
                 group = settings.CreateGroup(groupName, false, false, true, null);
-                Debug.Log($"🆕 Created Addressables group '{groupName}'.");
+                Debug.Log($"[UiFramework] Created Addressables group '{groupName}'.");
                 }
             }
 
             string guid = AssetDatabase.AssetPathToGUID(assetPath);
             if (string.IsNullOrEmpty(guid))
             {
-                Debug.LogError($"❌ Could not resolve GUID for asset at {assetPath}");
+                Debug.LogError($"[UiFramework] Could not resolve GUID for asset at {assetPath}");
                 return;
             }
 
@@ -451,12 +451,12 @@ namespace UiFramework.Editor.Window
             {
                 entry = settings.CreateOrMoveEntry(guid, group);
                 entry.address = "UiConfig"; // Set a predictable address
-                Debug.Log("✅ Registered UiConfig as Addressable entry.");
+                Debug.Log("[UiFramework] Registered UiConfig as Addressable entry.");
             }
             else if (entry.parentGroup != group)
             {
                 settings.MoveEntry(entry, group);
-                Debug.Log("🔄 Moved UiConfig entry to '" + groupName + "' group.");
+                Debug.Log("[UiFramework] Moved UiConfig entry to '" + groupName + "' group.");
             }
 
             // Ensure labels exist and are assigned

@@ -1,11 +1,11 @@
+using UiFramework.Core;
+
 namespace [UiParamNamespace]
 {
-    using UiFramework.Core;
-
     // Auto-generated: UI Population Params
     public class [UiParamName] : UiPopulationParams
     {
-        // Add any fields you want to pass to UiElement.Populate(...)
-        // e.g. public string Title;
+        // Add the data you want to pass to UiElement.Populate(...), e.g.
+        // public string Title { get; set; }
     }
 }

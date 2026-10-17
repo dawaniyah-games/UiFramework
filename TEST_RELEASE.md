@@ -1,12 +1,15 @@
-# Test Release Workflow
+# Release Workflow
 
-This file tests the automated release workflow.
+How a release is published. The full checklist is in [CONTRIBUTING.md → Release process](CONTRIBUTING.md#release-process).
 
-When merged to main via PR, it should:
+When a pull request is merged into `main`, the **Auto release on main** workflow (`.github/workflows/release.yml`):
 
-1. Read the version from Packages/com.dawaniyahgames.uiframework/package.json
-2. Create git tag vX.Y.Z (if missing)
-3. Create GitHub release with auto-generated notes
+1. Reads `version` from `Packages/com.dawaniyahgames.uiframework/package.json`.
+2. Creates and pushes the tag `vX.Y.Z`. If that tag already exists, the workflow **fails**. This usually means the version wasn't bumped before merging.
+3. Creates the GitHub Release `vX.Y.Z` with auto-generated notes and marks it as latest.
+
+It can also be started by hand (*Actions → Auto release on main → Run workflow*). There, `allow_existing_tag: true` skips the tag and release instead of failing.
 
 Notes:
-- Version bump is expected to be done manually (in dev) before merging to main.
+- Bump the version on `dev` (in `package.json`, `CHANGELOG.md`, `DESIGN.md` and `README.md`) before opening the `dev → main` PR.
+- `release-notes.md` holds the hand-written notes for the latest release.

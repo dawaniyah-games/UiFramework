@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-17
+
+### Added
+- **UI element scene contract** (`<Name>Root → Canvas → one stretched Root`) with validation and one-click fixes (see DESIGN.md §7.1)
+  - `UiGlobalCanvasSettings` asset (`Assets/UiConfigs/UiGlobalCanvasSettings.asset`, auto-created with defaults: Screen Space Overlay, Scale With Screen Size 1080x1920, Expand, 100 PPU), referenced from `UiEditorConfig.GlobalCanvasSettings`
+  - New elements are generated with the full contract hierarchy and the global canvas settings; creating from an existing scene offers a structure fix
+  - All tools live in the UI Setup Manager window. No separate menu items are added
+  - General tab: Global Canvas Settings section. These are the defaults every new element scene starts with (instead of Unity's defaults); editing them never changes existing scenes
+  - Elements tab redesigned like the States tab: search in the top bar, a scrolling element list on the left (status icon, "(open)", double-click opens the scene), and the selected element's settings on the right
+  - Element settings: Open Scene / Select Asset; Structure (issue summaries, Fix Structure…, What to fix by hand…); Animations (show / hide presets); Canvas (Render Mode, Sorting Order, UI Scale Mode, Reference Resolution, Screen Match Mode / Match, Reference PPU, Use Default Settings…); Addressables (toggle, group, labels)
+  - Elements toolbar: Refresh, Validate All, Fix All Structure…, "Only show elements with issues", and a status summary; ➕ New Element opens the create form in the settings panel
+  - Search by name or part of the name in the Elements and States lists (any case, several words, names that start with the text first, Enter selects the first result); the States tab's "Add element scene" is now a search box with suggestions
+  - Clear confirmation popup for every fix and for Use Default Settings: short "What will change" bullets, a Now / After hierarchy preview (new objects highlighted), a Setting · Now → After table for canvas values, collapsed "Needs manual work", and a one-line save/undo note
+  - Short plain-language issue summaries in the popup and tooltips (full details still in the Console)
+  - Fixes only create and reparent objects (Undo-recorded, never delete). Content that doesn't fill the screen is always wrapped in a new full-screen Root and never resized, so the layout is unchanged
+  - Default canvas values are written only when a scene or its Canvas is created, or by an element's Use Default Settings; sorting order/layer, override sorting, world camera, plane distance and shader channels are never touched
+- EditMode tests for the contract under `Tests/Editor`, and PlayMode tests for the animations under `Tests/Runtime`
+- `com.unity.ugui` package dependency
+- `TweenPresets.PrepareShow` and `TweenPresets.Describe`; `Tween.RunAsync` (shared, interruptible animation loop); `UiTweenChannels`
+- Elements tab Animations section shows friendly preset names and what each choice does on show and on hide
+
+### Changed
+- Smoother, calmer animations: entrances ease out, exits are shorter and ease in, slides take 0.32 s in / 0.24 s out instead of 0.20 s, fades 0.22 / 0.16 s
+- `Scale` is now a subtle zoom combined with a fade (0.94× → 1× in, → 0.96× out) instead of a 0.9× scale that popped in and out
+- `Shake` is a smooth, fading side-to-side motion instead of random jitter; `ClickPop` / `SettlePop` are gentler (1.08× / 1.04×) with no bounce
+- `TweenCurves.EaseOut` / `EaseIn` are now true cubic ease-out / ease-in, and `EaseInOut` no longer pauses half-way (their old shapes didn't match their names)
+- A long frame (e.g. right after a scene loads) no longer makes an animation jump ahead: each frame advances at most 1/30 s
+- Stacked states hide in parallel instead of one after another
+- `UiElement.PrepareForShow` uses `TweenPresets.PrepareShow` (one place for start poses)
+
+### Fixed
+- `Scale` show ended at 0.9× instead of the real size, and each show/hide cycle shrank the screen further; `ClickPop` grew a button when tapped repeatedly. Presets now use the recorded base pose
+- Starting an animation on an object while another was running left a mixed pose; the newer animation now stops the older one
+- Slide presets move in their named direction on show and on hide (SlideRight enters from the left and leaves on the right), now covered by tests
+- An element shown again after being hidden by a different preset could stay faded out or off-screen
+- `UiManager.IsLastSceneActive<T>()` threw on an empty stack; it now returns `false`
+- `UiManager.ResetUI()` blocked the main thread with `Task.Wait()` and could deadlock; it no longer blocks
+- Clearer `UiConfig` load error (it named the wrong Addressables key)
+
+### Deprecated
+- `UiManager.ResetUI()`: use `await UiManager.ResetUIAsync()`. `ResetUI()` now starts the reset and returns immediately
+- Elements tab no longer closes scenes the user already had open when reading or writing animation presets. Open scenes are edited in place and left unsaved
+- Creating a UI element now asks to save modified open scenes before replacing them
+- `UiFramework.Tweening` and `UiFramework.Editor` now reference `UnityEngine.UI` explicitly (required on Unity 2021.3/2022.3)
+
+### Documentation
+- `CODING_STANDARDS.md`: a single source of truth for code style and project rules (formatting, naming, Unity null semantics, async, logging, assembly boundaries, versioning, templates), with a list of known deviations
+- `CLAUDE.md` pointing AI assistants at the standards and design docs
+
+### Changed
+- Rewrote `DESIGN.md` to match the current code: assembly graph, data model, runtime lifecycle, GUID ref-counted shared scenes, animation targets/presets, editor build pipeline, Addressables layout, invariants and known limitations
+- `README.md`: fixed the out-of-order structure and the outdated initialization API (`UiManager.InitializeAsync()` takes no config)
+- `CONTRIBUTING.md`: added a PR checklist, Conventional Commit types and the full release steps
+- `.github/copilot-instructions.md`: condensed to point at the authoritative docs (it previously listed the version as 1.0.31 and gave wrong paths)
+- Code templates now emit `using` directives outside the namespace, as the standards require, and document that `UiState` subclasses are type markers only
+- `.editorconfig`: added rules for JSON/asmdef/USS/UXML/YAML/Markdown and block-scoped namespaces; `.gitattributes` now normalizes line endings (`* text=auto`)
+
 ## [1.0.40] - 2026-03-09
 
 ### Fixed

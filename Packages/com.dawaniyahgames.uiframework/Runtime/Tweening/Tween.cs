@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -7,6 +8,53 @@ namespace UiFramework.Tweening
 {
     public static class Tween
     {
+        // The most an animation advances in one frame. A long frame (for example the one where a scene loads) then
+        // slows the animation a little instead of skipping most of it, which is what made motion look like a jump.
+        public const float MaxFrameStep = 1.0f / 30.0f;
+
+        // Shared animation loop. apply receives the eased progress (0..1) once per frame and is always called with 1
+        // at the end. Stops early, without applying the end value, when owner is destroyed or keepRunning returns
+        // false (a newer animation took over the same object).
+        public static async Task RunAsync(UnityEngine.Object owner, float duration, AnimationCurve ease, bool unscaled,
+            CancellationToken ct, Func<bool> keepRunning, Action<float> apply)
+        {
+            if (apply == null)
+            {
+                return;
+            }
+
+            if (duration <= 0f)
+            {
+                apply(1f);
+                return;
+            }
+
+            float elapsed = 0f;
+
+            while (true)
+            {
+                await Task.Yield();
+
+                if (owner == null || (keepRunning != null && !keepRunning()))
+                {
+                    return;
+                }
+
+                ct.ThrowIfCancellationRequested();
+
+                float delta = unscaled ? Time.unscaledDeltaTime : Time.deltaTime;
+                elapsed += Mathf.Min(delta, MaxFrameStep);
+
+                float progress = Mathf.Clamp01(elapsed / duration);
+                apply(ease != null ? ease.Evaluate(progress) : progress);
+
+                if (progress >= 1f)
+                {
+                    return;
+                }
+            }
+        }
+
         public static async Task PopScaleAsync(
             Transform t,
             float peakScale,
@@ -24,191 +72,75 @@ namespace UiFramework.Tweening
             await ScaleAsync(t, peak, baseScale, downDuration, easeDown, unscaled, ct);
         }
 
-        public static async Task ScaleAsync(Transform t, Vector3 from, Vector3 to, float duration,
+        public static Task ScaleAsync(Transform t, Vector3 from, Vector3 to, float duration,
             AnimationCurve ease, bool unscaled, CancellationToken ct)
         {
-            if (duration <= 0f)
-            {
-                t.localScale = to;
-                return;
-            }
-
-            float start = unscaled ? Time.unscaledTime : Time.time;
-            float end = start + duration;
             t.localScale = from;
-
-            while ((unscaled ? Time.unscaledTime : Time.time) < end)
+            return RunAsync(t, duration, ease, unscaled, ct, null, e =>
             {
-                ct.ThrowIfCancellationRequested();
-                float now = unscaled ? Time.unscaledTime : Time.time;
-                float a = Mathf.InverseLerp(start, end, now);
-                float e = ease != null ? ease.Evaluate(a) : a;
                 t.localScale = Vector3.LerpUnclamped(from, to, e);
-                await Task.Yield();
-            }
-
-            t.localScale = to;
+            });
         }
 
-        public static async Task MoveLocalAsync(Transform t, Vector3 from, Vector3 to, float duration,
+        public static Task MoveLocalAsync(Transform t, Vector3 from, Vector3 to, float duration,
             AnimationCurve ease, bool unscaled, CancellationToken ct)
         {
-            if (duration <= 0f)
-            {
-                t.localPosition = to;
-                return;
-            }
-
-            float start = unscaled ? Time.unscaledTime : Time.time;
-            float end = start + duration;
             t.localPosition = from;
-
-            while ((unscaled ? Time.unscaledTime : Time.time) < end)
+            return RunAsync(t, duration, ease, unscaled, ct, null, e =>
             {
-                ct.ThrowIfCancellationRequested();
-                float now = unscaled ? Time.unscaledTime : Time.time;
-                float a = Mathf.InverseLerp(start, end, now);
-                float e = ease != null ? ease.Evaluate(a) : a;
                 t.localPosition = Vector3.LerpUnclamped(from, to, e);
-                await Task.Yield();
-            }
-
-            t.localPosition = to;
+            });
         }
 
-        public static async Task RotateLocalAsync(Transform t, Quaternion from, Quaternion to, float duration,
+        public static Task RotateLocalAsync(Transform t, Quaternion from, Quaternion to, float duration,
             AnimationCurve ease, bool unscaled, CancellationToken ct)
         {
-            if (duration <= 0f)
-            {
-                t.localRotation = to;
-                return;
-            }
-
-            float start = unscaled ? Time.unscaledTime : Time.time;
-            float end = start + duration;
             t.localRotation = from;
-
-            while ((unscaled ? Time.unscaledTime : Time.time) < end)
+            return RunAsync(t, duration, ease, unscaled, ct, null, e =>
             {
-                ct.ThrowIfCancellationRequested();
-                float now = unscaled ? Time.unscaledTime : Time.time;
-                float a = Mathf.InverseLerp(start, end, now);
-                float e = ease != null ? ease.Evaluate(a) : a;
                 t.localRotation = Quaternion.SlerpUnclamped(from, to, e);
-                await Task.Yield();
-            }
-
-            t.localRotation = to;
+            });
         }
 
-        public static async Task FadeCanvasGroupAsync(CanvasGroup cg, float from, float to, float duration,
+        public static Task FadeCanvasGroupAsync(CanvasGroup cg, float from, float to, float duration,
             AnimationCurve ease, bool unscaled, CancellationToken ct)
         {
-            if (duration <= 0f)
-            {
-                cg.alpha = to;
-                return;
-            }
-
-            float start = unscaled ? Time.unscaledTime : Time.time;
-            float end = start + duration;
             cg.alpha = from;
-
-            while ((unscaled ? Time.unscaledTime : Time.time) < end)
+            return RunAsync(cg, duration, ease, unscaled, ct, null, e =>
             {
-                ct.ThrowIfCancellationRequested();
-                float now = unscaled ? Time.unscaledTime : Time.time;
-                float a = Mathf.InverseLerp(start, end, now);
-                float e = ease != null ? ease.Evaluate(a) : a;
                 cg.alpha = Mathf.LerpUnclamped(from, to, e);
-                await Task.Yield();
-            }
-
-            cg.alpha = to;
+            });
         }
 
-        public static async Task FadeGraphicAsync(Graphic g, float fromA, float toA, float duration,
+        public static Task FadeGraphicAsync(Graphic g, float fromA, float toA, float duration,
             AnimationCurve ease, bool unscaled, CancellationToken ct)
         {
-            if (duration <= 0f)
+            return RunAsync(g, duration, ease, unscaled, ct, null, e =>
             {
-                Color c0 = g.color;
-                c0.a = toA;
-                g.color = c0;
-                return;
-            }
-
-            float start = unscaled ? Time.unscaledTime : Time.time;
-            float end = start + duration;
-
-            while ((unscaled ? Time.unscaledTime : Time.time) < end)
-            {
-                ct.ThrowIfCancellationRequested();
-                float now = unscaled ? Time.unscaledTime : Time.time;
-                float a = Mathf.InverseLerp(start, end, now);
-                float e = ease != null ? ease.Evaluate(a) : a;
                 Color c = g.color;
                 c.a = Mathf.LerpUnclamped(fromA, toA, e);
                 g.color = c;
-                await Task.Yield();
-            }
-
-            Color final = g.color;
-            final.a = toA;
-            g.color = final;
+            });
         }
 
-        public static async Task ColorGraphicAsync(Graphic g, Color from, Color to, float duration,
+        public static Task ColorGraphicAsync(Graphic g, Color from, Color to, float duration,
             AnimationCurve ease, bool unscaled, CancellationToken ct)
         {
-            if (duration <= 0f)
-            {
-                g.color = to;
-                return;
-            }
-
-            float start = unscaled ? Time.unscaledTime : Time.time;
-            float end = start + duration;
             g.color = from;
-
-            while ((unscaled ? Time.unscaledTime : Time.time) < end)
+            return RunAsync(g, duration, ease, unscaled, ct, null, e =>
             {
-                ct.ThrowIfCancellationRequested();
-                float now = unscaled ? Time.unscaledTime : Time.time;
-                float a = Mathf.InverseLerp(start, end, now);
-                float e = ease != null ? ease.Evaluate(a) : a;
                 g.color = Color.LerpUnclamped(from, to, e);
-                await Task.Yield();
-            }
-
-            g.color = to;
+            });
         }
 
-        public static async Task ColorSpriteAsync(SpriteRenderer sr, Color from, Color to, float duration,
+        public static Task ColorSpriteAsync(SpriteRenderer sr, Color from, Color to, float duration,
             AnimationCurve ease, bool unscaled, CancellationToken ct)
         {
-            if (duration <= 0f)
-            {
-                sr.color = to;
-                return;
-            }
-
-            float start = unscaled ? Time.unscaledTime : Time.time;
-            float end = start + duration;
             sr.color = from;
-
-            while ((unscaled ? Time.unscaledTime : Time.time) < end)
+            return RunAsync(sr, duration, ease, unscaled, ct, null, e =>
             {
-                ct.ThrowIfCancellationRequested();
-                float now = unscaled ? Time.unscaledTime : Time.time;
-                float a = Mathf.InverseLerp(start, end, now);
-                float e = ease != null ? ease.Evaluate(a) : a;
                 sr.color = Color.LerpUnclamped(from, to, e);
-                await Task.Yield();
-            }
-
-            sr.color = to;
+            });
         }
     }
 }

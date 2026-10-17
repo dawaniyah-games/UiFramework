@@ -6,6 +6,13 @@ using UnityEngine;
 
 namespace UiFramework.Tweening
 {
+    // Show / hide presets for UI elements, plus small feedback effects.
+    //
+    // Slides: the name is the direction of travel, for show AND hide.
+    //   SlideRight show: enters from the left edge moving right. SlideRight hide: keeps moving right, leaves on the right.
+    // Entrances use EaseOut (they slow down into place); exits are shorter and use EaseIn (they speed up as they go).
+    // Every preset starts from and returns to the object's base pose (recorded once in UiTweenState), so repeated or
+    // interrupted animations never drift, and a newer animation on the same object stops the older one.
     public static class TweenPresets
     {
         public const string NoneKey = "None";
@@ -19,7 +26,29 @@ namespace UiFramework.Tweening
         public const string SlideUpKey = "SlideUp";
         public const string SlideDownKey = "SlideDown";
 
-        private const float DefaultDuration = 0.20f;
+        private const float slideShowDuration = 0.32f;
+        private const float slideHideDuration = 0.24f;
+        private const float fadeShowDuration = 0.22f;
+        private const float fadeHideDuration = 0.16f;
+        private const float zoomShowDuration = 0.26f;
+        private const float zoomHideDuration = 0.18f;
+        private const float zoomShowStartScale = 0.94f;
+        private const float zoomHideEndScale = 0.96f;
+
+        private const float clickPeak = 1.08f;
+        private const float clickUp = 0.08f;
+        private const float clickDown = 0.14f;
+
+        private const float settlePeak = 1.04f;
+        private const float settleUp = 0.10f;
+        private const float settleDown = 0.18f;
+
+        private const float defaultShakeAmplitude = 8f;
+        private const float defaultShakeDuration = 0.32f;
+        private const float shakeCycles = 3f;
+
+        // Slide distance for objects without a RectTransform (local units).
+        private const float nonUiSlideDistance = 10f;
 
         private static readonly List<string> presetKeys = new List<string>
         {
@@ -35,17 +64,39 @@ namespace UiFramework.Tweening
             SlideDownKey
         };
 
-        private const float ClickPeak = 1.12f;
-        private const float ClickUp = 0.08f;
-        private const float ClickDown = 0.10f;
-
-        private const float SettlePeak = 1.06f;
-        private const float SettleUp = 0.06f;
-        private const float SettleDown = 0.08f;
-
         public static IReadOnlyList<string> GetPresetKeys()
         {
             return presetKeys.AsReadOnly();
+        }
+
+        // One plain sentence describing what the preset looks like when showing or hiding, for editor UI.
+        public static string Describe(string presetKey, bool isShow)
+        {
+            switch (Normalize(presetKey))
+            {
+                case NoneKey:
+                    return isShow ? "Appears instantly." : "Disappears instantly.";
+                case FadeKey:
+                    return isShow ? "Fades in." : "Fades out.";
+                case ScaleKey:
+                    return isShow ? "Fades in while growing slightly to full size." : "Fades out while shrinking slightly.";
+                case SlideRightKey:
+                    return isShow ? "Enters from the left edge, moving right." : "Keeps moving right and leaves past the right edge.";
+                case SlideLeftKey:
+                    return isShow ? "Enters from the right edge, moving left." : "Keeps moving left and leaves past the left edge.";
+                case SlideUpKey:
+                    return isShow ? "Enters from the bottom edge, moving up." : "Keeps moving up and leaves past the top edge.";
+                case SlideDownKey:
+                    return isShow ? "Enters from the top edge, moving down." : "Keeps moving down and leaves past the bottom edge.";
+                case ClickPopKey:
+                    return "A quick pop. Feedback for buttons; it doesn't hide anything.";
+                case SettlePopKey:
+                    return "A gentle pulse. Feedback; it doesn't hide anything.";
+                case ShakeKey:
+                    return "A short side-to-side shake (e.g. for errors). Feedback; it doesn't hide anything.";
+                default:
+                    return "Unknown preset; nothing plays.";
+            }
         }
 
         public static Task PlayAsync(string presetKey, GameObject target, bool isShow)
@@ -55,59 +106,284 @@ namespace UiFramework.Tweening
                 return Task.CompletedTask;
             }
 
-            if (string.IsNullOrWhiteSpace(presetKey) || string.Equals(presetKey, NoneKey, StringComparison.OrdinalIgnoreCase))
+            switch (Normalize(presetKey))
             {
-                return Task.CompletedTask;
+                case FadeKey:
+                    return PlayFadeAsync(target, isShow);
+                case ScaleKey:
+                    return PlayZoomAsync(target, isShow);
+                case ClickPopKey:
+                    return ClickPop(target.transform);
+                case SettlePopKey:
+                    return SettlePop(target.transform);
+                case ShakeKey:
+                    return ShakeLocal(target.transform);
+                case SlideLeftKey:
+                    return PlaySlideAsync(target, isShow, Vector2.left);
+                case SlideRightKey:
+                    return PlaySlideAsync(target, isShow, Vector2.right);
+                case SlideUpKey:
+                    return PlaySlideAsync(target, isShow, Vector2.up);
+                case SlideDownKey:
+                    return PlaySlideAsync(target, isShow, Vector2.down);
+                default:
+                    return Task.CompletedTask;
             }
-
-            if (string.Equals(presetKey, FadeKey, StringComparison.OrdinalIgnoreCase))
-            {
-                return PlayFadeAsync(target, isShow);
-            }
-
-            if (string.Equals(presetKey, ScaleKey, StringComparison.OrdinalIgnoreCase))
-            {
-                return PlayScaleAsync(target, isShow);
-            }
-
-            if (string.Equals(presetKey, ClickPopKey, StringComparison.OrdinalIgnoreCase))
-            {
-                return ClickPop(target.transform);
-            }
-
-            if (string.Equals(presetKey, SettlePopKey, StringComparison.OrdinalIgnoreCase))
-            {
-                return SettlePop(target.transform);
-            }
-
-            if (string.Equals(presetKey, ShakeKey, StringComparison.OrdinalIgnoreCase))
-            {
-                return ShakeLocal(target.transform);
-            }
-
-            if (string.Equals(presetKey, SlideLeftKey, StringComparison.OrdinalIgnoreCase))
-            {
-                return PlaySlideAsync(target, isShow, Vector2.left);
-            }
-
-            if (string.Equals(presetKey, SlideRightKey, StringComparison.OrdinalIgnoreCase))
-            {
-                return PlaySlideAsync(target, isShow, Vector2.right);
-            }
-
-            if (string.Equals(presetKey, SlideUpKey, StringComparison.OrdinalIgnoreCase))
-            {
-                return PlaySlideAsync(target, isShow, Vector2.up);
-            }
-
-            if (string.Equals(presetKey, SlideDownKey, StringComparison.OrdinalIgnoreCase))
-            {
-                return PlaySlideAsync(target, isShow, Vector2.down);
-            }
-
-            return Task.CompletedTask;
         }
 
+        // Puts target in the pose its show animation starts from. Call it right after the element is loaded, before
+        // it is rendered, so it doesn't flash at its final pose. Also stops any animation still running on target and
+        // undoes leftovers from an earlier hide (e.g. still faded out or off-screen).
+        public static void PrepareShow(string presetKey, GameObject target)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            string key = Normalize(presetKey);
+            UiTweenState state = target.GetComponent<UiTweenState>();
+
+            if (key == NoneKey && state == null)
+            {
+                return;
+            }
+
+            state = GetOrCreateTweenState(target);
+            state.BeginAnimation(UiTweenChannels.All);
+            RestoreBasePose(target, state);
+
+            switch (key)
+            {
+                case FadeKey:
+                    GetOrAddCanvasGroup(target).alpha = 0f;
+                    break;
+                case ScaleKey:
+                    target.transform.localScale = state.BaseLocalScale * zoomShowStartScale;
+                    GetOrAddCanvasGroup(target).alpha = 0f;
+                    break;
+                case SlideLeftKey:
+                    SetSlideStart(target, state, Vector2.left);
+                    break;
+                case SlideRightKey:
+                    SetSlideStart(target, state, Vector2.right);
+                    break;
+                case SlideUpKey:
+                    SetSlideStart(target, state, Vector2.up);
+                    break;
+                case SlideDownKey:
+                    SetSlideStart(target, state, Vector2.down);
+                    break;
+            }
+        }
+
+        public static async Task ClickPop(Transform t, CancellationToken ct = default)
+        {
+            await PopAsync(t, clickPeak, clickUp, clickDown, ct);
+        }
+
+        public static async Task SettlePop(Transform t, CancellationToken ct = default)
+        {
+            await PopAsync(t, settlePeak, settleUp, settleDown, ct);
+        }
+
+        // Smooth, fading side-to-side shake around where the object rests. Re-triggering mid-shake keeps the same
+        // resting point, so the object never drifts.
+        public static async Task ShakeLocal(Transform t, float amplitude = defaultShakeAmplitude, float duration = defaultShakeDuration, CancellationToken ct = default)
+        {
+            if (t == null)
+            {
+                return;
+            }
+
+            UiTweenState state = GetOrCreateTweenState(t.gameObject);
+            Vector3 origin;
+            int run = state.BeginShake(t.localPosition, out origin);
+
+            await Tween.RunAsync(t, duration, TweenCurves.Linear, true, ct, () => state != null && state.IsCurrent(run, UiTweenChannels.Position), p =>
+            {
+                float fade = (1f - p) * (1f - p);
+                float offset = Mathf.Sin(p * shakeCycles * 2f * Mathf.PI) * amplitude * fade;
+                t.localPosition = origin + new Vector3(offset, 0f, 0f);
+            });
+
+            if (state != null && state.IsCurrent(run, UiTweenChannels.Position))
+            {
+                t.localPosition = origin;
+                state.EndShake();
+            }
+        }
+
+        private static async Task PopAsync(Transform t, float peak, float upDuration, float downDuration, CancellationToken ct)
+        {
+            if (t == null)
+            {
+                return;
+            }
+
+            UiTweenState state = GetOrCreateTweenState(t.gameObject);
+            int run = state.BeginAnimation(UiTweenChannels.Scale);
+            Func<bool> isCurrent = () => state != null && state.IsCurrent(run, UiTweenChannels.Scale);
+
+            Vector3 restScale = state.BaseLocalScale;
+            Vector3 peakScale = restScale * peak;
+            Vector3 start = t.localScale;
+
+            await Tween.RunAsync(t, upDuration, TweenCurves.EaseOut, true, ct, isCurrent, e =>
+            {
+                t.localScale = Vector3.LerpUnclamped(start, peakScale, e);
+            });
+
+            if (!isCurrent())
+            {
+                return;
+            }
+
+            await Tween.RunAsync(t, downDuration, TweenCurves.EaseInOut, true, ct, isCurrent, e =>
+            {
+                t.localScale = Vector3.LerpUnclamped(peakScale, restScale, e);
+            });
+        }
+
+        private static Task PlaySlideAsync(GameObject target, bool isShow, Vector2 direction)
+        {
+            UiTweenState state = GetOrCreateTweenState(target);
+            int run = state.BeginAnimation(UiTweenChannels.Position);
+            Func<bool> isCurrent = () => state != null && state.IsCurrent(run, UiTweenChannels.Position);
+            float duration = isShow ? slideShowDuration : slideHideDuration;
+            AnimationCurve ease = isShow ? TweenCurves.EaseOut : TweenCurves.EaseIn;
+
+            RectTransform rectTransform = target.transform as RectTransform;
+            if (rectTransform != null)
+            {
+                Vector2 basePosition = state.BaseAnchoredPosition;
+                Vector2 offset = GetSlideOffset(rectTransform, direction);
+
+                // Show travels from the opposite edge to the base position; hide travels on, past the named edge.
+                Vector2 from = isShow ? basePosition - offset : rectTransform.anchoredPosition;
+                Vector2 to = isShow ? basePosition : basePosition + offset;
+                rectTransform.anchoredPosition = from;
+
+                return Tween.RunAsync(target, duration, ease, true, default, isCurrent, e =>
+                {
+                    rectTransform.anchoredPosition = Vector2.LerpUnclamped(from, to, e);
+                });
+            }
+
+            Transform t = target.transform;
+            Vector3 localOffset = new Vector3(direction.x, direction.y, 0f) * nonUiSlideDistance;
+            Vector3 localFrom = isShow ? state.BaseLocalPosition - localOffset : t.localPosition;
+            Vector3 localTo = isShow ? state.BaseLocalPosition : state.BaseLocalPosition + localOffset;
+            t.localPosition = localFrom;
+
+            return Tween.RunAsync(target, duration, ease, true, default, isCurrent, e =>
+            {
+                t.localPosition = Vector3.LerpUnclamped(localFrom, localTo, e);
+            });
+        }
+
+        private static Task PlayFadeAsync(GameObject target, bool isShow)
+        {
+            UiTweenState state = GetOrCreateTweenState(target);
+            int run = state.BeginAnimation(UiTweenChannels.Alpha);
+            CanvasGroup group = GetOrAddCanvasGroup(target);
+
+            float from = isShow ? 0f : group.alpha;
+            float to = isShow ? state.BaseAlpha : 0f;
+            group.alpha = from;
+
+            return Tween.RunAsync(target, isShow ? fadeShowDuration : fadeHideDuration, isShow ? TweenCurves.EaseOut : TweenCurves.EaseIn, true, default,
+                () => state != null && state.IsCurrent(run, UiTweenChannels.Alpha), e =>
+                {
+                    group.alpha = Mathf.LerpUnclamped(from, to, e);
+                });
+        }
+
+        // "Scale" preset: a subtle zoom combined with a fade, so the element never pops in or out abruptly.
+        private static Task PlayZoomAsync(GameObject target, bool isShow)
+        {
+            UiTweenState state = GetOrCreateTweenState(target);
+            int run = state.BeginAnimation(UiTweenChannels.Scale | UiTweenChannels.Alpha);
+            CanvasGroup group = GetOrAddCanvasGroup(target);
+            Transform t = target.transform;
+
+            Vector3 baseScale = state.BaseLocalScale;
+            Vector3 fromScale = isShow ? baseScale * zoomShowStartScale : t.localScale;
+            Vector3 toScale = isShow ? baseScale : baseScale * zoomHideEndScale;
+            float fromAlpha = isShow ? 0f : group.alpha;
+            float toAlpha = isShow ? state.BaseAlpha : 0f;
+
+            t.localScale = fromScale;
+            group.alpha = fromAlpha;
+
+            return Tween.RunAsync(target, isShow ? zoomShowDuration : zoomHideDuration, isShow ? TweenCurves.EaseOut : TweenCurves.EaseIn, true, default,
+                () => state != null && state.IsCurrent(run, UiTweenChannels.Scale | UiTweenChannels.Alpha), e =>
+                {
+                    t.localScale = Vector3.LerpUnclamped(fromScale, toScale, e);
+                    group.alpha = Mathf.LerpUnclamped(fromAlpha, toAlpha, e);
+                });
+        }
+
+        private static void SetSlideStart(GameObject target, UiTweenState state, Vector2 direction)
+        {
+            RectTransform rectTransform = target.transform as RectTransform;
+            if (rectTransform != null)
+            {
+                rectTransform.anchoredPosition = state.BaseAnchoredPosition - GetSlideOffset(rectTransform, direction);
+                return;
+            }
+
+            target.transform.localPosition = state.BaseLocalPosition - new Vector3(direction.x, direction.y, 0f) * nonUiSlideDistance;
+        }
+
+        private static void RestoreBasePose(GameObject target, UiTweenState state)
+        {
+            Transform t = target.transform;
+            t.localScale = state.BaseLocalScale;
+
+            RectTransform rectTransform = t as RectTransform;
+            if (rectTransform != null)
+            {
+                rectTransform.anchoredPosition = state.BaseAnchoredPosition;
+            }
+            else
+            {
+                t.localPosition = state.BaseLocalPosition;
+            }
+
+            CanvasGroup group = target.GetComponent<CanvasGroup>();
+            if (group != null)
+            {
+                group.alpha = state.BaseAlpha;
+            }
+        }
+
+        // Full canvas width or height in the direction of travel, so the element starts / ends just off-screen.
+        private static Vector2 GetSlideOffset(RectTransform rectTransform, Vector2 direction)
+        {
+            Vector2 size = Vector2.zero;
+            Canvas canvas = rectTransform.GetComponentInParent<Canvas>();
+            if (canvas != null)
+            {
+                RectTransform canvasRect = canvas.transform as RectTransform;
+                if (canvasRect != null)
+                {
+                    size = canvasRect.rect.size;
+                }
+            }
+
+            if (size.x <= 0f)
+            {
+                size.x = Screen.width;
+            }
+
+            if (size.y <= 0f)
+            {
+                size.y = Screen.height;
+            }
+
+            return new Vector2(direction.x * size.x, direction.y * size.y);
+        }
 
         private static UiTweenState GetOrCreateTweenState(GameObject target)
         {
@@ -121,201 +397,7 @@ namespace UiFramework.Tweening
             return state;
         }
 
-        private static RectTransform FindRectTransformForAnimation(GameObject target)
-        {
-            if (target == null)
-            {
-                return null;
-            }
-
-            RectTransform self = target.GetComponent<RectTransform>();
-            if (self != null)
-            {
-                return self;
-            }
-
-            return target.GetComponentInChildren<RectTransform>(true);
-        }
-
-        private static float GetCanvasWidth(RectTransform rectTransform)
-        {
-            if (rectTransform == null)
-            {
-                return 0.0f;
-            }
-
-            Canvas canvas = rectTransform.GetComponentInParent<Canvas>();
-            if (canvas == null)
-            {
-                return 0.0f;
-            }
-
-            RectTransform canvasRect = canvas.transform as RectTransform;
-            if (canvasRect == null)
-            {
-                return 0.0f;
-            }
-
-            return canvasRect.rect.width;
-        }
-
-        private static float GetCanvasHeight(RectTransform rectTransform)
-        {
-            if (rectTransform == null)
-            {
-                return 0.0f;
-            }
-
-            Canvas canvas = rectTransform.GetComponentInParent<Canvas>();
-            if (canvas == null)
-            {
-                return 0.0f;
-            }
-
-            RectTransform canvasRect = canvas.transform as RectTransform;
-            if (canvasRect == null)
-            {
-                return 0.0f;
-            }
-
-            return canvasRect.rect.height;
-        }
-
-        private static async Task PlaySlideAsync(GameObject target, bool isShow, Vector2 direction)
-        {
-            if (target == null)
-            {
-                return;
-            }
-
-            RectTransform rectTransform = FindRectTransformForAnimation(target);
-            UiTweenState tweenState = GetOrCreateTweenState(rectTransform != null ? rectTransform.gameObject : target);
-
-            if (rectTransform != null)
-            {
-                float canvasWidth = GetCanvasWidth(rectTransform);
-                float canvasHeight = GetCanvasHeight(rectTransform);
-
-                Vector2 basePos = tweenState.BaseAnchoredPosition;
-                Vector2 offset = Vector2.zero;
-
-                Vector2 offscreenDirection = isShow ? -direction : direction;
-
-                if (Mathf.Abs(offscreenDirection.x) > 0.0f)
-                {
-                    float w = canvasWidth;
-                    if (w <= 0.0f)
-                    {
-                        w = Screen.width;
-                    }
-
-                    offset = new Vector2(offscreenDirection.x * w, 0.0f);
-                }
-                else
-                {
-                    float h = canvasHeight;
-                    if (h <= 0.0f)
-                    {
-                        h = Screen.height;
-                    }
-
-                    offset = new Vector2(0.0f, offscreenDirection.y * h);
-                }
-
-                Vector2 from = isShow ? basePos + offset : basePos;
-                Vector2 to = isShow ? basePos : basePos + offset;
-
-                if (isShow)
-                {
-                    rectTransform.anchoredPosition = from;
-                }
-                else
-                {
-                    from = rectTransform.anchoredPosition;
-                }
-
-                float start = Time.unscaledTime;
-                float end = start + DefaultDuration;
-
-                while (Time.unscaledTime < end)
-                {
-                    float a = Mathf.InverseLerp(start, end, Time.unscaledTime);
-                    float e = TweenCurves.EaseOut != null ? TweenCurves.EaseOut.Evaluate(a) : a;
-                    rectTransform.anchoredPosition = Vector2.LerpUnclamped(from, to, e);
-                    await Task.Yield();
-                }
-
-                rectTransform.anchoredPosition = to;
-                return;
-            }
-
-            Transform t = target.transform;
-            Vector3 baseLocal = tweenState.BaseLocalPosition;
-            Vector2 localOffscreenDirection = isShow ? -direction : direction;
-            Vector3 localOffset = new Vector3(localOffscreenDirection.x, localOffscreenDirection.y, 0.0f) * 10.0f;
-            Vector3 localFrom = isShow ? baseLocal + localOffset : t.localPosition;
-            Vector3 localTo = isShow ? baseLocal : baseLocal + localOffset;
-
-            await Tween.MoveLocalAsync(t, localFrom, localTo, DefaultDuration, TweenCurves.EaseOut, true, default);
-        }
-
-        public static async Task ClickPop(Transform t, CancellationToken ct = default)
-        {
-            await Tween.PopScaleAsync(
-                t,
-                ClickPeak,
-                ClickUp,
-                ClickDown,
-                TweenCurves.EaseOut,
-                TweenCurves.EaseIn,
-                true,
-                ct
-            );
-        }
-
-        public static async Task SettlePop(Transform t, CancellationToken ct = default)
-        {
-            await Tween.PopScaleAsync(
-                t,
-                SettlePeak,
-                SettleUp,
-                SettleDown,
-                TweenCurves.EaseOut,
-                TweenCurves.BounceOut,
-                true,
-                ct
-            );
-        }
-
-        public static async Task ShakeLocal(Transform t, float amplitude = 6f, float duration = DefaultDuration, CancellationToken ct = default)
-        {
-            if (t == null)
-            {
-                return;
-            }
-
-            Vector3 origin = t.localPosition;
-            float start = Time.unscaledTime;
-            float end = start + duration;
-
-            while (Time.unscaledTime < end)
-            {
-                ct.ThrowIfCancellationRequested();
-                float progress = Mathf.InverseLerp(start, end, Time.unscaledTime);
-                float atten = 1f - progress;
-                Vector3 offset = new Vector3(
-                    (UnityEngine.Random.value * 2f - 1f) * amplitude * atten,
-                    (UnityEngine.Random.value * 2f - 1f) * amplitude * atten,
-                    0f
-                );
-                t.localPosition = origin + offset;
-                await Task.Yield();
-            }
-
-            t.localPosition = origin;
-        }
-
-        private static Task PlayFadeAsync(GameObject target, bool isShow)
+        private static CanvasGroup GetOrAddCanvasGroup(GameObject target)
         {
             CanvasGroup group = target.GetComponent<CanvasGroup>();
             if (group == null)
@@ -323,20 +405,25 @@ namespace UiFramework.Tweening
                 group = target.AddComponent<CanvasGroup>();
             }
 
-            float from = isShow ? 0.0f : 1.0f;
-            float to = isShow ? 1.0f : 0.0f;
-
-            return Tween.FadeCanvasGroupAsync(group, from, to, DefaultDuration, TweenCurves.EaseOut, true, default);
+            return group;
         }
 
-        private static Task PlayScaleAsync(GameObject target, bool isShow)
+        private static string Normalize(string presetKey)
         {
-            Transform t = target.transform;
-            Vector3 baseScale = t.localScale;
-            Vector3 from = isShow ? baseScale * 0.9f : baseScale;
-            Vector3 to = isShow ? baseScale : baseScale * 0.9f;
+            if (string.IsNullOrWhiteSpace(presetKey))
+            {
+                return NoneKey;
+            }
 
-            return Tween.ScaleAsync(t, from, to, DefaultDuration, TweenCurves.EaseOut, true, default);
+            for (int i = 0; i < presetKeys.Count; i++)
+            {
+                if (string.Equals(presetKeys[i], presetKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    return presetKeys[i];
+                }
+            }
+
+            return presetKey;
         }
     }
 }
