@@ -14,15 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `UiGlobalCanvasSettings` asset (`Assets/UiConfigs/UiGlobalCanvasSettings.asset`, auto-created with defaults: Screen Space Overlay, Scale With Screen Size 1080x1920, Expand, 100 PPU), referenced from `UiEditorConfig.GlobalCanvasSettings`
   - New elements are generated with the full contract hierarchy and the global canvas settings; creating from an existing scene offers a structure fix
   - All tools live in the UI Setup Manager window. No separate menu items are added
-  - General tab: new Global Canvas Settings section to pick and edit the settings asset
-  - Elements tab toolbar: Refresh, Validate All, Fix All Structure…, Apply Canvas To All…, an "Only show scenes with issues" filter, and a status summary
-  - Elements tab rows: clickable Structure (⚠ Fix / ✖ details) and Canvas (⚠ Reset) status cells, and a ⋯ menu (Open Scene, Select Scene Asset, Fix Structure…, Reset Canvas…, Exclude From Apply To All, Log Validation Details, Remove From Addressables)
-  - Click a scene name to select it, double-click to open it; open scenes are marked "(open)"
-  - Clear confirmation popup for every fix, reset and apply: short "What will change" bullets, a Now / After hierarchy preview (new objects highlighted), a Setting · Now → After table for canvas values, collapsed "Needs manual work", and a one-line save/undo note
+  - General tab: Global Canvas Settings section. These are the defaults every new element scene starts with (instead of Unity's defaults); editing them never changes existing scenes
+  - Elements tab redesigned like the States tab: search in the top bar, a scrolling element list on the left (status icon, "(open)", double-click opens the scene), and the selected element's settings on the right
+  - Element settings: Open Scene / Select Asset; Structure (issue summaries, Fix Structure…, What to fix by hand…); Animations (show / hide presets); Canvas (Render Mode, Sorting Order, UI Scale Mode, Reference Resolution, Screen Match Mode / Match, Reference PPU, Use Default Settings…); Addressables (toggle, group, labels)
+  - Elements toolbar: Refresh, Validate All, Fix All Structure…, "Only show elements with issues", and a status summary; ➕ New Element opens the create form in the settings panel
+  - Search by name or part of the name in the Elements and States lists (any case, several words, names that start with the text first, Enter selects the first result); the States tab's "Add element scene" is now a search box with suggestions
+  - Clear confirmation popup for every fix and for Use Default Settings: short "What will change" bullets, a Now / After hierarchy preview (new objects highlighted), a Setting · Now → After table for canvas values, collapsed "Needs manual work", and a one-line save/undo note
   - Short plain-language issue summaries in the popup and tooltips (full details still in the Console)
-  - "Create New UI Element" grouped in a foldout below the list
   - Fixes only create and reparent objects (Undo-recorded, never delete). Content that doesn't fill the screen is always wrapped in a new full-screen Root and never resized, so the layout is unchanged
-  - Global canvas settings are applied at authoring time only; sorting order/layer, override sorting, world camera, plane distance and shader channels are never touched
+  - Default canvas values are written only when a scene or its Canvas is created, or by an element's Use Default Settings; sorting order/layer, override sorting, world camera, plane distance and shader channels are never touched
 - EditMode tests for the contract under `Tests/Editor`
 - `com.unity.ugui` package dependency
 

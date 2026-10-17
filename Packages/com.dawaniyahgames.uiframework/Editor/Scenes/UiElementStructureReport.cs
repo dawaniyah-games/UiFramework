@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace UiFramework.Editor.Scenes
 {
@@ -13,14 +14,6 @@ namespace UiFramework.Editor.Scenes
         ContentRootNotStretched,
         ContentRootInactive,
         CanvasInsidePrefab
-    }
-
-    public enum UiCanvasStatus
-    {
-        Matches,
-        Differs,
-        NoCanvas,
-        Excluded
     }
 
     public sealed class UiElementStructureIssue
@@ -205,6 +198,46 @@ namespace UiFramework.Editor.Scenes
         }
     }
 
+    // The element scene's own Canvas / Canvas Scaler values, read when the scene was inspected.
+    public sealed class UiCanvasSnapshot
+    {
+        public bool HasScaler { get; internal set; }
+        public RenderMode RenderMode { get; internal set; }
+        public int SortingOrder { get; internal set; }
+        public CanvasScaler.ScaleMode UiScaleMode { get; internal set; }
+        public Vector2 ReferenceResolution { get; internal set; }
+        public CanvasScaler.ScreenMatchMode ScreenMatchMode { get; internal set; }
+        public float MatchWidthOrHeight { get; internal set; }
+        public float ReferencePixelsPerUnit { get; internal set; }
+
+        public static UiCanvasSnapshot Capture(Canvas canvas)
+        {
+            if (canvas == null)
+            {
+                return null;
+            }
+
+            UiCanvasSnapshot snapshot = new UiCanvasSnapshot
+            {
+                RenderMode = canvas.renderMode,
+                SortingOrder = canvas.sortingOrder
+            };
+
+            CanvasScaler scaler = canvas.GetComponent<CanvasScaler>();
+            if (scaler != null)
+            {
+                snapshot.HasScaler = true;
+                snapshot.UiScaleMode = scaler.uiScaleMode;
+                snapshot.ReferenceResolution = scaler.referenceResolution;
+                snapshot.ScreenMatchMode = scaler.screenMatchMode;
+                snapshot.MatchWidthOrHeight = scaler.matchWidthOrHeight;
+                snapshot.ReferencePixelsPerUnit = scaler.referencePixelsPerUnit;
+            }
+
+            return snapshot;
+        }
+    }
+
     // One Canvas/CanvasScaler value that differs from the global canvas settings, e.g. ("ScreenMatchMode", "MatchWidthOrHeight", "Expand").
     public sealed class UiCanvasSettingDifference
     {
@@ -236,8 +269,10 @@ namespace UiFramework.Editor.Scenes
         public string ShowPreset { get; internal set; }
         public string HidePreset { get; internal set; }
         public UiElementStructureReport Structure { get; internal set; }
-        public UiCanvasStatus CanvasStatus { get; internal set; }
-        public string CanvasDiff { get; internal set; }
+        // Null when the scene has no root Canvas under the element root.
+        public UiCanvasSnapshot Canvas { get; internal set; }
+
+        // How the scene's Canvas differs from the Global Canvas Settings (the defaults). Empty when it matches.
         public IReadOnlyList<UiCanvasSettingDifference> CanvasDifferences { get; internal set; }
 
         public UiElementSceneInfo(string scenePath)
@@ -245,8 +280,6 @@ namespace UiFramework.Editor.Scenes
             ScenePath = scenePath ?? string.Empty;
             SceneName = System.IO.Path.GetFileNameWithoutExtension(ScenePath);
             Structure = new UiElementStructureReport(SceneName);
-            CanvasStatus = UiCanvasStatus.NoCanvas;
-            CanvasDiff = string.Empty;
             CanvasDifferences = new List<UiCanvasSettingDifference>().AsReadOnly();
         }
     }

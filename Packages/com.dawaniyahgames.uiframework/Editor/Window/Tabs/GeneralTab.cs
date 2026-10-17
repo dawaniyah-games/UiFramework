@@ -135,7 +135,7 @@ namespace UiFramework.Editor.Window.Tabs
                 }
             });
 
-            Label hint = new Label("One set of Canvas and Canvas Scaler values shared by every UI element scene in the project. New elements are created with them, and the Elements tab checks each scene against them (Fix Structure, Reset Canvas, Apply Canvas To All). Scenes are only changed by those actions, and sorting order and cameras are never touched.");
+            Label hint = new Label("Default Canvas and Canvas Scaler values. Every new UI element scene starts with them instead of Unity's defaults. Existing scenes are never changed by editing these; each element can adjust its own Canvas in the Elements tab (or use \"Use Default Settings\" there).");
             hint.style.whiteSpace = WhiteSpace.Normal;
             hint.style.fontSize = 11;
             hint.style.marginLeft = 10;

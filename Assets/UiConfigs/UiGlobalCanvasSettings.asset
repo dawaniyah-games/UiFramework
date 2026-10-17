@@ -19,4 +19,3 @@ MonoBehaviour:
   screenMatchMode: 1
   matchWidthOrHeight: 0.5
   referencePixelsPerUnit: 100
-  excludedScenes: []

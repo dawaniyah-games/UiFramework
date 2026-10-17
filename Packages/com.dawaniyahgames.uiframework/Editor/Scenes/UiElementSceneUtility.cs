@@ -141,11 +141,11 @@ namespace UiFramework.Editor.Scenes
                 ValidateStructure(scene, out report);
                 info.Structure = report;
 
-                string diff;
-                List<UiCanvasSettingDifference> differences;
-                info.CanvasStatus = GetCanvasStatus(report, settings, scenePath, out diff, out differences);
-                info.CanvasDiff = diff;
-                info.CanvasDifferences = differences.AsReadOnly();
+                if (report.Canvas != null)
+                {
+                    info.Canvas = UiCanvasSnapshot.Capture(report.Canvas);
+                    info.CanvasDifferences = GetCanvasDifferences(report.Canvas, report.Canvas.GetComponent<CanvasScaler>(), settings).AsReadOnly();
+                }
             });
 
             info.IsAvailable = opened;
@@ -331,33 +331,42 @@ namespace UiFramework.Editor.Scenes
             return string.Join("; ", parts.ToArray());
         }
 
-        // Uses the Canvas found by ValidateStructure, so the scene must still be open.
-        public static UiCanvasStatus GetCanvasStatus(UiElementStructureReport report, UiGlobalCanvasSettings settings, string scenePath, out string diff)
+        // Changes the element scene's root Canvas / Canvas Scaler (Undo-recorded). Open scenes are edited in place and
+        // left unsaved; closed scenes are opened, saved and closed. Returns false when the scene has no root Canvas.
+        public static bool EditCanvas(string scenePath, string undoName, Action<Canvas, CanvasScaler> edit)
         {
-            List<UiCanvasSettingDifference> differences;
-            return GetCanvasStatus(report, settings, scenePath, out diff, out differences);
-        }
+            bool edited = false;
 
-        public static UiCanvasStatus GetCanvasStatus(UiElementStructureReport report, UiGlobalCanvasSettings settings, string scenePath, out string diff, out List<UiCanvasSettingDifference> differences)
-        {
-            diff = string.Empty;
-            differences = new List<UiCanvasSettingDifference>();
-
-            if (report == null || report.Canvas == null)
+            WithScene(scenePath, true, scene =>
             {
-                return UiCanvasStatus.NoCanvas;
-            }
+                UiElementStructureReport report;
+                ValidateStructure(scene, out report);
+                if (report.Canvas == null)
+                {
+                    return;
+                }
 
-            differences = GetCanvasDifferences(report.Canvas, report.Canvas.GetComponent<CanvasScaler>(), settings);
-            diff = JoinDifferences(differences);
-            bool matches = differences.Count == 0;
+                CanvasScaler scaler = report.Canvas.GetComponent<CanvasScaler>();
+                Undo.RecordObject(report.Canvas, undoName);
+                if (scaler != null)
+                {
+                    Undo.RecordObject(scaler, undoName);
+                }
 
-            if (settings != null && settings.IsExcluded(scenePath))
-            {
-                return UiCanvasStatus.Excluded;
-            }
+                edit(report.Canvas, scaler);
 
-            return matches ? UiCanvasStatus.Matches : UiCanvasStatus.Differs;
+                RecordPrefabOverrides(report.Canvas);
+                EditorUtility.SetDirty(report.Canvas);
+                if (scaler != null)
+                {
+                    RecordPrefabOverrides(scaler);
+                    EditorUtility.SetDirty(scaler);
+                }
+
+                edited = true;
+            });
+
+            return edited;
         }
 
         // ---------- Structure validation ----------

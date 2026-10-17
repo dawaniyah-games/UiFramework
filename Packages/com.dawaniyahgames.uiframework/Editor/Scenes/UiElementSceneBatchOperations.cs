@@ -5,11 +5,10 @@ using UiFramework.Editor.Window.Popups;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace UiFramework.Editor.Scenes
 {
-    // Validate / Fix / Apply across element scenes. Each method returns a short summary for the editor UI and logs the
+    // Validate / Fix across element scenes. Each method returns a short summary for the editor UI and logs the
     // full report to the Console. The IList overloads reuse scene info the caller already inspected (the Elements tab
     // list), so scenes are not opened an extra time just to plan the operation.
     public static class UiElementSceneBatchOperations
@@ -34,7 +33,6 @@ namespace UiFramework.Editor.Scenes
         {
             int valid = 0;
             int withIssues = 0;
-            int canvasDiffers = 0;
             StringBuilder lines = new StringBuilder();
             StringBuilder details = new StringBuilder();
 
@@ -48,7 +46,7 @@ namespace UiFramework.Editor.Scenes
                 }
 
                 string structure = info.Structure.HasIssues ? info.Structure.GetCodesSummary() : "OK";
-                lines.Append("\n  " + info.SceneName + ": " + structure + " | Canvas: " + DescribeCanvasStatus(info));
+                lines.Append("\n  " + info.SceneName + ": " + structure);
 
                 if (info.Structure.HasIssues)
                 {
@@ -59,14 +57,9 @@ namespace UiFramework.Editor.Scenes
                 {
                     valid++;
                 }
-
-                if (info.CanvasStatus == UiCanvasStatus.Differs)
-                {
-                    canvasDiffers++;
-                }
             }
 
-            string summary = "Validated " + infos.Count + " element scene(s): " + valid + " follow the contract, " + withIssues + " have structure issues, " + canvasDiffers + " differ from the global canvas settings.";
+            string summary = "Validated " + infos.Count + " element scene(s): " + valid + " follow the contract, " + withIssues + " have structure issues.";
             string message = "[UiFramework] " + summary + lines;
 
             if (details.Length > 0)
@@ -74,7 +67,7 @@ namespace UiFramework.Editor.Scenes
                 message += "\n\nDetails:" + details;
             }
 
-            if (withIssues > 0 || canvasDiffers > 0)
+            if (withIssues > 0)
             {
                 Debug.LogWarning(message);
             }
@@ -83,163 +76,6 @@ namespace UiFramework.Editor.Scenes
                 Debug.Log(message);
             }
 
-            return summary;
-        }
-
-        public static string ApplyCanvasSettingsToAll(UiEditorConfig config, UiGlobalCanvasSettings settings)
-        {
-            if (settings == null)
-            {
-                return "No UiGlobalCanvasSettings asset.";
-            }
-
-            List<UiElementSceneInfo> infos = InspectAll(config, settings, "Checking Global Canvas Settings");
-            if (infos == null)
-            {
-                return "Cancelled.";
-            }
-
-            if (infos.Count == 0)
-            {
-                return LogNoScenes(config);
-            }
-
-            return ApplyCanvasSettingsToAll(infos, settings);
-        }
-
-        public static string ApplyCanvasSettingsToAll(IList<UiElementSceneInfo> infos, UiGlobalCanvasSettings settings)
-        {
-            if (settings == null)
-            {
-                return "No UiGlobalCanvasSettings asset.";
-            }
-
-            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
-            {
-                return "Cancelled.";
-            }
-
-            List<UiElementSceneInfo> toUpdate = new List<UiElementSceneInfo>();
-            List<string> plan = new List<string>();
-            int matching = 0;
-            int excluded = 0;
-            int noCanvas = 0;
-            int unavailable = 0;
-
-            for (int i = 0; i < infos.Count; i++)
-            {
-                UiElementSceneInfo info = infos[i];
-                if (!info.IsAvailable)
-                {
-                    unavailable++;
-                    continue;
-                }
-
-                switch (info.CanvasStatus)
-                {
-                    case UiCanvasStatus.Matches:
-                        matching++;
-                        break;
-                    case UiCanvasStatus.Excluded:
-                        excluded++;
-                        break;
-                    case UiCanvasStatus.NoCanvas:
-                        noCanvas++;
-                        break;
-                    default:
-                        toUpdate.Add(info);
-                        plan.Add(info.SceneName + ": " + info.CanvasDiff);
-                        break;
-                }
-            }
-
-            if (toUpdate.Count == 0)
-            {
-                string nothing = "Apply Global Canvas Settings: nothing to update (matching " + matching + ", excluded " + excluded + ", no canvas " + noCanvas + ").";
-                Debug.Log("[UiFramework] " + nothing);
-                return nothing;
-            }
-
-            Debug.Log("[UiFramework] Apply Global Canvas Settings plan:\n  " + string.Join("\n  ", plan.ToArray()));
-
-            UiElementChangeDialogModel dialogModel = new UiElementChangeDialogModel
-            {
-                WindowTitle = "Apply Canvas To All",
-                Heading = "Apply the Global Canvas Settings to " + DescribeScenes(toUpdate.Count) + "?",
-                Description = "Expand a scene to see which values change. Excluded scenes and scenes that already match are skipped.",
-                Footer = "Only the listed Canvas values change. Sorting order and cameras stay as they are. Scenes that aren't open are saved.",
-                ConfirmLabel = "Apply to " + DescribeScenes(toUpdate.Count)
-            };
-
-            for (int i = 0; i < toUpdate.Count; i++)
-            {
-                UiElementSceneInfo info = toUpdate[i];
-                UiElementChangeEntry entry = new UiElementChangeEntry
-                {
-                    Title = info.SceneName,
-                    Subtitle = info.CanvasDifferences.Count == 1 ? "1 value" : info.CanvasDifferences.Count + " values"
-                };
-
-                for (int d = 0; d < info.CanvasDifferences.Count; d++)
-                {
-                    entry.SettingChanges.Add(info.CanvasDifferences[d]);
-                }
-
-                dialogModel.Entries.Add(entry);
-            }
-
-            if (!UiElementChangeDialog.Show(dialogModel))
-            {
-                return "Cancelled.";
-            }
-
-            int updated = 0;
-            List<string> leftOpen = new List<string>();
-
-            try
-            {
-                for (int i = 0; i < toUpdate.Count; i++)
-                {
-                    UiElementSceneInfo info = toUpdate[i];
-                    EditorUtility.DisplayProgressBar("Applying Global Canvas Settings", info.SceneName, (float)i / toUpdate.Count);
-
-                    bool isOpen = UiElementSceneUtility.IsSceneOpen(info.ScenePath);
-                    bool applied = false;
-
-                    UiElementSceneUtility.WithScene(info.ScenePath, true, scene =>
-                    {
-                        UiElementStructureReport report;
-                        UiElementSceneUtility.ValidateStructure(scene, out report);
-                        if (report.Canvas == null)
-                        {
-                            return;
-                        }
-
-                        UiElementSceneUtility.ApplyCanvasSettings(report.Canvas, report.Canvas.GetComponent<CanvasScaler>(), settings);
-                        applied = true;
-                    });
-
-                    if (applied)
-                    {
-                        updated++;
-                        if (isOpen)
-                        {
-                            leftOpen.Add(info.SceneName);
-                        }
-                    }
-                    else
-                    {
-                        noCanvas++;
-                    }
-                }
-            }
-            finally
-            {
-                EditorUtility.ClearProgressBar();
-            }
-
-            string summary = "Apply Global Canvas Settings: updated " + updated + ", already matching " + matching + ", excluded " + excluded + ", no canvas " + noCanvas + (unavailable > 0 ? ", could not open " + unavailable : string.Empty) + ".";
-            Debug.Log("[UiFramework] " + summary + DescribeLeftOpen(leftOpen));
             return summary;
         }
 
@@ -393,21 +229,6 @@ namespace UiFramework.Editor.Scenes
             }
 
             return plan;
-        }
-
-        public static string DescribeCanvasStatus(UiElementSceneInfo info)
-        {
-            switch (info.CanvasStatus)
-            {
-                case UiCanvasStatus.Matches:
-                    return "matches";
-                case UiCanvasStatus.Differs:
-                    return "differs (" + info.CanvasDiff + ")";
-                case UiCanvasStatus.Excluded:
-                    return string.IsNullOrEmpty(info.CanvasDiff) ? "excluded" : "excluded (" + info.CanvasDiff + ")";
-                default:
-                    return "no canvas";
-            }
         }
 
         private static List<UiElementSceneInfo> InspectAll(UiEditorConfig config, UiGlobalCanvasSettings settings, string title)

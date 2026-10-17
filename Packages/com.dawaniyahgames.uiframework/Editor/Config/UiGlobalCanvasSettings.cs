@@ -1,13 +1,10 @@
-using System;
-using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace UiFramework.Editor.Config
 {
-    // Project-wide Canvas/CanvasScaler values for UI element scenes. Written into scenes at authoring time only
-    // (Fix / Reset / Apply actions); nothing enforces them at runtime.
+    // Default Canvas/CanvasScaler values for new UI element scenes (and the per-element "Use Default Settings" button).
+    // Written into scenes at authoring time only; nothing enforces them at runtime, and each scene can differ.
     [CreateAssetMenu(fileName = "UiGlobalCanvasSettings", menuName = "Scripts/UiFramework/Global Canvas Settings")]
     public sealed class UiGlobalCanvasSettings : ScriptableObject
     {
@@ -26,9 +23,6 @@ namespace UiFramework.Editor.Config
         [SerializeField] private float matchWidthOrHeight = 0.5f;
         [SerializeField] private float referencePixelsPerUnit = 100.0f;
 
-        [Header("Apply To All")]
-        [Tooltip("Skipped by 'Apply Canvas To All'. Structure checks and the per-scene 'Reset Canvas' still apply to these scenes.")]
-        [SerializeField] private List<SceneAsset> excludedScenes = new List<SceneAsset>();
 
         public RenderMode RenderMode
         {
@@ -84,84 +78,6 @@ namespace UiFramework.Editor.Config
             {
                 return referencePixelsPerUnit;
             }
-        }
-
-        public IReadOnlyList<SceneAsset> ExcludedScenes
-        {
-            get
-            {
-                if (excludedScenes == null)
-                {
-                    excludedScenes = new List<SceneAsset>();
-                }
-
-                return excludedScenes.AsReadOnly();
-            }
-        }
-
-        public bool IsExcluded(string scenePath)
-        {
-            if (string.IsNullOrEmpty(scenePath) || excludedScenes == null)
-            {
-                return false;
-            }
-
-            for (int i = 0; i < excludedScenes.Count; i++)
-            {
-                SceneAsset sceneAsset = excludedScenes[i];
-                if (sceneAsset == null)
-                {
-                    continue;
-                }
-
-                if (string.Equals(AssetDatabase.GetAssetPath(sceneAsset), scenePath, StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        // Returns true when the exclusion list changed. Undo-recorded; the caller decides when to save the asset.
-        public bool SetExcluded(string scenePath, bool excluded)
-        {
-            if (IsExcluded(scenePath) == excluded)
-            {
-                return false;
-            }
-
-            SceneAsset sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath);
-            if (sceneAsset == null)
-            {
-                return false;
-            }
-
-            Undo.RecordObject(this, excluded ? "Exclude Scene From Global Canvas Settings" : "Include Scene In Global Canvas Settings");
-
-            if (excludedScenes == null)
-            {
-                excludedScenes = new List<SceneAsset>();
-            }
-
-            if (excluded)
-            {
-                excludedScenes.Add(sceneAsset);
-            }
-            else
-            {
-                for (int i = excludedScenes.Count - 1; i >= 0; i--)
-                {
-                    SceneAsset existing = excludedScenes[i];
-                    if (existing != null && string.Equals(AssetDatabase.GetAssetPath(existing), scenePath, StringComparison.OrdinalIgnoreCase))
-                    {
-                        excludedScenes.RemoveAt(i);
-                    }
-                }
-            }
-
-            EditorUtility.SetDirty(this);
-            return true;
         }
     }
 }

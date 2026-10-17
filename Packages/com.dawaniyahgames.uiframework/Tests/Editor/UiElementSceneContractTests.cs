@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using UiFramework.Editor.Config;
 using UiFramework.Editor.Scenes;
+using UiFramework.Editor.Window;
 using UiFramework.Tests.Support;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -505,8 +506,54 @@ namespace UiFramework.Editor.Tests
             Assert.IsTrue(info.IsAvailable);
             Assert.IsTrue(info.HasUiElement);
             AssertCodes(info.Structure);
-            Assert.AreEqual(UiCanvasStatus.Matches, info.CanvasStatus, info.CanvasDiff);
+            Assert.IsNotNull(info.Canvas, "Canvas values should be captured.");
+            Assert.AreEqual(0, info.CanvasDifferences.Count, "A Canvas created by the fix uses the default settings.");
             Assert.IsFalse(SceneManager.GetSceneByPath(path).IsValid(), "InspectScene must close the scene.");
+        }
+
+        [Test]
+        public void EditCanvas_ClosedScene_SavesTheChangeAndKeepsOtherValues()
+        {
+            Canvas canvas = CreateCanvas(CreateElementRoot("PopupUiElementRoot", true));
+            CreateStretched("Root", canvas.transform);
+            UiElementSceneUtility.ApplyCanvasSettings(canvas, canvas.GetComponent<CanvasScaler>(), settings);
+            string path = SaveActiveScene("PopupUiElement");
+            scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+            bool edited = UiElementSceneUtility.EditCanvas(path, "Test", (c, s) =>
+            {
+                c.sortingOrder = 50;
+            });
+
+            Assert.IsTrue(edited);
+            Assert.IsFalse(SceneManager.GetSceneByPath(path).IsValid(), "Scene must be closed again.");
+
+            UiElementSceneInfo info = UiElementSceneUtility.InspectScene(path, settings);
+            Assert.AreEqual(50, info.Canvas.SortingOrder);
+            Assert.AreEqual(new Vector2(1080.0f, 1920.0f), info.Canvas.ReferenceResolution);
+            Assert.AreEqual(0, info.CanvasDifferences.Count, "Sorting order is not part of the default settings.");
+        }
+
+        // ---------- Search ----------
+
+        [Test]
+        public void Search_MatchesPartOfTheNameIgnoringCase()
+        {
+            Assert.IsTrue(UiSearchFilter.Matches("MainMenuUiState", "menu"));
+            Assert.IsTrue(UiSearchFilter.Matches("MainMenuUiState", "MAIN"));
+            Assert.IsTrue(UiSearchFilter.Matches("PlayWithFriendsUiElement", "friends play"), "All words must appear, in any order.");
+            Assert.IsFalse(UiSearchFilter.Matches("StoreUiState", "menu"));
+            Assert.IsTrue(UiSearchFilter.Matches("StoreUiState", "   "), "An empty search shows everything.");
+        }
+
+        [Test]
+        public void Search_RanksStartsWithThenWordStartThenContains()
+        {
+            List<string> names = new List<string> { "GameResultUiState", "StoreUiState", "MainStoreBannerUiState", "RestoreUiState" };
+
+            List<string> results = UiSearchFilter.Filter(names, name => name, "store");
+
+            CollectionAssert.AreEqual(new List<string> { "StoreUiState", "MainStoreBannerUiState", "RestoreUiState" }, results);
         }
 
         // ---------- Fix preview (what the dialog shows) ----------
