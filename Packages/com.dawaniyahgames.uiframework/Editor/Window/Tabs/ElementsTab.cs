@@ -970,8 +970,7 @@ namespace UiFramework.Editor.Window.Tabs
             };
             dialogModel.Entries.Add(entry);
 
-            bool unused;
-            if (UiElementChangeDialog.Show(dialogModel, out unused))
+            if (UiElementChangeDialog.Show(dialogModel))
             {
                 OpenScene(sceneAssetPath);
             }
@@ -981,20 +980,13 @@ namespace UiFramework.Editor.Window.Tabs
         private static UiElementChangeDialogModel BuildFixDialog(string sceneName, UiElementStructureReport report, bool willBeSaved, bool hideMissingUiElement)
         {
             UiElementChangeEntry entry = new UiElementChangeEntry { Title = sceneName };
-            entry.Changes.AddRange(UiElementStructureFixer.DescribePlannedChanges(report, UiElementStructureFixMode.WrapContent));
-
-            bool offersStretch = UiElementStructureFixer.OffersContentRootReset(report);
-            if (offersStretch)
-            {
-                entry.AlternativeChanges = UiElementStructureFixer.DescribePlannedChanges(report, UiElementStructureFixMode.ResetContentRoot);
-            }
+            entry.Changes.AddRange(UiElementStructureFixer.DescribePlannedChanges(report));
 
             UiElementFixPreview preview = UiElementFixPreview.Build(report);
             if (preview != null)
             {
                 entry.Before = preview.Before;
-                entry.After = preview.AfterWrap;
-                entry.AlternativeAfter = preview.AfterStretch;
+                entry.After = preview.After;
             }
 
             for (int i = 0; i < report.Issues.Count; i++)
@@ -1007,15 +999,12 @@ namespace UiFramework.Editor.Window.Tabs
                 }
             }
 
-            string stretchTarget = offersStretch ? report.Find(UiElementStructureIssueCode.ContentRootNotStretched).ObjectName : null;
-
             UiElementChangeDialogModel dialogModel = new UiElementChangeDialogModel
             {
                 WindowTitle = "Fix Structure",
                 Heading = "Fix the structure of " + sceneName + "?",
                 Description = "For the show/hide animation to move the whole screen, everything has to sit inside one full-screen Root under the Canvas.",
-                OptionLabel = offersStretch ? "Stretch '" + stretchTarget + "' to fill the screen instead (changes its size and position)" : null,
-                Footer = willBeSaved ? "Nothing is deleted. The scene will be saved." : "Nothing is deleted. The scene is open, so you can undo with Ctrl+Z. Save the scene to keep the changes.",
+                Footer = willBeSaved ? "Nothing is deleted or resized. The scene will be saved." : "Nothing is deleted or resized. The scene is open, so you can undo with Ctrl+Z. Save the scene to keep the changes.",
                 ConfirmLabel = "Fix"
             };
             dialogModel.Entries.Add(entry);
@@ -1062,17 +1051,15 @@ namespace UiFramework.Editor.Window.Tabs
                 return;
             }
 
-            bool stretchInstead;
-            if (!UiElementChangeDialog.Show(dialogModel, out stretchInstead))
+            if (!UiElementChangeDialog.Show(dialogModel))
             {
                 return;
             }
 
-            UiElementStructureFixMode mode = stretchInstead ? UiElementStructureFixMode.ResetContentRoot : UiElementStructureFixMode.WrapContent;
             UiElementStructureReport remaining = null;
             UiElementSceneUtility.WithScene(sceneAssetPath, true, scene =>
             {
-                remaining = UiElementStructureFixer.FixStructure(scene, canvasSettings, mode);
+                remaining = UiElementStructureFixer.FixStructure(scene, canvasSettings);
             });
 
             if (remaining != null)
@@ -1105,8 +1092,7 @@ namespace UiFramework.Editor.Window.Tabs
             };
             dialogModel.Entries.Add(entry);
 
-            bool unused;
-            if (!UiElementChangeDialog.Show(dialogModel, out unused))
+            if (!UiElementChangeDialog.Show(dialogModel))
             {
                 return;
             }
@@ -1247,13 +1233,12 @@ namespace UiFramework.Editor.Window.Tabs
             UiElementChangeDialogModel dialogModel = BuildFixDialog(elementName, report, true, true);
             dialogModel.Description = "This scene doesn't follow the UI element layout yet. " + dialogModel.Description + " You can also fix it later from the Elements list.";
 
-            bool stretchInstead;
-            if (!UiElementChangeDialog.Show(dialogModel, out stretchInstead))
+            if (!UiElementChangeDialog.Show(dialogModel))
             {
                 return;
             }
 
-            UiElementStructureFixer.FixStructure(scene, canvasSettings, stretchInstead ? UiElementStructureFixMode.ResetContentRoot : UiElementStructureFixMode.WrapContent);
+            UiElementStructureFixer.FixStructure(scene, canvasSettings);
         }
 
         private List<string> GetElementScenePaths()

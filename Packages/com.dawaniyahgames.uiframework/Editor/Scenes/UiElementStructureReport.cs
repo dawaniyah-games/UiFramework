@@ -15,15 +15,6 @@ namespace UiFramework.Editor.Scenes
         CanvasInsidePrefab
     }
 
-    public enum UiElementStructureFixMode
-    {
-        // Wraps a non-stretched content root in a new stretched Root, so the on-screen layout does not change.
-        WrapContent,
-
-        // Resets a non-stretched content root's RectTransform to the contract values; its own size/position change.
-        ResetContentRoot
-    }
-
     public enum UiCanvasStatus
     {
         Matches,
@@ -47,7 +38,7 @@ namespace UiFramework.Editor.Scenes
         // Name of the scene object the issue is about (used to describe fixes after the scene is closed).
         public string ObjectName { get; }
 
-        // Short description of what FixStructure does for this issue in WrapContent mode. Empty when not fixable.
+        // Short description of what FixStructure does for this issue. Empty when not fixable.
         public string FixDescription { get; }
 
         public UiElementStructureIssue(UiElementStructureIssueCode code, string summary, string message, bool isFixable, bool isWarning, string objectName, string fixDescription)

@@ -15,12 +15,8 @@ namespace UiFramework.Editor.Window.Popups
 
         public string Title { get; set; }
         public string Subtitle { get; set; }
-
-        // Shown instead of Changes / After while the dialog's option toggle is on. Null = no difference.
-        public List<string> AlternativeChanges { get; set; }
         public UiElementPreviewNode Before { get; set; }
         public UiElementPreviewNode After { get; set; }
-        public UiElementPreviewNode AlternativeAfter { get; set; }
 
         public List<string> Changes
         {
@@ -54,9 +50,6 @@ namespace UiFramework.Editor.Window.Popups
         public string WindowTitle { get; set; }
         public string Heading { get; set; }
         public string Description { get; set; }
-
-        // Null hides the option toggle.
-        public string OptionLabel { get; set; }
         public string Footer { get; set; }
         public string ConfirmLabel { get; set; }
         public string CancelLabel { get; set; }
@@ -81,17 +74,14 @@ namespace UiFramework.Editor.Window.Popups
         private static readonly Color manualColor = new Color(0.95f, 0.65f, 0.3f);
 
         private static bool lastConfirmed;
-        private static bool lastOptionValue;
 
         private UiElementChangeDialogModel model;
         private ScrollView body;
-        private bool optionValue;
 
         // Blocks until the dialog is closed. Returns true when the confirm button was pressed.
-        public static bool Show(UiElementChangeDialogModel model, out bool optionSelected)
+        public static bool Show(UiElementChangeDialogModel model)
         {
             lastConfirmed = false;
-            lastOptionValue = false;
 
             UiElementChangeDialog dialog = CreateInstance<UiElementChangeDialog>();
             dialog.titleContent = new GUIContent(model.WindowTitle);
@@ -104,7 +94,6 @@ namespace UiFramework.Editor.Window.Popups
             dialog.position = new Rect(main.x + (main.width - size.x) * 0.5f, main.y + (main.height - size.y) * 0.5f, size.x, size.y);
             dialog.ShowModal();
 
-            optionSelected = lastOptionValue;
             return lastConfirmed;
         }
 
@@ -136,18 +125,6 @@ namespace UiFramework.Editor.Window.Popups
             body.style.flexGrow = 1;
             root.Add(body);
             RenderBody();
-
-            if (!string.IsNullOrEmpty(model.OptionLabel))
-            {
-                Toggle option = new Toggle(model.OptionLabel);
-                option.style.marginTop = 8;
-                option.RegisterValueChangedCallback(evt =>
-                {
-                    optionValue = evt.newValue;
-                    RenderBody();
-                });
-                root.Add(option);
-            }
 
             if (!string.IsNullOrEmpty(model.Footer))
             {
@@ -217,8 +194,8 @@ namespace UiFramework.Editor.Window.Popups
 
         private void RenderEntry(VisualElement container, UiElementChangeEntry entry, bool single)
         {
-            List<string> changes = optionValue && entry.AlternativeChanges != null ? entry.AlternativeChanges : entry.Changes;
-            UiElementPreviewNode after = optionValue && entry.AlternativeAfter != null ? entry.AlternativeAfter : entry.After;
+            List<string> changes = entry.Changes;
+            UiElementPreviewNode after = entry.After;
 
             if (changes.Count > 0)
             {
@@ -466,7 +443,6 @@ namespace UiFramework.Editor.Window.Popups
         private void Confirm()
         {
             lastConfirmed = true;
-            lastOptionValue = optionValue;
             Close();
         }
 

@@ -54,10 +54,7 @@ namespace UiFramework.Editor.Scenes
         private const int maxChildrenShown = 6;
 
         public UiElementPreviewNode Before { get; private set; }
-        public UiElementPreviewNode AfterWrap { get; private set; }
-
-        // Null when the "stretch instead" option does not apply.
-        public UiElementPreviewNode AfterStretch { get; private set; }
+        public UiElementPreviewNode After { get; private set; }
 
         // The report's scene must still be open.
         public static UiElementFixPreview Build(UiElementStructureReport report)
@@ -69,13 +66,7 @@ namespace UiFramework.Editor.Scenes
 
             UiElementFixPreview preview = new UiElementFixPreview();
             preview.Before = Capture(report.ElementRoot.transform, 0);
-            preview.AfterWrap = Simulate(preview.Before, report, false);
-
-            if (UiElementStructureFixer.OffersContentRootReset(report))
-            {
-                preview.AfterStretch = Simulate(preview.Before, report, true);
-            }
-
+            preview.After = Simulate(preview.Before, report);
             return preview;
         }
 
@@ -111,7 +102,7 @@ namespace UiFramework.Editor.Scenes
             return node;
         }
 
-        private static UiElementPreviewNode Simulate(UiElementPreviewNode before, UiElementStructureReport report, bool stretchInstead)
+        private static UiElementPreviewNode Simulate(UiElementPreviewNode before, UiElementStructureReport report)
         {
             UiElementPreviewNode root = before.Clone();
             bool canvasCreated = false;
@@ -155,21 +146,9 @@ namespace UiFramework.Editor.Scenes
             bool contentNotFilling = report.HasFixable(UiElementStructureIssueCode.ContentRootNotStretched) ||
                 (canvasCreated && canvasNode.Children.Count == 1 && !canvasNode.Children[0].FillsParent);
 
-            if (needsWrap)
+            if (needsWrap || contentNotFilling)
             {
                 Wrap(canvasNode);
-            }
-            else if (contentNotFilling)
-            {
-                if (stretchInstead)
-                {
-                    canvasNode.Children[0].FillsParent = true;
-                    canvasNode.Children[0].Note = "stretched to fill the screen";
-                }
-                else
-                {
-                    Wrap(canvasNode);
-                }
             }
 
             return root;

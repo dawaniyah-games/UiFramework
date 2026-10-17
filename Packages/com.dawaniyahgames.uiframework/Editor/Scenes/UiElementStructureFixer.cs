@@ -18,13 +18,10 @@ namespace UiFramework.Editor.Scenes
         private const string undoName = "Fix UI Element Structure";
         private const string uiLayerName = "UI";
 
-        public static UiElementStructureReport FixStructure(Scene scene, UiGlobalCanvasSettings settings)
-        {
-            return FixStructure(scene, settings, UiElementStructureFixMode.WrapContent);
-        }
-
         // Applies every fixable issue, then re-validates and returns the report of what remains.
-        public static UiElementStructureReport FixStructure(Scene scene, UiGlobalCanvasSettings settings, UiElementStructureFixMode mode)
+        // Content that doesn't fill the screen is always wrapped in a new full-screen Root, never resized, so the
+        // existing layout is kept and the whole screen animates together.
+        public static UiElementStructureReport FixStructure(Scene scene, UiGlobalCanvasSettings settings)
         {
             UiElementStructureReport report;
             UiElementSceneUtility.ValidateStructure(scene, out report);
@@ -57,17 +54,11 @@ namespace UiFramework.Editor.Scenes
                     }
 
                     bool wrap = report.HasFixable(UiElementStructureIssueCode.NoContentRoot) ||
-                        (mode == UiElementStructureFixMode.WrapContent && report.HasFixable(UiElementStructureIssueCode.ContentRootNotStretched));
+                        report.HasFixable(UiElementStructureIssueCode.ContentRootNotStretched);
 
                     if (wrap)
                     {
                         WrapCanvasChildren(canvas.transform);
-                    }
-                    else if (mode == UiElementStructureFixMode.ResetContentRoot &&
-                        report.HasFixable(UiElementStructureIssueCode.ContentRootNotStretched) &&
-                        report.ContentRoot != null)
-                    {
-                        StretchToParent(report.ContentRoot, true);
                     }
                 }
             }
@@ -82,7 +73,7 @@ namespace UiFramework.Editor.Scenes
         }
 
         // Human-readable list of what FixStructure will change, built from a report (works after the scene closed).
-        public static List<string> DescribePlannedChanges(UiElementStructureReport report, UiElementStructureFixMode mode)
+        public static List<string> DescribePlannedChanges(UiElementStructureReport report)
         {
             List<string> changes = new List<string>();
             if (report == null)
@@ -100,18 +91,9 @@ namespace UiFramework.Editor.Scenes
                     continue;
                 }
 
-                if (issue.Code == UiElementStructureIssueCode.ContentRootNotStretched)
+                if (issue.Code == UiElementStructureIssueCode.ContentRootNotStretched && wrapsCanvasChildren)
                 {
-                    if (wrapsCanvasChildren)
-                    {
-                        continue;
-                    }
-
-                    if (mode == UiElementStructureFixMode.ResetContentRoot)
-                    {
-                        changes.Add("Stretch '" + issue.ObjectName + "' to fill the screen (its size and position change)");
-                        continue;
-                    }
+                    continue;
                 }
 
                 changes.Add(issue.FixDescription);
@@ -177,13 +159,6 @@ namespace UiFramework.Editor.Scenes
             }
 
             return ContentRootObjectName;
-        }
-
-        public static bool OffersContentRootReset(UiElementStructureReport report)
-        {
-            return report != null &&
-                report.HasFixable(UiElementStructureIssueCode.ContentRootNotStretched) &&
-                !report.HasFixable(UiElementStructureIssueCode.NoContentRoot);
         }
 
         // Builds Canvas -> Root under an element root that has no children yet (new element scenes).
@@ -264,7 +239,7 @@ namespace UiFramework.Editor.Scenes
         {
             GameObject rootObject = CreateGameObject(name, canvasTransform, typeof(RectTransform));
             RectTransform rectTransform = rootObject.GetComponent<RectTransform>();
-            StretchToParent(rectTransform, false);
+            StretchToParent(rectTransform);
             return rectTransform;
         }
 
@@ -291,13 +266,9 @@ namespace UiFramework.Editor.Scenes
             return created;
         }
 
-        private static void StretchToParent(RectTransform rectTransform, bool recordUndo)
+        // Only used on objects this class just created (their creation is already registered with Undo).
+        private static void StretchToParent(RectTransform rectTransform)
         {
-            if (recordUndo)
-            {
-                Undo.RecordObject(rectTransform, undoName);
-            }
-
             rectTransform.anchorMin = Vector2.zero;
             rectTransform.anchorMax = Vector2.one;
             rectTransform.pivot = new Vector2(0.5f, 0.5f);
@@ -306,11 +277,6 @@ namespace UiFramework.Editor.Scenes
             rectTransform.anchoredPosition3D = Vector3.zero;
             rectTransform.localScale = Vector3.one;
             rectTransform.localRotation = Quaternion.identity;
-
-            if (recordUndo && PrefabUtility.IsPartOfPrefabInstance(rectTransform))
-            {
-                PrefabUtility.RecordPrefabInstancePropertyModifications(rectTransform);
-            }
         }
 
         // Equivalent to SetParent(newParent, worldPositionStays: false) with Undo. The new parents created here are

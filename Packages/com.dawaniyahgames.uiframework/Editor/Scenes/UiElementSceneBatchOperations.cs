@@ -188,8 +188,7 @@ namespace UiFramework.Editor.Scenes
                 dialogModel.Entries.Add(entry);
             }
 
-            bool unused;
-            if (!UiElementChangeDialog.Show(dialogModel, out unused))
+            if (!UiElementChangeDialog.Show(dialogModel))
             {
                 return "Cancelled.";
             }
@@ -269,7 +268,6 @@ namespace UiFramework.Editor.Scenes
             }
 
             List<UiElementSceneInfo> toFix = new List<UiElementSceneInfo>();
-            bool offersReset = false;
 
             for (int i = 0; i < infos.Count; i++)
             {
@@ -277,7 +275,6 @@ namespace UiFramework.Editor.Scenes
                 if (info.IsAvailable && info.Structure.HasFixableIssues)
                 {
                     toFix.Add(info);
-                    offersReset |= UiElementStructureFixer.OffersContentRootReset(info.Structure);
                 }
             }
 
@@ -288,7 +285,7 @@ namespace UiFramework.Editor.Scenes
                 return nothing;
             }
 
-            List<string> wrapPlan = BuildFixPlan(toFix, UiElementStructureFixMode.WrapContent);
+            List<string> wrapPlan = BuildFixPlan(toFix);
             Debug.Log("[UiFramework] Fix Structure plan:\n  " + string.Join("\n  ", wrapPlan.ToArray()));
 
             UiElementChangeDialogModel dialogModel = new UiElementChangeDialogModel
@@ -296,8 +293,7 @@ namespace UiFramework.Editor.Scenes
                 WindowTitle = "Fix All Structure",
                 Heading = "Fix the structure of " + DescribeScenes(toFix.Count) + "?",
                 Description = "Each scene gets one full-screen Root under its Canvas, so the whole screen animates. Expand a scene to see its changes.",
-                OptionLabel = offersReset ? "Stretch content that doesn't fill the screen instead of wrapping it (changes its size and position)" : null,
-                Footer = "Nothing is deleted. Scenes that aren't open are saved; open scenes stay unsaved so you can undo.",
+                Footer = "Nothing is deleted or resized. Scenes that aren't open are saved; open scenes stay unsaved so you can undo.",
                 ConfirmLabel = "Fix " + DescribeScenes(toFix.Count)
             };
 
@@ -305,7 +301,7 @@ namespace UiFramework.Editor.Scenes
             {
                 UiElementStructureReport structure = toFix[i].Structure;
                 List<string> manualWork = UiElementStructureFixer.SummarizeManualWork(structure);
-                List<string> changes = UiElementStructureFixer.DescribePlannedChanges(structure, UiElementStructureFixMode.WrapContent);
+                List<string> changes = UiElementStructureFixer.DescribePlannedChanges(structure);
 
                 UiElementChangeEntry entry = new UiElementChangeEntry
                 {
@@ -315,21 +311,13 @@ namespace UiFramework.Editor.Scenes
                 entry.Changes.AddRange(changes);
                 entry.ManualWork.AddRange(manualWork);
 
-                if (UiElementStructureFixer.OffersContentRootReset(structure))
-                {
-                    entry.AlternativeChanges = UiElementStructureFixer.DescribePlannedChanges(structure, UiElementStructureFixMode.ResetContentRoot);
-                }
-
                 dialogModel.Entries.Add(entry);
             }
 
-            bool stretchInstead;
-            if (!UiElementChangeDialog.Show(dialogModel, out stretchInstead))
+            if (!UiElementChangeDialog.Show(dialogModel))
             {
                 return "Cancelled.";
             }
-
-            UiElementStructureFixMode mode = stretchInstead ? UiElementStructureFixMode.ResetContentRoot : UiElementStructureFixMode.WrapContent;
 
             int fixedCount = 0;
             List<string> leftOpen = new List<string>();
@@ -345,7 +333,7 @@ namespace UiFramework.Editor.Scenes
                     bool isOpen = UiElementSceneUtility.IsSceneOpen(info.ScenePath);
                     bool done = UiElementSceneUtility.WithScene(info.ScenePath, true, scene =>
                     {
-                        afterReports[info.ScenePath] = UiElementStructureFixer.FixStructure(scene, settings, mode);
+                        afterReports[info.ScenePath] = UiElementStructureFixer.FixStructure(scene, settings);
                     });
 
                     if (done)
@@ -376,7 +364,7 @@ namespace UiFramework.Editor.Scenes
                 remainingInfos.Add(info);
             }
 
-            string summary = "Fix Structure: fixed " + fixedCount + " scene(s) (" + (mode == UiElementStructureFixMode.WrapContent ? "keep layout" : "stretch existing") + ").";
+            string summary = "Fix Structure: fixed " + fixedCount + " scene(s).";
             string remaining = DescribeRemaining(remainingInfos);
 
             if (remaining.Length > 0)
@@ -391,13 +379,13 @@ namespace UiFramework.Editor.Scenes
             return summary;
         }
 
-        public static List<string> BuildFixPlan(IList<UiElementSceneInfo> infos, UiElementStructureFixMode mode)
+        public static List<string> BuildFixPlan(IList<UiElementSceneInfo> infos)
         {
             List<string> plan = new List<string>();
 
             for (int i = 0; i < infos.Count; i++)
             {
-                List<string> changes = UiElementStructureFixer.DescribePlannedChanges(infos[i].Structure, mode);
+                List<string> changes = UiElementStructureFixer.DescribePlannedChanges(infos[i].Structure);
                 for (int c = 0; c < changes.Count; c++)
                 {
                     plan.Add(infos[i].SceneName + ": " + changes[c]);

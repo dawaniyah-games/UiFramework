@@ -328,13 +328,13 @@ namespace UiFramework.Editor.Tests
         }
 
         [Test]
-        public void Fix_WrapMode_KeepsNonStretchedContentRootLayout()
+        public void Fix_NonStretchedContentRoot_IsWrappedAndKeepsItsLayout()
         {
             Canvas canvas = CreateCanvas(CreateElementRoot("TopBarUiElementRoot", true));
             RectTransform bar = CreateTopStrip("Bar_bg", canvas.transform);
             Vector2 size = bar.sizeDelta;
 
-            UiElementStructureReport remaining = UiElementStructureFixer.FixStructure(scene, settings, UiElementStructureFixMode.WrapContent);
+            UiElementStructureReport remaining = UiElementStructureFixer.FixStructure(scene, settings);
 
             AssertCodes(remaining);
             Assert.AreSame(bar, canvas.transform.GetChild(0).GetChild(0));
@@ -343,17 +343,19 @@ namespace UiFramework.Editor.Tests
         }
 
         [Test]
-        public void Fix_ResetMode_StretchesExistingContentRoot()
+        public void Fix_FixedSizeBox_IsWrappedNeverResized()
         {
             Canvas canvas = CreateCanvas(CreateElementRoot("GameSettingsUiElementRoot", true));
-            RectTransform root = CreateRect("Root", canvas.transform);
-            root.sizeDelta = new Vector2(1080.0f, 1920.0f);
+            RectTransform box = CreateRect("Root", canvas.transform);
+            box.sizeDelta = new Vector2(1080.0f, 1920.0f);
 
-            UiElementStructureReport remaining = UiElementStructureFixer.FixStructure(scene, settings, UiElementStructureFixMode.ResetContentRoot);
+            UiElementStructureReport remaining = UiElementStructureFixer.FixStructure(scene, settings);
 
             AssertCodes(remaining);
-            Assert.AreEqual(1, canvas.transform.childCount);
-            Assert.AreSame(root, canvas.transform.GetChild(0));
+            Assert.AreEqual("ContentRoot", canvas.transform.GetChild(0).name, "A new wrapper is added (named ContentRoot because 'Root' is taken).");
+            Assert.AreSame(box, canvas.transform.GetChild(0).GetChild(0));
+            Assert.AreEqual(new Vector2(1080.0f, 1920.0f), box.sizeDelta);
+            Assert.AreEqual(new Vector2(0.5f, 0.5f), box.anchorMin);
         }
 
         [Test]
@@ -512,21 +514,19 @@ namespace UiFramework.Editor.Tests
         [TestCase("PlayWithFriends")]
         [TestCase("SeveralChildren")]
         [TestCase("ChildNamedRoot")]
-        [TestCase("TopBarWrap")]
-        [TestCase("TopBarStretch")]
+        [TestCase("TopBar")]
         [TestCase("NoChildren")]
         [TestCase("UiChildrenWithoutCanvas")]
         [TestCase("MisplacedCanvas")]
         public void Preview_AfterTree_MatchesActualFixResult(string scenario)
         {
             GameObject elementRoot = BuildPreviewScenario(scenario);
-            bool stretch = scenario == "TopBarStretch";
 
             UiElementStructureReport report = Validate();
             UiElementFixPreview preview = UiElementFixPreview.Build(report);
-            UiElementPreviewNode expected = stretch ? preview.AfterStretch : preview.AfterWrap;
+            UiElementPreviewNode expected = preview.After;
 
-            UiElementStructureFixer.FixStructure(scene, settings, stretch ? UiElementStructureFixMode.ResetContentRoot : UiElementStructureFixMode.WrapContent);
+            UiElementStructureFixer.FixStructure(scene, settings);
 
             Assert.IsNotNull(expected, "Preview has no After tree.");
             Assert.AreEqual(DescribeTree(elementRoot.transform, 0), DescribePreview(expected, 0));
@@ -540,12 +540,11 @@ namespace UiFramework.Editor.Tests
             CreateStretched("Content", canvas.transform);
 
             UiElementFixPreview preview = UiElementFixPreview.Build(Validate());
-            UiElementPreviewNode wrapper = preview.AfterWrap.Children[0].Children[0];
+            UiElementPreviewNode wrapper = preview.After.Children[0].Children[0];
 
             Assert.AreEqual("Root", wrapper.Name);
             Assert.IsTrue(wrapper.IsNew);
-            Assert.IsFalse(preview.AfterWrap.Children[0].IsNew, "The existing Canvas is not new.");
-            Assert.IsNull(preview.AfterStretch, "Stretch option only applies to a single non-filling content root.");
+            Assert.IsFalse(preview.After.Children[0].IsNew, "The existing Canvas is not new.");
         }
 
         [Test]
@@ -593,8 +592,7 @@ namespace UiFramework.Editor.Tests
                     CreateTopStrip("TopPanel", canvas.transform);
                     break;
                 }
-                case "TopBarWrap":
-                case "TopBarStretch":
+                case "TopBar":
                 {
                     Canvas canvas = CreateCanvas(elementRoot);
                     RectTransform bar = CreateTopStrip("Bar_bg", canvas.transform);
