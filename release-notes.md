@@ -18,7 +18,16 @@ A consistent layout for every UI element scene with one-click validation and fix
 - Fixed: `Scale` ended at 0.9× and shrank further every show/hide cycle; `ClickPop` grew buttons when tapped repeatedly.
 - Entrances ease out, exits are shorter and ease in; no more jump on the first frame after a scene loads; overlapping animations no longer fight.
 - `Scale` is now a subtle zoom with a fade; `Shake` is a smooth wiggle instead of random jitter.
+- Every show and hide fades: slides, pops and shake fade in at the start of a show and out at the end of a hide, so nothing pops in or out.
 - Slides move in their named direction on show **and** hide (Slide Right enters from the left and leaves on the right).
+
+**Per-call animation override**
+- Play a different animation for one call without changing the configured presets:
+
+```csharp
+await UiManager.ShowState<StoreUiState>(context, transition: UiTransition.ShowWith(TweenPresets.ScaleKey));
+await UiManager.HideUI(UiTransition.HideWith(TweenPresets.SlideRightKey));
+```
 
 ### Upgrade notes
 - No breaking API changes.
