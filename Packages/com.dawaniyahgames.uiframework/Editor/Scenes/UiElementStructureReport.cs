@@ -35,6 +35,11 @@ namespace UiFramework.Editor.Scenes
     public sealed class UiElementStructureIssue
     {
         public UiElementStructureIssueCode Code { get; }
+
+        // One short plain-language line for the editor UI, e.g. "'Bar_bg' doesn't fill the screen".
+        public string Summary { get; }
+
+        // Full explanation for the Console and validation reports.
         public string Message { get; }
         public bool IsFixable { get; }
         public bool IsWarning { get; }
@@ -42,12 +47,13 @@ namespace UiFramework.Editor.Scenes
         // Name of the scene object the issue is about (used to describe fixes after the scene is closed).
         public string ObjectName { get; }
 
-        // What FixStructure will do for this issue in WrapContent mode. Empty when not fixable.
+        // Short description of what FixStructure does for this issue in WrapContent mode. Empty when not fixable.
         public string FixDescription { get; }
 
-        public UiElementStructureIssue(UiElementStructureIssueCode code, string message, bool isFixable, bool isWarning, string objectName, string fixDescription)
+        public UiElementStructureIssue(UiElementStructureIssueCode code, string summary, string message, bool isFixable, bool isWarning, string objectName, string fixDescription)
         {
             Code = code;
+            Summary = string.IsNullOrEmpty(summary) ? message : summary;
             Message = message;
             IsFixable = isFixable;
             IsWarning = isWarning;
@@ -172,6 +178,19 @@ namespace UiFramework.Editor.Scenes
             return string.Join(", ", codes.ToArray());
         }
 
+        // Short bullet list for tooltips and dialogs.
+        public string GetSummaryText()
+        {
+            List<string> lines = new List<string>(issues.Count);
+
+            for (int i = 0; i < issues.Count; i++)
+            {
+                lines.Add("• " + issues[i].Summary);
+            }
+
+            return string.Join("\n", lines.ToArray());
+        }
+
         public string GetIssuesText()
         {
             List<string> lines = new List<string>(issues.Count);
@@ -195,6 +214,26 @@ namespace UiFramework.Editor.Scenes
         }
     }
 
+    // One Canvas/CanvasScaler value that differs from the global canvas settings, e.g. ("ScreenMatchMode", "MatchWidthOrHeight", "Expand").
+    public sealed class UiCanvasSettingDifference
+    {
+        public string Setting { get; }
+        public string Current { get; }
+        public string Target { get; }
+
+        public UiCanvasSettingDifference(string setting, string current, string target)
+        {
+            Setting = setting;
+            Current = current;
+            Target = target;
+        }
+
+        public override string ToString()
+        {
+            return Setting + ": " + Current + " → " + Target;
+        }
+    }
+
     public sealed class UiElementSceneInfo
     {
         public string ScenePath { get; }
@@ -208,6 +247,7 @@ namespace UiFramework.Editor.Scenes
         public UiElementStructureReport Structure { get; internal set; }
         public UiCanvasStatus CanvasStatus { get; internal set; }
         public string CanvasDiff { get; internal set; }
+        public IReadOnlyList<UiCanvasSettingDifference> CanvasDifferences { get; internal set; }
 
         public UiElementSceneInfo(string scenePath)
         {
@@ -216,6 +256,7 @@ namespace UiFramework.Editor.Scenes
             Structure = new UiElementStructureReport(SceneName);
             CanvasStatus = UiCanvasStatus.NoCanvas;
             CanvasDiff = string.Empty;
+            CanvasDifferences = new List<UiCanvasSettingDifference>().AsReadOnly();
         }
     }
 }

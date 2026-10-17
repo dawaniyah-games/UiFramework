@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Elements tab toolbar: Refresh, Validate All, Fix All Structure…, Apply Canvas To All…, an "Only show scenes with issues" filter, and a status summary
   - Elements tab rows: clickable Structure (⚠ Fix / ✖ details) and Canvas (⚠ Reset) status cells, and a ⋯ menu (Open Scene, Select Scene Asset, Fix Structure…, Reset Canvas…, Exclude From Apply To All, Log Validation Details, Remove From Addressables)
   - Click a scene name to select it, double-click to open it; open scenes are marked "(open)"
+  - Clear confirmation popup for every fix, reset and apply: short "What will change" bullets, a Now / After hierarchy preview (new objects highlighted), a Setting · Now → After table for canvas values, collapsed "Needs manual work", one optional "stretch instead" checkbox, and a one-line save/undo note
+  - Short plain-language issue summaries in the popup and tooltips (full details still in the Console)
   - "Create New UI Element" grouped in a foldout below the list
   - Fixes only create and reparent objects (Undo-recorded, never delete). Non-stretched content roots are wrapped by default so the layout is unchanged; resetting them instead is offered as an option
   - Global canvas settings are applied at authoring time only; sorting order/layer, override sorting, world camera, plane distance and shader channels are never touched

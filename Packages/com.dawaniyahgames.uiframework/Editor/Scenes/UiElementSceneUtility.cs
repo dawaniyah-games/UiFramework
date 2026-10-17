@@ -142,8 +142,10 @@ namespace UiFramework.Editor.Scenes
                 info.Structure = report;
 
                 string diff;
-                info.CanvasStatus = GetCanvasStatus(report, settings, scenePath, out diff);
+                List<UiCanvasSettingDifference> differences;
+                info.CanvasStatus = GetCanvasStatus(report, settings, scenePath, out diff, out differences);
                 info.CanvasDiff = diff;
+                info.CanvasDifferences = differences.AsReadOnly();
             });
 
             info.IsAvailable = opened;
@@ -251,78 +253,104 @@ namespace UiFramework.Editor.Scenes
 
         public static bool CanvasSettingsMatch(Canvas canvas, CanvasScaler scaler, UiGlobalCanvasSettings settings, out string diff)
         {
-            List<string> diffs = new List<string>();
+            List<UiCanvasSettingDifference> differences = GetCanvasDifferences(canvas, scaler, settings);
+            diff = JoinDifferences(differences);
+            return differences.Count == 0;
+        }
+
+        public static List<UiCanvasSettingDifference> GetCanvasDifferences(Canvas canvas, CanvasScaler scaler, UiGlobalCanvasSettings settings)
+        {
+            List<UiCanvasSettingDifference> differences = new List<UiCanvasSettingDifference>();
 
             if (settings == null)
             {
-                diff = "No UiGlobalCanvasSettings";
-                return false;
+                differences.Add(new UiCanvasSettingDifference("GlobalCanvasSettings", "missing", "assign in the General tab"));
+                return differences;
             }
 
             if (canvas == null)
             {
-                diff = "No Canvas";
-                return false;
+                differences.Add(new UiCanvasSettingDifference("Canvas", "missing", "use Fix Structure"));
+                return differences;
             }
 
             if (canvas.renderMode != settings.RenderMode)
             {
-                diffs.Add("RenderMode: " + canvas.renderMode + " → " + settings.RenderMode);
+                differences.Add(new UiCanvasSettingDifference("RenderMode", canvas.renderMode.ToString(), settings.RenderMode.ToString()));
             }
 
             if (canvas.pixelPerfect != settings.PixelPerfect)
             {
-                diffs.Add("PixelPerfect: " + canvas.pixelPerfect + " → " + settings.PixelPerfect);
+                differences.Add(new UiCanvasSettingDifference("PixelPerfect", canvas.pixelPerfect.ToString(), settings.PixelPerfect.ToString()));
             }
 
             if (scaler == null)
             {
-                diffs.Add("CanvasScaler: missing");
+                differences.Add(new UiCanvasSettingDifference("CanvasScaler", "missing", "use Fix Structure"));
+                return differences;
             }
-            else
+
+            if (scaler.uiScaleMode != settings.UiScaleMode)
             {
-                if (scaler.uiScaleMode != settings.UiScaleMode)
-                {
-                    diffs.Add("UiScaleMode: " + scaler.uiScaleMode + " → " + settings.UiScaleMode);
-                }
-
-                if (!Approximately(scaler.referenceResolution, settings.ReferenceResolution, positionTolerance))
-                {
-                    diffs.Add("ReferenceResolution: " + FormatResolution(scaler.referenceResolution) + " → " + FormatResolution(settings.ReferenceResolution));
-                }
-
-                if (scaler.screenMatchMode != settings.ScreenMatchMode)
-                {
-                    diffs.Add("ScreenMatchMode: " + scaler.screenMatchMode + " → " + settings.ScreenMatchMode);
-                }
-
-                if (settings.ScreenMatchMode == CanvasScaler.ScreenMatchMode.MatchWidthOrHeight &&
-                    Mathf.Abs(scaler.matchWidthOrHeight - settings.MatchWidthOrHeight) > unitTolerance)
-                {
-                    diffs.Add("MatchWidthOrHeight: " + FormatNumber(scaler.matchWidthOrHeight) + " → " + FormatNumber(settings.MatchWidthOrHeight));
-                }
-
-                if (Mathf.Abs(scaler.referencePixelsPerUnit - settings.ReferencePixelsPerUnit) > unitTolerance)
-                {
-                    diffs.Add("ReferencePixelsPerUnit: " + FormatNumber(scaler.referencePixelsPerUnit) + " → " + FormatNumber(settings.ReferencePixelsPerUnit));
-                }
+                differences.Add(new UiCanvasSettingDifference("UiScaleMode", scaler.uiScaleMode.ToString(), settings.UiScaleMode.ToString()));
             }
 
-            diff = string.Join("; ", diffs.ToArray());
-            return diffs.Count == 0;
+            if (!Approximately(scaler.referenceResolution, settings.ReferenceResolution, positionTolerance))
+            {
+                differences.Add(new UiCanvasSettingDifference("ReferenceResolution", FormatResolution(scaler.referenceResolution), FormatResolution(settings.ReferenceResolution)));
+            }
+
+            if (scaler.screenMatchMode != settings.ScreenMatchMode)
+            {
+                differences.Add(new UiCanvasSettingDifference("ScreenMatchMode", scaler.screenMatchMode.ToString(), settings.ScreenMatchMode.ToString()));
+            }
+
+            if (settings.ScreenMatchMode == CanvasScaler.ScreenMatchMode.MatchWidthOrHeight &&
+                Mathf.Abs(scaler.matchWidthOrHeight - settings.MatchWidthOrHeight) > unitTolerance)
+            {
+                differences.Add(new UiCanvasSettingDifference("MatchWidthOrHeight", FormatNumber(scaler.matchWidthOrHeight), FormatNumber(settings.MatchWidthOrHeight)));
+            }
+
+            if (Mathf.Abs(scaler.referencePixelsPerUnit - settings.ReferencePixelsPerUnit) > unitTolerance)
+            {
+                differences.Add(new UiCanvasSettingDifference("ReferencePixelsPerUnit", FormatNumber(scaler.referencePixelsPerUnit), FormatNumber(settings.ReferencePixelsPerUnit)));
+            }
+
+            return differences;
+        }
+
+        private static string JoinDifferences(List<UiCanvasSettingDifference> differences)
+        {
+            List<string> parts = new List<string>(differences.Count);
+
+            for (int i = 0; i < differences.Count; i++)
+            {
+                parts.Add(differences[i].ToString());
+            }
+
+            return string.Join("; ", parts.ToArray());
         }
 
         // Uses the Canvas found by ValidateStructure, so the scene must still be open.
         public static UiCanvasStatus GetCanvasStatus(UiElementStructureReport report, UiGlobalCanvasSettings settings, string scenePath, out string diff)
         {
+            List<UiCanvasSettingDifference> differences;
+            return GetCanvasStatus(report, settings, scenePath, out diff, out differences);
+        }
+
+        public static UiCanvasStatus GetCanvasStatus(UiElementStructureReport report, UiGlobalCanvasSettings settings, string scenePath, out string diff, out List<UiCanvasSettingDifference> differences)
+        {
             diff = string.Empty;
+            differences = new List<UiCanvasSettingDifference>();
 
             if (report == null || report.Canvas == null)
             {
                 return UiCanvasStatus.NoCanvas;
             }
 
-            bool matches = CanvasSettingsMatch(report.Canvas, report.Canvas.GetComponent<CanvasScaler>(), settings, out diff);
+            differences = GetCanvasDifferences(report.Canvas, report.Canvas.GetComponent<CanvasScaler>(), settings);
+            diff = JoinDifferences(differences);
+            bool matches = differences.Count == 0;
 
             if (settings != null && settings.IsExcluded(scenePath))
             {
@@ -340,7 +368,7 @@ namespace UiFramework.Editor.Scenes
 
             if (!scene.IsValid() || !scene.isLoaded)
             {
-                report.Add(new UiElementStructureIssue(UiElementStructureIssueCode.NoUiElement, "Scene is not loaded, so it could not be validated.", false, false, string.Empty, null));
+                report.Add(new UiElementStructureIssue(UiElementStructureIssueCode.NoUiElement, "Scene isn't loaded", "Scene is not loaded, so it could not be validated.", false, false, string.Empty, null));
                 return false;
             }
 
@@ -350,7 +378,9 @@ namespace UiFramework.Editor.Scenes
 
             if (!hasUiElement)
             {
-                report.Add(new UiElementStructureIssue(UiElementStructureIssueCode.NoUiElement, BuildNoUiElementMessage(roots, elementRoot), false, false, elementRoot != null ? elementRoot.name : string.Empty, null));
+                string noUiElementSummary;
+                string noUiElementMessage = BuildNoUiElementMessage(roots, elementRoot, out noUiElementSummary);
+                report.Add(new UiElementStructureIssue(UiElementStructureIssueCode.NoUiElement, noUiElementSummary, noUiElementMessage, false, false, elementRoot != null ? elementRoot.name : string.Empty, null));
             }
 
             if (elementRoot == null)
@@ -371,6 +401,7 @@ namespace UiFramework.Editor.Scenes
                 string state = other.activeSelf ? "active" : "inactive";
                 report.Add(new UiElementStructureIssue(
                     UiElementStructureIssueCode.ExtraRootObjects,
+                    "Extra object '" + other.name + "' at the scene root (" + state + "): move it inside the element or delete it",
                     "Extra root object '" + other.name + "' (" + state + "). Only '" + elementRoot.name + "' may be a root object; move it under the element or delete it manually.",
                     false,
                     false,
@@ -494,13 +525,14 @@ namespace UiFramework.Editor.Scenes
             return roots[0];
         }
 
-        private static string BuildNoUiElementMessage(GameObject[] roots, GameObject elementRoot)
+        private static string BuildNoUiElementMessage(GameObject[] roots, GameObject elementRoot, out string summary)
         {
             for (int i = 0; i < roots.Length; i++)
             {
                 UiElement nested = roots[i].GetComponentInChildren<UiElement>(true);
                 if (nested != null)
                 {
+                    summary = "The UiElement script is on '" + nested.name + "': move it to the root object";
                     return "UiElement '" + nested.GetType().Name + "' is on '" + GetPath(nested.transform) + "', but it must be on the scene's root object.";
                 }
             }
@@ -509,15 +541,18 @@ namespace UiFramework.Editor.Scenes
             {
                 if (HasMissingScript(roots[i]))
                 {
+                    summary = "'" + roots[i].name + "' has a missing script: re-assign the UiElement script";
                     return "Root object '" + roots[i].name + "' has a missing script. The UiElement class may have been renamed, deleted or failed to compile; fix or re-assign it.";
                 }
             }
 
             if (elementRoot == null)
             {
+                summary = "The scene is empty";
                 return "The scene has no root objects.";
             }
 
+            summary = "No UiElement script: add it to '" + elementRoot.name + "'";
             return "No root GameObject has a UiElement component. Add your UiElement subclass to '" + elementRoot.name + "'.";
         }
 
@@ -547,11 +582,12 @@ namespace UiFramework.Editor.Scenes
             {
                 report.Add(new UiElementStructureIssue(
                     UiElementStructureIssueCode.NoCanvas,
+                    "No Canvas yet",
                     "'" + rootName + "' has no children. Expected a Canvas as its first child.",
                     !rootIsInPrefab,
                     false,
                     rootName,
-                    "Create 'Canvas' (with the global canvas settings) and an empty stretched 'Root' under '" + rootName + "'."));
+                    "Add a Canvas with an empty full-screen Root"));
                 return null;
             }
 
@@ -559,6 +595,7 @@ namespace UiFramework.Editor.Scenes
             {
                 report.Add(new UiElementStructureIssue(
                     UiElementStructureIssueCode.NoCanvas,
+                    "'" + rootName + "' has its own Canvas: move the Canvas to a child object",
                     "'" + rootName + "' has a Canvas itself. The element root must be a plain Transform with the Canvas as its first child.",
                     false,
                     false,
@@ -581,11 +618,12 @@ namespace UiFramework.Editor.Scenes
                 {
                     report.Add(new UiElementStructureIssue(
                         UiElementStructureIssueCode.NoCanvas,
+                        "The Canvas isn't the first child",
                         "Canvas '" + candidate.name + "' is child " + i + " of '" + rootName + "'; it must be the first child ('" + first.name + "' is first).",
                         !rootIsInPrefab,
                         false,
                         candidate.name,
-                        "Move Canvas '" + candidate.name + "' to be the first child of '" + rootName + "'."));
+                        "Move '" + candidate.name + "' to the top"));
                     return candidate;
                 }
             }
@@ -606,16 +644,18 @@ namespace UiFramework.Editor.Scenes
                 int count = elementRoot.childCount;
                 report.Add(new UiElementStructureIssue(
                     UiElementStructureIssueCode.NoCanvas,
+                    "UI without a Canvas",
                     "'" + rootName + "' has " + count + " UI child(ren) (" + ListChildNames(elementRoot) + ") but no Canvas.",
                     !rootIsInPrefab,
                     false,
                     rootName,
-                    "Create 'Canvas' (with the global canvas settings) under '" + rootName + "' and move its " + count + " UI child(ren) into it, keeping their order; they are wrapped in a stretched 'Root' if there is more than one."));
+                    "Add a Canvas and move " + DescribeCount(count) + " into it"));
                 return null;
             }
 
             report.Add(new UiElementStructureIssue(
                 UiElementStructureIssueCode.NoCanvas,
+                "'" + first.name + "' is first, but it isn't a Canvas: rearrange the objects by hand",
                 "First child '" + first.name + "' of '" + rootName + "' is not a Canvas, and '" + rootName + "' has non-UI children, so it cannot be wrapped automatically.",
                 false,
                 false,
@@ -635,6 +675,7 @@ namespace UiFramework.Editor.Scenes
                 string prefabName = prefabRoot != null ? prefabRoot.name : canvasName;
                 report.Add(new UiElementStructureIssue(
                     UiElementStructureIssueCode.CanvasInsidePrefab,
+                    "The Canvas is part of prefab '" + prefabName + "': fix it inside the prefab",
                     "Canvas '" + canvasName + "' is part of prefab instance '" + prefabName + "', so its children cannot be restructured in the scene. Fix the hierarchy in the prefab, or unpack it.",
                     false,
                     false,
@@ -647,13 +688,15 @@ namespace UiFramework.Editor.Scenes
             if (missingScaler || missingRaycaster)
             {
                 string missing = missingScaler && missingRaycaster ? "CanvasScaler and GraphicRaycaster" : (missingScaler ? "CanvasScaler" : "GraphicRaycaster");
+                string missingFriendly = missingScaler && missingRaycaster ? "Canvas Scaler and Graphic Raycaster" : (missingScaler ? "Canvas Scaler" : "Graphic Raycaster");
                 report.Add(new UiElementStructureIssue(
                     UiElementStructureIssueCode.CanvasMissingComponents,
+                    "The Canvas has no " + missingFriendly,
                     "Canvas '" + canvasName + "' is missing " + missing + ".",
                     true,
                     false,
                     canvasName,
-                    "Add " + missing + " to '" + canvasName + "'" + (missingScaler ? " (the CanvasScaler gets the global canvas settings)." : ".")));
+                    "Add " + missingFriendly + " to the Canvas"));
             }
 
             Transform canvasTransform = canvas.transform;
@@ -663,20 +706,24 @@ namespace UiFramework.Editor.Scenes
             {
                 report.Add(new UiElementStructureIssue(
                     UiElementStructureIssueCode.NoContentRoot,
+                    "The Canvas is empty",
                     "Canvas '" + canvasName + "' has no children. Expected one stretched content root.",
                     true,
                     false,
                     canvasName,
-                    "Create an empty stretched 'Root' under '" + canvasName + "'."));
+                    "Add an empty full-screen Root"));
                 return;
             }
 
-            string wrapDescription = "Create a stretched 'Root' under '" + canvasName + "' and move its " + childCount + " child(ren) into it, keeping their order (" + ListChildNames(canvasTransform) + ").";
+            string wrapDescription = childCount == 1
+                ? "Put '" + canvasTransform.GetChild(0).name + "' inside a new full-screen Root"
+                : "Put the " + childCount + " objects inside a new full-screen Root (same order)";
 
             if (childCount > 1)
             {
                 report.Add(new UiElementStructureIssue(
                     UiElementStructureIssueCode.NoContentRoot,
+                    childCount + " objects sit directly under the Canvas, so only '" + canvasTransform.GetChild(0).name + "' animates",
                     "Canvas '" + canvasName + "' has " + childCount + " direct children (" + ListChildNames(canvasTransform) + "); only the first one would animate.",
                     !canvasIsInPrefab,
                     false,
@@ -688,23 +735,27 @@ namespace UiFramework.Editor.Scenes
             Transform only = canvasTransform.GetChild(0);
             RectTransform contentRoot = only as RectTransform;
             string problem = null;
+            string problemSummary = null;
 
             if (PrefabUtility.IsAnyPrefabInstanceRoot(only.gameObject) && !canvasIsInPrefab)
             {
+                problemSummary = "'" + only.name + "' is a prefab, so it can't be the Root";
                 problem = "The only child of Canvas '" + canvasName + "', '" + only.name + "', is a prefab instance, so it cannot be the content root.";
             }
             else if (contentRoot == null)
             {
+                problemSummary = "'" + only.name + "' isn't a UI object";
                 problem = "The only child of Canvas '" + canvasName + "', '" + only.name + "', has no RectTransform.";
             }
             else if (only.GetComponent<Canvas>() != null)
             {
+                problemSummary = "'" + only.name + "' has its own Canvas, so it won't animate";
                 problem = "The only child of Canvas '" + canvasName + "', '" + only.name + "', has its own Canvas, so the animation would skip it and animate its first child instead.";
             }
 
             if (problem != null)
             {
-                report.Add(new UiElementStructureIssue(UiElementStructureIssueCode.NoContentRoot, problem, !canvasIsInPrefab, false, only.name, wrapDescription));
+                report.Add(new UiElementStructureIssue(UiElementStructureIssueCode.NoContentRoot, problemSummary, problem, !canvasIsInPrefab, false, only.name, wrapDescription));
                 return;
             }
 
@@ -715,17 +766,19 @@ namespace UiFramework.Editor.Scenes
             {
                 report.Add(new UiElementStructureIssue(
                     UiElementStructureIssueCode.ContentRootNotStretched,
+                    "'" + only.name + "' doesn't fill the screen, so slides and scales look wrong",
                     "Content root '" + only.name + "' is not stretched to the canvas (" + stretchDifference + ").",
                     !canvasIsInPrefab,
                     false,
                     only.name,
-                    "Wrap '" + only.name + "' in a new stretched 'Root'. '" + only.name + "' keeps its own anchors and size, so the layout does not change."));
+                    "Put '" + only.name + "' inside a new full-screen Root ('" + only.name + "' keeps its size and position)"));
             }
 
             if (!only.gameObject.activeSelf)
             {
                 report.Add(new UiElementStructureIssue(
                     UiElementStructureIssueCode.ContentRootInactive,
+                    "'" + only.name + "' is turned off, so nothing shows until it's turned on",
                     "Content root '" + only.name + "' is inactive; the element is invisible until something activates it.",
                     false,
                     true,
@@ -740,6 +793,11 @@ namespace UiFramework.Editor.Scenes
             {
                 PrefabUtility.RecordPrefabInstancePropertyModifications(target);
             }
+        }
+
+        private static string DescribeCount(int count)
+        {
+            return count == 1 ? "it" : "the " + count + " objects";
         }
 
         private static string ListChildNames(Transform parent)

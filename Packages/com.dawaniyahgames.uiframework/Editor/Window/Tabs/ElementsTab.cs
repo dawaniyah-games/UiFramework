@@ -750,7 +750,7 @@ namespace UiFramework.Editor.Window.Tabs
             {
                 return CreateStatusCell(
                     structure.HasUnfixableIssues ? "✖ Fix" : "⚠ Fix",
-                    structure.GetIssuesText() + "\n\nClick to fix what can be fixed automatically (you'll see the changes first).",
+                    structure.GetSummaryText() + "\n\nClick to fix what can be fixed automatically (you'll see the changes first).",
                     structure.HasUnfixableIssues ? errorColor : warningColor,
                     () =>
                     {
@@ -760,7 +760,7 @@ namespace UiFramework.Editor.Window.Tabs
 
             return CreateStatusCell(
                 structure.HasUnfixableIssues ? "✖" : "⚠",
-                structure.GetIssuesText() + "\n\nClick for details.",
+                structure.GetSummaryText() + "\n\nClick for details.",
                 structure.HasUnfixableIssues ? errorColor : warningColor,
                 () =>
                 {
@@ -957,17 +957,69 @@ namespace UiFramework.Editor.Window.Tabs
 
         private void ShowManualIssues(string sceneAssetPath, UiElementSceneInfo info)
         {
-            List<string> lines = UiElementStructureFixer.DescribeUnfixableIssues(info.Structure);
-            bool open = EditorUtility.DisplayDialog(
-                "Structure: " + info.SceneName,
-                UiElementSceneDialogs.BuildMessage("These need to be fixed by hand in the scene:", lines),
-                "Open Scene",
-                "Close");
+            UiElementChangeEntry entry = new UiElementChangeEntry { Title = info.SceneName };
+            entry.ManualWork.AddRange(UiElementStructureFixer.SummarizeManualWork(info.Structure));
 
-            if (open)
+            UiElementChangeDialogModel dialogModel = new UiElementChangeDialogModel
+            {
+                WindowTitle = "Structure",
+                Heading = info.SceneName + " needs a manual fix",
+                Description = "These can't be fixed automatically. Open the scene and change them by hand.",
+                ConfirmLabel = "Open Scene",
+                CancelLabel = "Close"
+            };
+            dialogModel.Entries.Add(entry);
+
+            bool unused;
+            if (UiElementChangeDialog.Show(dialogModel, out unused))
             {
                 OpenScene(sceneAssetPath);
             }
+        }
+
+        // Builds the single-scene Fix Structure dialog. The report's scene must still be open (for the preview).
+        private static UiElementChangeDialogModel BuildFixDialog(string sceneName, UiElementStructureReport report, bool willBeSaved, bool hideMissingUiElement)
+        {
+            UiElementChangeEntry entry = new UiElementChangeEntry { Title = sceneName };
+            entry.Changes.AddRange(UiElementStructureFixer.DescribePlannedChanges(report, UiElementStructureFixMode.WrapContent));
+
+            bool offersStretch = UiElementStructureFixer.OffersContentRootReset(report);
+            if (offersStretch)
+            {
+                entry.AlternativeChanges = UiElementStructureFixer.DescribePlannedChanges(report, UiElementStructureFixMode.ResetContentRoot);
+            }
+
+            UiElementFixPreview preview = UiElementFixPreview.Build(report);
+            if (preview != null)
+            {
+                entry.Before = preview.Before;
+                entry.After = preview.AfterWrap;
+                entry.AlternativeAfter = preview.AfterStretch;
+            }
+
+            for (int i = 0; i < report.Issues.Count; i++)
+            {
+                UiElementStructureIssue issue = report.Issues[i];
+                bool hidden = hideMissingUiElement && issue.Code == UiElementStructureIssueCode.NoUiElement;
+                if (!issue.IsFixable && !hidden)
+                {
+                    entry.ManualWork.Add(issue.Summary);
+                }
+            }
+
+            string stretchTarget = offersStretch ? report.Find(UiElementStructureIssueCode.ContentRootNotStretched).ObjectName : null;
+
+            UiElementChangeDialogModel dialogModel = new UiElementChangeDialogModel
+            {
+                WindowTitle = "Fix Structure",
+                Heading = "Fix the structure of " + sceneName + "?",
+                Description = "For the show/hide animation to move the whole screen, everything has to sit inside one full-screen Root under the Canvas.",
+                OptionLabel = offersStretch ? "Stretch '" + stretchTarget + "' to fill the screen instead (changes its size and position)" : null,
+                Footer = willBeSaved ? "Nothing is deleted. The scene will be saved." : "Nothing is deleted. The scene is open, so you can undo with Ctrl+Z. Save the scene to keep the changes.",
+                ConfirmLabel = "Fix"
+            };
+            dialogModel.Entries.Add(entry);
+            return dialogModel;
         }
 
         private void WriteElementAnimationPresets(string sceneAssetPath, string showPreset, string hidePreset)
@@ -993,19 +1045,30 @@ namespace UiFramework.Editor.Window.Tabs
 
         private void FixSceneStructure(string sceneAssetPath, UiElementSceneInfo info, UiGlobalCanvasSettings canvasSettings)
         {
-            List<string> lines = UiElementStructureFixer.DescribePlannedChanges(info.Structure, UiElementStructureFixMode.WrapContent);
-            UiElementSceneDialogs.AppendUnfixable(lines, UiElementStructureFixer.DescribeUnfixableIssues(info.Structure));
-
+            // Re-read the scene so the dialog's Now / After preview reflects its current state.
             bool isOpen = UiElementSceneUtility.IsSceneOpen(sceneAssetPath);
-            string intro = "Fix the structure of '" + info.SceneName + "'? Objects are only created and reparented, never deleted." +
-                (isOpen ? " The scene is open, so it is edited in place (with Undo) and not saved." : " The scene is saved afterwards.");
+            UiElementStructureReport current = null;
+            UiElementChangeDialogModel dialogModel = null;
 
-            UiElementStructureFixMode mode;
-            if (!UiElementSceneDialogs.ConfirmStructureFix("Fix Structure", intro, lines, UiElementStructureFixer.OffersContentRootReset(info.Structure), out mode))
+            UiElementSceneUtility.WithScene(sceneAssetPath, false, scene =>
+            {
+                UiElementSceneUtility.ValidateStructure(scene, out current);
+                dialogModel = BuildFixDialog(info.SceneName, current, !isOpen, false);
+            });
+
+            if (current == null || !current.HasFixableIssues)
+            {
+                RefreshScene(sceneAssetPath);
+                return;
+            }
+
+            bool stretchInstead;
+            if (!UiElementChangeDialog.Show(dialogModel, out stretchInstead))
             {
                 return;
             }
 
+            UiElementStructureFixMode mode = stretchInstead ? UiElementStructureFixMode.ResetContentRoot : UiElementStructureFixMode.WrapContent;
             UiElementStructureReport remaining = null;
             UiElementSceneUtility.WithScene(sceneAssetPath, true, scene =>
             {
@@ -1023,12 +1086,27 @@ namespace UiFramework.Editor.Window.Tabs
 
         private void ResetSceneCanvas(string sceneAssetPath, UiElementSceneInfo info, UiGlobalCanvasSettings canvasSettings)
         {
-            List<string> lines = new List<string>(info.CanvasDiff.Split(new string[] { "; " }, StringSplitOptions.RemoveEmptyEntries));
             bool isOpen = UiElementSceneUtility.IsSceneOpen(sceneAssetPath);
-            string intro = "Reset the canvas in '" + info.SceneName + "' to the global canvas settings? Sorting order and cameras are not changed." +
-                (isOpen ? " The scene is open, so it is edited in place (with Undo) and not saved." : string.Empty);
 
-            if (!UiElementSceneDialogs.Confirm("Reset Canvas", intro, lines, "Reset"))
+            UiElementChangeEntry entry = new UiElementChangeEntry { Title = info.SceneName };
+            for (int i = 0; i < info.CanvasDifferences.Count; i++)
+            {
+                entry.SettingChanges.Add(info.CanvasDifferences[i]);
+            }
+
+            UiElementChangeDialogModel dialogModel = new UiElementChangeDialogModel
+            {
+                WindowTitle = "Reset Canvas",
+                Heading = "Reset the canvas of " + info.SceneName + "?",
+                Description = "These values change to match the Global Canvas Settings (General tab).",
+                Footer = "Sorting order, cameras and everything else stay as they are." +
+                    (isOpen ? " The scene is open, so you can undo with Ctrl+Z. Save the scene to keep the change." : " The scene will be saved."),
+                ConfirmLabel = "Reset Canvas"
+            };
+            dialogModel.Entries.Add(entry);
+
+            bool unused;
+            if (!UiElementChangeDialog.Show(dialogModel, out unused))
             {
                 return;
             }
@@ -1165,28 +1243,17 @@ namespace UiFramework.Editor.Window.Tabs
                 return;
             }
 
-            List<string> lines = UiElementStructureFixer.DescribePlannedChanges(report, UiElementStructureFixMode.WrapContent);
-            List<string> unfixable = UiElementStructureFixer.DescribeUnfixableIssues(report);
+            // The UiElement script is attached after compilation, so its absence is expected here and not listed.
+            UiElementChangeDialogModel dialogModel = BuildFixDialog(elementName, report, true, true);
+            dialogModel.Description = "This scene doesn't follow the UI element layout yet. " + dialogModel.Description + " You can also fix it later from the Elements list.";
 
-            // The UiElement script is attached after compilation, so its absence is expected here.
-            for (int i = unfixable.Count - 1; i >= 0; i--)
-            {
-                if (unfixable[i].StartsWith(UiElementStructureIssueCode.NoUiElement.ToString(), StringComparison.Ordinal))
-                {
-                    unfixable.RemoveAt(i);
-                }
-            }
-
-            UiElementSceneDialogs.AppendUnfixable(lines, unfixable);
-
-            UiElementStructureFixMode mode;
-            string intro = "'" + elementName + "' does not follow the UI element scene contract yet. Apply these changes before saving? (You can also run 'Fix Structure' later from the Elements list.)";
-            if (!UiElementSceneDialogs.ConfirmStructureFix("Fix Element Scene Structure", intro, lines, UiElementStructureFixer.OffersContentRootReset(report), out mode))
+            bool stretchInstead;
+            if (!UiElementChangeDialog.Show(dialogModel, out stretchInstead))
             {
                 return;
             }
 
-            UiElementStructureFixer.FixStructure(scene, canvasSettings, mode);
+            UiElementStructureFixer.FixStructure(scene, canvasSettings, stretchInstead ? UiElementStructureFixMode.ResetContentRoot : UiElementStructureFixMode.WrapContent);
         }
 
         private List<string> GetElementScenePaths()

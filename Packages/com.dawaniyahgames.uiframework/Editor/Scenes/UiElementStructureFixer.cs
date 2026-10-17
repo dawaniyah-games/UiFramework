@@ -109,7 +109,7 @@ namespace UiFramework.Editor.Scenes
 
                     if (mode == UiElementStructureFixMode.ResetContentRoot)
                     {
-                        changes.Add("Reset '" + issue.ObjectName + "' to stretch the full canvas (anchors 0-1, offsets 0, pivot 0.5, scale 1, rotation 0). Its children keep their RectTransforms, but '" + issue.ObjectName + "' itself changes size/position.");
+                        changes.Add("Stretch '" + issue.ObjectName + "' to fill the screen (its size and position change)");
                         continue;
                     }
                 }
@@ -120,6 +120,7 @@ namespace UiFramework.Editor.Scenes
             return changes;
         }
 
+        // Full text for Console logs.
         public static List<string> DescribeUnfixableIssues(UiElementStructureReport report)
         {
             List<string> lines = new List<string>();
@@ -138,6 +139,44 @@ namespace UiFramework.Editor.Scenes
             }
 
             return lines;
+        }
+
+        // Short lines for dialogs: what the user still has to do by hand.
+        public static List<string> SummarizeManualWork(UiElementStructureReport report)
+        {
+            List<string> lines = new List<string>();
+            if (report == null)
+            {
+                return lines;
+            }
+
+            for (int i = 0; i < report.Issues.Count; i++)
+            {
+                UiElementStructureIssue issue = report.Issues[i];
+                if (!issue.IsFixable)
+                {
+                    lines.Add(issue.Summary);
+                }
+            }
+
+            return lines;
+        }
+
+        // Name FixStructure gives a new wrapper under the Canvas: "Root", or "ContentRoot" if a child is already called Root.
+        public static string GetWrapperName(IList<string> canvasChildNames)
+        {
+            if (canvasChildNames != null)
+            {
+                for (int i = 0; i < canvasChildNames.Count; i++)
+                {
+                    if (canvasChildNames[i] == ContentRootObjectName)
+                    {
+                        return alternateContentRootObjectName;
+                    }
+                }
+            }
+
+            return ContentRootObjectName;
         }
 
         public static bool OffersContentRootReset(UiElementStructureReport report)
@@ -198,18 +237,14 @@ namespace UiFramework.Editor.Scenes
         private static void WrapCanvasChildren(Transform canvasTransform)
         {
             List<Transform> children = GetChildren(canvasTransform);
-            string rootName = ContentRootObjectName;
+            List<string> childNames = new List<string>(children.Count);
 
             for (int i = 0; i < children.Count; i++)
             {
-                if (children[i].name == ContentRootObjectName)
-                {
-                    rootName = alternateContentRootObjectName;
-                    break;
-                }
+                childNames.Add(children[i].name);
             }
 
-            RectTransform contentRoot = CreateContentRoot(canvasTransform, rootName);
+            RectTransform contentRoot = CreateContentRoot(canvasTransform, GetWrapperName(childNames));
 
             for (int i = 0; i < children.Count; i++)
             {

@@ -507,6 +507,150 @@ namespace UiFramework.Editor.Tests
             Assert.IsFalse(SceneManager.GetSceneByPath(path).IsValid(), "InspectScene must close the scene.");
         }
 
+        // ---------- Fix preview (what the dialog shows) ----------
+
+        [TestCase("PlayWithFriends")]
+        [TestCase("SeveralChildren")]
+        [TestCase("ChildNamedRoot")]
+        [TestCase("TopBarWrap")]
+        [TestCase("TopBarStretch")]
+        [TestCase("NoChildren")]
+        [TestCase("UiChildrenWithoutCanvas")]
+        [TestCase("MisplacedCanvas")]
+        public void Preview_AfterTree_MatchesActualFixResult(string scenario)
+        {
+            GameObject elementRoot = BuildPreviewScenario(scenario);
+            bool stretch = scenario == "TopBarStretch";
+
+            UiElementStructureReport report = Validate();
+            UiElementFixPreview preview = UiElementFixPreview.Build(report);
+            UiElementPreviewNode expected = stretch ? preview.AfterStretch : preview.AfterWrap;
+
+            UiElementStructureFixer.FixStructure(scene, settings, stretch ? UiElementStructureFixMode.ResetContentRoot : UiElementStructureFixMode.WrapContent);
+
+            Assert.IsNotNull(expected, "Preview has no After tree.");
+            Assert.AreEqual(DescribeTree(elementRoot.transform, 0), DescribePreview(expected, 0));
+        }
+
+        [Test]
+        public void Preview_MarksNewObjects()
+        {
+            Canvas canvas = CreateCanvas(CreateElementRoot("GameResultUiElementRoot", true));
+            CreateStretched("Overlay", canvas.transform);
+            CreateStretched("Content", canvas.transform);
+
+            UiElementFixPreview preview = UiElementFixPreview.Build(Validate());
+            UiElementPreviewNode wrapper = preview.AfterWrap.Children[0].Children[0];
+
+            Assert.AreEqual("Root", wrapper.Name);
+            Assert.IsTrue(wrapper.IsNew);
+            Assert.IsFalse(preview.AfterWrap.Children[0].IsNew, "The existing Canvas is not new.");
+            Assert.IsNull(preview.AfterStretch, "Stretch option only applies to a single non-filling content root.");
+        }
+
+        [Test]
+        public void IssueSummaries_AreShortPlainLanguage()
+        {
+            Canvas canvas = CreateCanvas(CreateElementRoot("PlayWithFriendsUiElementRoot", false));
+            CreateStretched("A", canvas.transform);
+            CreateStretched("B", canvas.transform);
+            new GameObject("testCamera");
+
+            UiElementStructureReport report = Validate();
+
+            for (int i = 0; i < report.Issues.Count; i++)
+            {
+                Assert.LessOrEqual(report.Issues[i].Summary.Length, 110, report.Issues[i].Summary);
+                Assert.IsFalse(report.Issues[i].Summary.Contains("RectTransform"), report.Issues[i].Summary);
+            }
+        }
+
+        private GameObject BuildPreviewScenario(string scenario)
+        {
+            GameObject elementRoot = CreateElementRoot(scenario + "UiElementRoot", true);
+
+            switch (scenario)
+            {
+                case "PlayWithFriends":
+                {
+                    Canvas canvas = CreateCanvas(elementRoot);
+                    InstantiatePrefab(CreateRectPrefab("FriendsPanel"), canvas.transform);
+                    CreateRect("Title", canvas.transform);
+                    break;
+                }
+                case "SeveralChildren":
+                {
+                    Canvas canvas = CreateCanvas(elementRoot);
+                    CreateStretched("Overlay", canvas.transform);
+                    CreateStretched("Content", canvas.transform);
+                    CreateStretched("CoinFlyLayer", canvas.transform);
+                    break;
+                }
+                case "ChildNamedRoot":
+                {
+                    Canvas canvas = CreateCanvas(elementRoot);
+                    CreateStretched("Root", canvas.transform);
+                    CreateTopStrip("TopPanel", canvas.transform);
+                    break;
+                }
+                case "TopBarWrap":
+                case "TopBarStretch":
+                {
+                    Canvas canvas = CreateCanvas(elementRoot);
+                    RectTransform bar = CreateTopStrip("Bar_bg", canvas.transform);
+                    CreateRect("Icon", bar);
+                    break;
+                }
+                case "UiChildrenWithoutCanvas":
+                {
+                    CreateTopStrip("Header", elementRoot.transform);
+                    CreateStretched("List", elementRoot.transform);
+                    break;
+                }
+                case "MisplacedCanvas":
+                {
+                    new GameObject("Helper").transform.SetParent(elementRoot.transform, false);
+                    Canvas canvas = CreateCanvas(elementRoot);
+                    CreateStretched("Root", canvas.transform);
+                    break;
+                }
+            }
+
+            return elementRoot;
+        }
+
+        private static string DescribeTree(Transform transform, int depth)
+        {
+            string text = new string(' ', depth * 2) + transform.name + "\n";
+            if (depth >= 3)
+            {
+                return text;
+            }
+
+            for (int i = 0; i < transform.childCount; i++)
+            {
+                text += DescribeTree(transform.GetChild(i), depth + 1);
+            }
+
+            return text;
+        }
+
+        private static string DescribePreview(UiElementPreviewNode node, int depth)
+        {
+            string text = new string(' ', depth * 2) + node.Name + "\n";
+            if (depth >= 3)
+            {
+                return text;
+            }
+
+            for (int i = 0; i < node.Children.Count; i++)
+            {
+                text += DescribePreview(node.Children[i], depth + 1);
+            }
+
+            return text;
+        }
+
         // ---------- Helpers ----------
 
         private UiElementStructureReport Validate()

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using UiFramework.Editor.Config;
+using UiFramework.Editor.Window.Popups;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -161,7 +162,34 @@ namespace UiFramework.Editor.Scenes
 
             Debug.Log("[UiFramework] Apply Global Canvas Settings plan:\n  " + string.Join("\n  ", plan.ToArray()));
 
-            if (!UiElementSceneDialogs.Confirm("Apply Global Canvas Settings", "Update the Canvas/CanvasScaler in " + toUpdate.Count + " scene(s)? Sorting order, cameras and other Canvas fields are not changed.", plan, "Apply"))
+            UiElementChangeDialogModel dialogModel = new UiElementChangeDialogModel
+            {
+                WindowTitle = "Apply Canvas To All",
+                Heading = "Apply the Global Canvas Settings to " + DescribeScenes(toUpdate.Count) + "?",
+                Description = "Expand a scene to see which values change. Excluded scenes and scenes that already match are skipped.",
+                Footer = "Only the listed Canvas values change. Sorting order and cameras stay as they are. Scenes that aren't open are saved.",
+                ConfirmLabel = "Apply to " + DescribeScenes(toUpdate.Count)
+            };
+
+            for (int i = 0; i < toUpdate.Count; i++)
+            {
+                UiElementSceneInfo info = toUpdate[i];
+                UiElementChangeEntry entry = new UiElementChangeEntry
+                {
+                    Title = info.SceneName,
+                    Subtitle = info.CanvasDifferences.Count == 1 ? "1 value" : info.CanvasDifferences.Count + " values"
+                };
+
+                for (int d = 0; d < info.CanvasDifferences.Count; d++)
+                {
+                    entry.SettingChanges.Add(info.CanvasDifferences[d]);
+                }
+
+                dialogModel.Entries.Add(entry);
+            }
+
+            bool unused;
+            if (!UiElementChangeDialog.Show(dialogModel, out unused))
             {
                 return "Cancelled.";
             }
@@ -263,12 +291,45 @@ namespace UiFramework.Editor.Scenes
             List<string> wrapPlan = BuildFixPlan(toFix, UiElementStructureFixMode.WrapContent);
             Debug.Log("[UiFramework] Fix Structure plan:\n  " + string.Join("\n  ", wrapPlan.ToArray()));
 
-            UiElementStructureFixMode mode;
-            string intro = "Fix the structure of " + toFix.Count + " scene(s)? Objects are only created and reparented, never deleted. Issues that cannot be fixed automatically are reported in the Console.";
-            if (!UiElementSceneDialogs.ConfirmStructureFix("Fix Structure In All Scenes", intro, wrapPlan, offersReset, out mode))
+            UiElementChangeDialogModel dialogModel = new UiElementChangeDialogModel
+            {
+                WindowTitle = "Fix All Structure",
+                Heading = "Fix the structure of " + DescribeScenes(toFix.Count) + "?",
+                Description = "Each scene gets one full-screen Root under its Canvas, so the whole screen animates. Expand a scene to see its changes.",
+                OptionLabel = offersReset ? "Stretch content that doesn't fill the screen instead of wrapping it (changes its size and position)" : null,
+                Footer = "Nothing is deleted. Scenes that aren't open are saved; open scenes stay unsaved so you can undo.",
+                ConfirmLabel = "Fix " + DescribeScenes(toFix.Count)
+            };
+
+            for (int i = 0; i < toFix.Count; i++)
+            {
+                UiElementStructureReport structure = toFix[i].Structure;
+                List<string> manualWork = UiElementStructureFixer.SummarizeManualWork(structure);
+                List<string> changes = UiElementStructureFixer.DescribePlannedChanges(structure, UiElementStructureFixMode.WrapContent);
+
+                UiElementChangeEntry entry = new UiElementChangeEntry
+                {
+                    Title = toFix[i].SceneName,
+                    Subtitle = (changes.Count == 1 ? "1 change" : changes.Count + " changes") + (manualWork.Count > 0 ? ", " + manualWork.Count + " manual" : string.Empty)
+                };
+                entry.Changes.AddRange(changes);
+                entry.ManualWork.AddRange(manualWork);
+
+                if (UiElementStructureFixer.OffersContentRootReset(structure))
+                {
+                    entry.AlternativeChanges = UiElementStructureFixer.DescribePlannedChanges(structure, UiElementStructureFixMode.ResetContentRoot);
+                }
+
+                dialogModel.Entries.Add(entry);
+            }
+
+            bool stretchInstead;
+            if (!UiElementChangeDialog.Show(dialogModel, out stretchInstead))
             {
                 return "Cancelled.";
             }
+
+            UiElementStructureFixMode mode = stretchInstead ? UiElementStructureFixMode.ResetContentRoot : UiElementStructureFixMode.WrapContent;
 
             int fixedCount = 0;
             List<string> leftOpen = new List<string>();
@@ -416,6 +477,11 @@ namespace UiFramework.Editor.Scenes
             }
 
             return "\nEdited in place and left unsaved (they were open in the editor): " + string.Join(", ", sceneNames.ToArray());
+        }
+
+        private static string DescribeScenes(int count)
+        {
+            return count == 1 ? "1 scene" : count + " scenes";
         }
 
         private static string LogNoScenes(UiEditorConfig config)
