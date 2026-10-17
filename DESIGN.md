@@ -1,6 +1,6 @@
 # UI Framework: System Design
 
-> Package `com.dawaniyahgames.uiframework` · describes **v1.0.41** · last reviewed 2026-10-16
+> Package `com.dawaniyahgames.uiframework` · describes **v1.1.0** · last reviewed 2026-10-17
 >
 > This document describes how the framework works *today*. If you change behaviour, update the matching section in the same PR ([CODING_STANDARDS.md §10](CODING_STANDARDS.md#10-comments--documentation)).
 
@@ -216,7 +216,7 @@ Presets are strings stored on each `UiElement` (`showAnimationPreset`, `hideAnim
 | `ClickPop`, `SettlePop`, `Shake` | feedback effects (pop 1.08×, pulse 1.04×, smooth fading side-to-side shake); they don't hide anything | same |
 
 - **Slides:** the name is always the direction of travel, for show and for hide. The distance is the canvas width or height (falling back to `Screen` size), so a screen enters and leaves fully off-screen.
-- **Base pose:** `UiTweenState` (added on demand) records the target's resting position, anchored position, scale and alpha the first time it animates. Every preset starts from and returns to that pose, so repeated, re-triggered or interrupted animations never drift. (Before 1.0.41, Scale used the current size as its base, so a shown screen ended at 0.9× and shrank further every cycle.)
+- **Base pose:** `UiTweenState` (added on demand) records the target's resting position, anchored position, scale and alpha the first time it animates. Every preset starts from and returns to that pose, so repeated, re-triggered or interrupted animations never drift. (Before 1.1.0, Scale used the current size as its base, so a shown screen ended at 0.9× and shrank further every cycle.)
 - **No skipped frames:** `Tween.RunAsync` advances by at most `Tween.MaxFrameStep` (1/30 s) per frame. A long frame, like the one where a scene loads, slows the animation slightly instead of jumping past half of it.
 - **One animation per channel:** a new animation stops older ones on the same object that drive the same thing (position, scale, alpha). A button pop doesn't stop a slide, but a new show stops a running hide.
 - **No flash:** `PrepareForShow()` → `TweenPresets.PrepareShow` puts the element in its show start pose right after its scene loads, in the same continuation as `Populate`. It also undoes leftovers from an earlier hide (faded out, off-screen).
