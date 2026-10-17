@@ -148,7 +148,8 @@ Consequences:
 | --- | --- |
 | `UiManager.IsInitialized` | `true` once `InitializeAsync` has created the instance (see §5.1) |
 | `UiManager.GetCurrentState()` | The state being loaded, if any, otherwise the top of the stack, otherwise `null` |
-| `UiManager.IsLastSceneActive<T>()` | Whether the top state's key is `T`'s key |
+| `UiManager.IsLastSceneActive<T>()` | Whether the top state's key is `T`'s key (`false` when the stack is empty) |
+| `UiManager.ResetUIAsync()` | Hides and unloads every state (`ResetUI()` is obsolete) |
 | `UiManager.TryGetUiStateKeyName<T>(out key)` | The key registered for `T` |
 
 ## 6. Shared scenes and shared elements
@@ -274,8 +275,6 @@ These hold today. A change that breaks one is a design change and needs this doc
 | Concurrency | Overlapping `ShowState*` / `HideUI` calls are not serialized. Callers should await one before starting the next, as `NavBarUiElement` does by deferring to end of frame and checking `IsLastSceneActive`. |
 | `HideUI` | Does not skip elements shared with the state underneath, so a shared element (e.g. NavBar) plays its hide animation even though its scene stays loaded. |
 | Init | `IsInitialized` is `true` before the config finishes loading, and stays `true` if loading fails. |
-| `ResetUI()` | Blocks with `Task.Wait()`. Can deadlock on the main thread, so avoid it. |
-| `IsLastSceneActive<T>()` | Throws on an empty stack. |
 | Type resolution | Reflection over all assemblies at init, matched by simple class name (§5.3). |
 | Non-`UiElement` `IUiElement`s | Receive `Populate` but never animate. |
 | Samples | `package.json` declares `Samples~/BasicSetup`, but that folder is empty. The working sample is the host project under `Assets/`. |

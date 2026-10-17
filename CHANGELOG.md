@@ -42,6 +42,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Starting an animation on an object while another was running left a mixed pose; the newer animation now stops the older one
 - Slide presets move in their named direction on show and on hide (SlideRight enters from the left and leaves on the right), now covered by tests
 - An element shown again after being hidden by a different preset could stay faded out or off-screen
+- `UiManager.IsLastSceneActive<T>()` threw on an empty stack; it now returns `false`
+- `UiManager.ResetUI()` blocked the main thread with `Task.Wait()` and could deadlock; it no longer blocks
+- Clearer `UiConfig` load error (it named the wrong Addressables key)
+
+### Deprecated
+- `UiManager.ResetUI()`: use `await UiManager.ResetUIAsync()`. `ResetUI()` now starts the reset and returns immediately
 - Elements tab no longer closes scenes the user already had open when reading or writing animation presets. Open scenes are edited in place and left unsaved
 - Creating a UI element now asks to save modified open scenes before replacing them
 - `UiFramework.Tweening` and `UiFramework.Editor` now reference `UnityEngine.UI` explicitly (required on Unity 2021.3/2022.3)

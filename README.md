@@ -100,6 +100,7 @@ public class MainMenuUiElement : UiElement
 | `await UiManager.HideUI()` | Pop and unload the top state |
 | `UiManager.GetCurrentState()` | Current (or currently loading) state |
 | `UiManager.IsLastSceneActive<T>()` | Whether `T` is the top state |
+| `await UiManager.ResetUIAsync()` | Hide and unload every state |
 
 `additive: false` (default) replaces the stack. `additive: true` pushes on top, for modals and overlays.
 

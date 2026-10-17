@@ -54,12 +54,12 @@ namespace UiFramework.Editor.Window.Tabs
             });
 
             // Hide internal UI Setup asset path from the editor UI
-            content.Add(CreatePathField("Element Output Path", config?.ElementsScriptPath));
-            content.Add(CreatePathField("Element Scene Path", config?.ElementsScenePath));
-            content.Add(CreatePathField("State Output Path", config?.StatesPath));
-            content.Add(CreatePathField("State Definitions Path", config?.StateDefinitionsPath));
-            content.Add(CreatePathField("State Registry Path", config?.StateRegistryPath));
-            content.Add(CreatePathField("Runtime Config Output Path", config?.RuntimeConfigOutputPath));
+            content.Add(CreatePathField("Element Output Path", config != null ? config.ElementsScriptPath : null));
+            content.Add(CreatePathField("Element Scene Path", config != null ? config.ElementsScenePath : null));
+            content.Add(CreatePathField("State Output Path", config != null ? config.StatesPath : null));
+            content.Add(CreatePathField("State Definitions Path", config != null ? config.StateDefinitionsPath : null));
+            content.Add(CreatePathField("State Registry Path", config != null ? config.StateRegistryPath : null));
+            content.Add(CreatePathField("Runtime Config Output Path", config != null ? config.RuntimeConfigOutputPath : null));
 
             VisualElement buttonRow = new VisualElement
             {

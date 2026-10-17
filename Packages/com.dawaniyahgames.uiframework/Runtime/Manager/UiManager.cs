@@ -44,7 +44,7 @@ namespace UiFramework.Runtime.Manager
             
             if (loadedConfig == null)
             {
-                Debug.LogError("❌ UiConfig failed to load via Addressables label 'RuntimeUiConfig'.");
+                Debug.LogError("[UiManager] UiConfig failed to load from Addressables (address 'UiConfig'). Run Build Runtime UiConfig in the UI Setup Manager.");
                 return;
             }
 
@@ -84,7 +84,7 @@ namespace UiFramework.Runtime.Manager
 
             if (handle.Status != AsyncOperationStatus.Succeeded)
             {
-                Debug.LogError("❌ Failed to locate UiConfig via Addressables key/label 'UiConfig'. Ensure the UI Editor Window generated the runtime config and assigned this label in the GlobalConfigs group.");
+                Debug.LogError("[UiManager] Failed to locate UiConfig via Addressables key/label 'UiConfig'. Ensure the UI Editor Window generated the runtime config and assigned this label in the GlobalConfigs group.");
                 return null;
             }
 
@@ -92,7 +92,7 @@ namespace UiFramework.Runtime.Manager
 
             if (cfg == null)
             {
-                Debug.LogError("❌ Failed to locate UiConfig via Addressables label 'UiConfig'. Ensure the UI Editor Window generated the runtime config and assigned this label in the GlobalConfigs group.");
+                Debug.LogError("[UiManager] Failed to locate UiConfig via Addressables label 'UiConfig'. Ensure the UI Editor Window generated the runtime config and assigned this label in the GlobalConfigs group.");
             }
 
             return cfg;
@@ -102,13 +102,13 @@ namespace UiFramework.Runtime.Manager
         {
             if (instance == null)
             {
-                Debug.LogError("❌ UiManager instance not set.");
+                Debug.LogError("[UiManager] UiManager instance not set.");
                 return;
             }
 
             if (!instance.typeToKeyMap.TryGetValue(typeof(T), out string key))
             {
-                Debug.LogError($"❌ No UI state key registered for {typeof(T).Name}");
+                Debug.LogError($"[UiManager] No UI state key registered for {typeof(T).Name}");
                 return;
             }
 
@@ -119,13 +119,13 @@ namespace UiFramework.Runtime.Manager
         {
             if (instance == null)
             {
-                Debug.LogError("❌ UiManager instance not set.");
+                Debug.LogError("[UiManager] UiManager instance not set.");
                 return;
             }
 
             if (!instance.cachedStates.TryGetValue(stateKey, out UiStateEntry entry))
             {
-                Debug.LogError($"❌ State '{stateKey}' not found in cache.");
+                Debug.LogError($"[UiManager] State '{stateKey}' not found in cache.");
                 return;
             }
 
@@ -561,14 +561,12 @@ namespace UiFramework.Runtime.Manager
                 return false;
             }
 
-            UiState popped = instance.stateStack.Peek();
-
-            if (popped.StateName == key)
+            if (instance.stateStack.Count == 0)
             {
-                return true;
+                return false;
             }
 
-            return false;
+            return instance.stateStack.Peek().StateName == key;
         }
 
         public static bool TryGetUiStateKeyName<T>(out string keyName) where T : UiState
@@ -589,10 +587,30 @@ namespace UiFramework.Runtime.Manager
             return true;
         }
 
-        public void ResetUI()
+        // Hides and unloads every state on the stack.
+        public static async Task ResetUIAsync()
         {
-            Task task = UnloadAllPreviousStates();
-            task.Wait();
+            if (instance == null)
+            {
+                return;
+            }
+
+            await instance.UnloadAllPreviousStates();
+        }
+
+        // Blocking on the unload with Task.Wait() could deadlock the main thread (Addressables completes on it), so
+        // this now starts the reset and returns immediately.
+        [Obsolete("Use 'await UiManager.ResetUIAsync()'. ResetUI no longer waits for the states to unload.")]
+        public async void ResetUI()
+        {
+            try
+            {
+                await UnloadAllPreviousStates();
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError("[UiManager] ResetUI failed: " + exception);
+            }
         }
 
         private async Task UnloadAllPreviousStates(bool playHideTransitions = true)

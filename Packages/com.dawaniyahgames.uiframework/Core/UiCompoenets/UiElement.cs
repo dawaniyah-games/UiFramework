@@ -1,9 +1,9 @@
+using System.Threading.Tasks;
+using UiFramework.Tweening;
+using UnityEngine;
+
 namespace UiFramework.Core
 {
-    using System.Threading.Tasks;
-    using UnityEngine;
-    using UiFramework.Tweening;
-
     public abstract class UiElement : MonoBehaviour, IUiElement
     {
         [SerializeField] private string showAnimationPreset;
@@ -38,7 +38,9 @@ namespace UiFramework.Core
             animationTarget = root;
         }
 
-        public virtual void Populate(object context = null) { }
+        public virtual void Populate(object context = null)
+        {
+        }
 
         public virtual Task ShowAsync(string presetKey = null)
         {

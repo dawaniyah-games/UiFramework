@@ -231,10 +231,9 @@ The rules above apply to all new and modified code. These pre-existing violation
 
 | Location | Deviation |
 | --- | --- |
-| `Core/UiCompoenets/IUiElement.cs`, `UiElement.cs`, `UiElementReference.cs`, `UiPopulationParams.cs`; `Editor/Window/Tabs/IVisualElementTab.cs`, `BaseVisualElementTab.cs` | `using` inside namespace; `UiElement.Populate` and `UiPopulationParams` use single-line `{ }` |
-| `Core/Config/UiConfig.cs`, `Editor/Data/UiStateRegistry.cs`, `Editor/Window/UiSetupEditorWindow.cs` | Target-typed `new()` |
+| `Core/UiCompoenets/IUiElement.cs`, `UiElementReference.cs`, `UiPopulationParams.cs`; `Editor/Window/Tabs/IVisualElementTab.cs`, `BaseVisualElementTab.cs` | `using` inside namespace; `UiPopulationParams` uses a single-line `{ }` |
+| `Core/Config/UiConfig.cs`, `Editor/Data/UiStateRegistry.cs` | Target-typed `new()` |
 | `Core/Config/UiConfig.cs` | Lives in the `UiFramework.Core` assembly but declares `namespace UiFramework.Runtime` (kept for compatibility) |
-| `Runtime/Manager/UiManager.cs` | `ResetUI()` blocks with `Task.Wait()` (deadlock risk, §5); emoji in log messages; `IsLastSceneActive<T>()` calls `Peek()` without checking for an empty stack |
 | `Editor/CodeGeneration/UiElementScriptBinder.cs` | Declared in the global namespace; uses `?.` on a `MonoScript` (§4.1) |
-| `Editor/**` (pre-1.0.41 files) | Emoji and missing `[UiFramework]` tags in log messages |
+| `Editor/Addressables/AddressablesAssetUtility.cs`, `Editor/CodeGeneration/*.cs` | Emoji and missing `[UiFramework]` tags in log messages |
 | Folder `Core/UiCompoenets/` | Misspelled; renaming moves GUIDs/paths for users, so it is deferred to a major version |
