@@ -60,6 +60,19 @@ namespace UiFramework.Core
             TweenPresets.PrepareShow(showAnimationPreset, GetAnimationTargetGameObject());
         }
 
+        // Prepares for a show that plays presetKey instead of the configured animation (a per-call UiTransition).
+        // UiManager calls the parameterless overload when there is no override, so existing overrides keep working.
+        public virtual void PrepareForShow(string presetKey)
+        {
+            if (string.IsNullOrWhiteSpace(presetKey))
+            {
+                PrepareForShow();
+                return;
+            }
+
+            TweenPresets.PrepareShow(presetKey, GetAnimationTargetGameObject());
+        }
+
         private GameObject GetAnimationTargetGameObject()
         {
             if (animationTarget == null)

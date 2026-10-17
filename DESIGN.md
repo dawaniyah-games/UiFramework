@@ -95,10 +95,10 @@ The `defaultState` parameter of `InitializeAsync` is currently unused. There is 
 
 ### 5.2 Showing a state
 
-`ShowState<T>(context, additive)` resolves `T` to its key and delegates to `ShowStateByKey(key, context, additive)`, which calls `LoadAndPushState`:
+`ShowState<T>(context, additive, transition)` resolves `T` to its key and delegates to `ShowStateByKey(key, context, additive, transition)`, which calls `LoadAndPushState`:
 
 ```
-ShowStateByKey(key, ctx, additive)
+ShowStateByKey(key, ctx, additive, transition)
 │
 ├─ newState   = new UiState(key, entry.uiElementScenes)      ← always the base class
 ├─ loadingState = newState                                    ← GetCurrentState() returns it while loading
@@ -140,7 +140,7 @@ Consequences:
 
 ### 5.4 Hiding
 
-`HideUI()` pops the top state, plays its hide animations, releases its scene references (unloading at zero) and disposes it. It does **not** replay show animations on the state underneath.
+`HideUI(transition)` pops the top state, plays its hide animations (or `transition.HidePreset`), releases its scene references (unloading at zero) and disposes it. It does **not** replay show animations on the state underneath.
 
 ### 5.5 Queries
 
@@ -205,24 +205,45 @@ Validation issue codes (`UiElementStructureIssueCode`):
 
 ### 7.2 Presets
 
-Presets are strings stored on each `UiElement` (`showAnimationPreset`, `hideAnimationPreset`) and chosen in the **Elements** tab, which shows a one-line description of each choice (`TweenPresets.Describe`). All presets run on unscaled time. **Entrances use ease-out** (they slow down into place); **exits are shorter and use ease-in** (they speed up as they leave), the usual pattern for UI that feels calm rather than jumpy.
+Presets are strings stored on each `UiElement` (`showAnimationPreset`, `hideAnimationPreset`) and chosen in the **Elements** tab, which shows a one-line description of each choice (`TweenPresets.Describe`). All presets run on unscaled time. **Every show and hide fades** (Fade and Scale over their whole duration, the others at their edges), so nothing pops in or out. **Entrances use ease-out** (they slow down into place); **exits are shorter and use ease-in** (they speed up as they leave), the usual pattern for UI that feels calm rather than jumpy.
 
 | Key | Show | Hide |
 | --- | --- | --- |
 | `None` | appears instantly | disappears instantly |
 | `Fade` | alpha 0 → 1, 0.22 s (adds a `CanvasGroup` if missing) | alpha → 0, 0.16 s |
 | `Scale` | subtle zoom **with fade**: scale 0.94× → 1×, alpha 0 → 1, 0.26 s | scale → 0.96×, alpha → 0, 0.18 s |
-| `SlideRight` / `SlideLeft` / `SlideUp` / `SlideDown` | **moves in the named direction**: enters from the opposite edge (SlideRight enters from the left), 0.32 s | **keeps moving in the named direction** and leaves past that edge (SlideRight leaves on the right), 0.24 s |
-| `ClickPop`, `SettlePop`, `Shake` | feedback effects (pop 1.08×, pulse 1.04×, smooth fading side-to-side shake); they don't hide anything | same |
+| `SlideRight` / `SlideLeft` / `SlideUp` / `SlideDown` | **moves in the named direction**: enters from the opposite edge (SlideRight enters from the left), 0.32 s, fading in during the first 40% | **keeps moving in the named direction** and leaves past that edge (SlideRight leaves on the right), 0.24 s, fading out during the last 40% |
+| `ClickPop`, `SettlePop`, `Shake` | pop 1.08× / pulse 1.04× / smooth fading side-to-side shake, fading in during the first 40% | the same motion, fading out during the last 40% |
 
 - **Slides:** the name is always the direction of travel, for show and for hide. The distance is the canvas width or height (falling back to `Screen` size), so a screen enters and leaves fully off-screen.
+- **Edge fades:** slides, pops and shake fade in during the first 40% of a show and out during the last 40% of a hide, so the element is fully visible while it moves but never appears or vanishes abruptly. This applies only when they run as a show / hide (`PlayAsync`); calling `TweenPresets.ClickPop` / `SettlePop` / `ShakeLocal` directly as button feedback never fades.
 - **Base pose:** `UiTweenState` (added on demand) records the target's resting position, anchored position, scale and alpha the first time it animates. Every preset starts from and returns to that pose, so repeated, re-triggered or interrupted animations never drift. (Before 1.1.0, Scale used the current size as its base, so a shown screen ended at 0.9× and shrank further every cycle.)
 - **No skipped frames:** `Tween.RunAsync` advances by at most `Tween.MaxFrameStep` (1/30 s) per frame. A long frame, like the one where a scene loads, slows the animation slightly instead of jumping past half of it.
 - **One animation per channel:** a new animation stops older ones on the same object that drive the same thing (position, scale, alpha). A button pop doesn't stop a slide, but a new show stops a running hide.
 - **No flash:** `PrepareForShow()` → `TweenPresets.PrepareShow` puts the element in its show start pose right after its scene loads, in the same continuation as `Populate`. It also undoes leftovers from an earlier hide (faded out, off-screen).
 - Stacked states hide in parallel during a non-additive switch, while the new state shows.
 
-### 7.3 Extending
+### 7.3 Per-call animation override (`UiTransition`)
+
+Each element's show / hide presets are set in the Elements tab. A call can replace them **for that call only**, without changing the configuration:
+
+```csharp
+// Show the Store with a zoom this time, whatever its elements are configured to do.
+await UiManager.ShowState<StoreUiState>(context, transition: UiTransition.ShowWith(TweenPresets.ScaleKey));
+
+// Close the top state by sliding it out to the right.
+await UiManager.HideUI(UiTransition.HideWith(TweenPresets.SlideRightKey));
+
+// Both sides in a non-additive switch: new screen slides in moving left, old screen leaves moving left.
+await UiManager.ShowStateByKey("ProfileUiState", context, false, new UiTransition(TweenPresets.SlideLeftKey, TweenPresets.SlideLeftKey));
+```
+
+- `ShowPreset` replaces the show animation (and its start pose, via `UiElement.PrepareForShow(string)`) of every element that **appears** in the call. `HidePreset` replaces the hide animation of every element that **disappears** in it: the states leaving in a non-additive switch, or the popped state in `HideUI`.
+- `null` (or `UiTransition.Default`) keeps each element's own animation. Shared elements that stay on screen are still not animated.
+- Preset names are the `TweenPresets.*Key` constants and are matched ignoring case. An unknown name logs a `[UiTransition]` warning and falls back to the elements' own animations, so a typo never breaks navigation.
+- Subclasses that override `PrepareForShow()` keep working: `UiManager` calls the parameterless overload when there is no override, and `PrepareForShow(string)` only when there is one.
+
+### 7.4 Extending
 
 Adding a preset means changing `TweenPresets` only: the key constant, the `presetKeys` list, the `PlayAsync` branch, its start pose in `PrepareShow`, and its text in `Describe`. Use `Tween.RunAsync` with a `UiTweenState` run so it can be interrupted cleanly. `ShowAsync`, `HideAsync` and `PrepareForShow` stay `virtual` for per-element custom animation.
 
@@ -310,7 +331,8 @@ If nothing appears, check the following: the key matches the class name; *Build 
 | --- | --- |
 | `Runtime/Manager/UiManager.cs` | Stack, scene loading and ref counting, transitions, public API |
 | `Core/UiCompoenets/UiState.cs` | Per-state scene list, acquired GUIDs, element discovery and `Populate` |
-| `Core/UiCompoenets/UiElement.cs` | Element base: animation target, show/hide/prepare |
+| `Core/UiCompoenets/UiElement.cs` | Element base: animation target, show/hide/prepare (optionally with a per-call preset) |
+| `Core/Transitions/UiTransition.cs` | Optional per-call animation override for `ShowState*` / `HideUI` |
 | `Core/Config/UiConfig.cs` | Runtime state key → scenes map |
 | `Runtime/Tweening/TweenPresets.cs` | Preset catalogue and implementations |
 | `Editor/Window/UiSetupEditorWindow.cs` | Window host, *Build Runtime UiConfig*, config Addressables setup |

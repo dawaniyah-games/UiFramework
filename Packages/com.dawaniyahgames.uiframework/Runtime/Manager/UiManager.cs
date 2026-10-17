@@ -98,7 +98,8 @@ namespace UiFramework.Runtime.Manager
             return cfg;
         }
 
-        public static async Task ShowState<T>(object context = null, bool additive = false) where T : UiState
+        // transition (optional) replaces the animations for this call only; see UiTransition.
+        public static async Task ShowState<T>(object context = null, bool additive = false, UiTransition transition = null) where T : UiState
         {
             if (instance == null)
             {
@@ -112,10 +113,12 @@ namespace UiFramework.Runtime.Manager
                 return;
             }
 
-            await ShowStateByKey(key, context, additive);
+            await ShowStateByKey(key, context, additive, transition);
         }
 
-        public static async Task ShowStateByKey(string stateKey, object context = null, bool additive = false)
+        // transition (optional): ShowPreset plays on the new state's elements; in a non-additive switch, HidePreset
+        // plays on the elements that disappear. Null presets keep each element's own animation.
+        public static async Task ShowStateByKey(string stateKey, object context = null, bool additive = false, UiTransition transition = null)
         {
             if (instance == null)
             {
@@ -129,10 +132,10 @@ namespace UiFramework.Runtime.Manager
                 return;
             }
 
-            await instance.LoadAndPushState(entry, context, additive);
+            await instance.LoadAndPushState(entry, context, additive, transition ?? UiTransition.Default);
         }
 
-        private async Task LoadAndPushState(UiStateEntry entry, object context, bool additive)
+        private async Task LoadAndPushState(UiStateEntry entry, object context, bool additive, UiTransition transition)
         {
             UiState newState = new UiState(entry.stateKey, entry.uiElementScenes);
 
@@ -144,12 +147,12 @@ namespace UiFramework.Runtime.Manager
             {
                 try
                 {
-                    await LoadStateScenesAsync(newState, context, true, currentlyVisibleElementIds);
+                    await LoadStateScenesAsync(newState, context, true, currentlyVisibleElementIds, transition.ShowPreset);
 
                     HashSet<int> sharedElementIds = GetSharedElementIds(currentlyVisibleElementIds, newState);
 
-                    Task hideTask = PlayHideTransitionsForAllStatesAsync(sharedElementIds);
-                    Task showTask = PlayShowTransitionAsync(newState, sharedElementIds);
+                    Task hideTask = PlayHideTransitionsForAllStatesAsync(sharedElementIds, transition.HidePreset);
+                    Task showTask = PlayShowTransitionAsync(newState, sharedElementIds, transition.ShowPreset);
                     await Task.WhenAll(hideTask, showTask);
                 }
                 catch (Exception exception)
@@ -169,7 +172,7 @@ namespace UiFramework.Runtime.Manager
 
             try
             {
-                await LoadStateScenesAsync(newState, context, true, currentlyVisibleElementIds);
+                await LoadStateScenesAsync(newState, context, true, currentlyVisibleElementIds, transition.ShowPreset);
             }
             catch (Exception exception)
             {
@@ -184,7 +187,7 @@ namespace UiFramework.Runtime.Manager
             try
             {
                 HashSet<int> sharedInAdditive = GetSharedElementIds(currentlyVisibleElementIds, newState);
-                await PlayShowTransitionAsync(newState, sharedInAdditive);
+                await PlayShowTransitionAsync(newState, sharedInAdditive, transition.ShowPreset);
             }
             catch (Exception exception)
             {
@@ -192,7 +195,8 @@ namespace UiFramework.Runtime.Manager
             }
         }
 
-        private static void PrepareShowTransition(UiState state, HashSet<int> skipElementIds)
+        // showPreset: per-call override (UiTransition.ShowPreset), or null for each element's own animation.
+        private static void PrepareShowTransition(UiState state, HashSet<int> skipElementIds, string showPreset)
         {
             if (state == null)
             {
@@ -232,21 +236,28 @@ namespace UiFramework.Runtime.Manager
                     continue;
                 }
 
-                uiElement.PrepareForShow();
+                if (showPreset == null)
+                {
+                    uiElement.PrepareForShow();
+                }
+                else
+                {
+                    uiElement.PrepareForShow(showPreset);
+                }
             }
         }
 
-        private async Task PlayShowTransitionAsync(UiState state, HashSet<int> skipElementIds)
+        private async Task PlayShowTransitionAsync(UiState state, HashSet<int> skipElementIds, string showPreset)
         {
             if (state == null)
             {
                 return;
             }
 
-            await PlayTransitionAsync(state, true, skipElementIds);
+            await PlayTransitionAsync(state, true, skipElementIds, showPreset);
         }
 
-        private async Task PlayHideTransitionsForAllStatesAsync(HashSet<int> skipElementIds)
+        private async Task PlayHideTransitionsForAllStatesAsync(HashSet<int> skipElementIds, string hidePreset)
         {
             if (stateStack == null || stateStack.Count == 0)
             {
@@ -258,13 +269,14 @@ namespace UiFramework.Runtime.Manager
             List<Task> hides = new List<Task>(states.Length);
             for (int i = 0; i < states.Length; i++)
             {
-                hides.Add(PlayTransitionAsync(states[i], false, skipElementIds));
+                hides.Add(PlayTransitionAsync(states[i], false, skipElementIds, hidePreset));
             }
 
             await Task.WhenAll(hides);
         }
 
-        private static async Task PlayTransitionAsync(UiState state, bool isShow, HashSet<int> skipElementIds)
+        // presetOverride: per-call UiTransition preset, or null to play each element's own show / hide animation.
+        private static async Task PlayTransitionAsync(UiState state, bool isShow, HashSet<int> skipElementIds, string presetOverride)
         {
             if (state == null)
             {
@@ -308,7 +320,7 @@ namespace UiFramework.Runtime.Manager
                 UiElement uiElement = elements[i] as UiElement;
                 if (uiElement != null)
                 {
-                    tasks.Add(isShow ? uiElement.ShowAsync() : uiElement.HideAsync());
+                    tasks.Add(isShow ? uiElement.ShowAsync(presetOverride) : uiElement.HideAsync(presetOverride));
                     continue;
                 }
 
@@ -321,7 +333,7 @@ namespace UiFramework.Runtime.Manager
             }
         }
 
-        private async Task LoadStateScenesAsync(UiState state, object context, bool prepareForShow, HashSet<int> skipPrepareElementIds)
+        private async Task LoadStateScenesAsync(UiState state, object context, bool prepareForShow, HashSet<int> skipPrepareElementIds, string showPreset)
         {
             if (state == null)
             {
@@ -368,7 +380,7 @@ namespace UiFramework.Runtime.Manager
 
                 if (prepareForShow)
                 {
-                    PrepareShowTransition(state, skipPrepareElementIds);
+                    PrepareShowTransition(state, skipPrepareElementIds, showPreset);
                 }
             }
         }
@@ -534,7 +546,8 @@ namespace UiFramework.Runtime.Manager
             }
         }
 
-        public static async Task HideUI()
+        // Pops the top state. transition (optional): HidePreset plays on its elements instead of their own hide animation.
+        public static async Task HideUI(UiTransition transition = null)
         {
             if (instance == null || instance.stateStack.Count == 0)
             {
@@ -543,7 +556,7 @@ namespace UiFramework.Runtime.Manager
 
             UiState popped = instance.stateStack.Pop();
 
-            await PlayTransitionAsync(popped, false, null);
+            await PlayTransitionAsync(popped, false, null, transition != null ? transition.HidePreset : null);
 
             await instance.ReleaseStateScenesAsync(popped);
             popped.Dispose();
@@ -625,7 +638,7 @@ namespace UiFramework.Runtime.Manager
 
                     if (playHideTransitions)
                     {
-                        await PlayTransitionAsync(poppedState, false, null);
+                        await PlayTransitionAsync(poppedState, false, null, null);
                     }
 
                     await ReleaseStateScenesAsync(poppedState);

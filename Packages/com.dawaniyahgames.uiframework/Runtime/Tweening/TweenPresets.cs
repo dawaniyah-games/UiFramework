@@ -11,6 +11,9 @@ namespace UiFramework.Tweening
     // Slides: the name is the direction of travel, for show AND hide.
     //   SlideRight show: enters from the left edge moving right. SlideRight hide: keeps moving right, leaves on the right.
     // Entrances use EaseOut (they slow down into place); exits are shorter and use EaseIn (they speed up as they go).
+    // Every show / hide fades: Fade and Scale over their whole duration, all others at their edges (fade in during the
+    // first 40% of a show, fade out during the last 40% of a hide). Calling ClickPop / SettlePop / ShakeLocal directly
+    // (button feedback) doesn't fade.
     // Every preset starts from and returns to the object's base pose (recorded once in UiTweenState), so repeated or
     // interrupted animations never drift, and a newer animation on the same object stops the older one.
     public static class TweenPresets
@@ -47,6 +50,9 @@ namespace UiFramework.Tweening
         private const float defaultShakeDuration = 0.32f;
         private const float shakeCycles = 3f;
 
+        // Share of a slide / pop / shake that fades: the first part of a show, the last part of a hide.
+        private const float edgeFadePortion = 0.4f;
+
         // Slide distance for objects without a RectTransform (local units).
         private const float nonUiSlideDistance = 10f;
 
@@ -69,6 +75,25 @@ namespace UiFramework.Tweening
             return presetKeys.AsReadOnly();
         }
 
+        // Finds a built-in preset by name, ignoring case ("slideleft" -> "SlideLeft").
+        public static bool TryGetPresetKey(string name, out string presetKey)
+        {
+            presetKey = null;
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return false;
+            }
+
+            string normalized = Normalize(name);
+            if (!presetKeys.Contains(normalized))
+            {
+                return false;
+            }
+
+            presetKey = normalized;
+            return true;
+        }
+
         // One plain sentence describing what the preset looks like when showing or hiding, for editor UI.
         public static string Describe(string presetKey, bool isShow)
         {
@@ -81,19 +106,19 @@ namespace UiFramework.Tweening
                 case ScaleKey:
                     return isShow ? "Fades in while growing slightly to full size." : "Fades out while shrinking slightly.";
                 case SlideRightKey:
-                    return isShow ? "Enters from the left edge, moving right." : "Keeps moving right and leaves past the right edge.";
+                    return isShow ? "Fades in while entering from the left edge, moving right." : "Keeps moving right and fades out as it leaves past the right edge.";
                 case SlideLeftKey:
-                    return isShow ? "Enters from the right edge, moving left." : "Keeps moving left and leaves past the left edge.";
+                    return isShow ? "Fades in while entering from the right edge, moving left." : "Keeps moving left and fades out as it leaves past the left edge.";
                 case SlideUpKey:
-                    return isShow ? "Enters from the bottom edge, moving up." : "Keeps moving up and leaves past the top edge.";
+                    return isShow ? "Fades in while entering from the bottom edge, moving up." : "Keeps moving up and fades out as it leaves past the top edge.";
                 case SlideDownKey:
-                    return isShow ? "Enters from the top edge, moving down." : "Keeps moving down and leaves past the bottom edge.";
+                    return isShow ? "Fades in while entering from the top edge, moving down." : "Keeps moving down and fades out as it leaves past the bottom edge.";
                 case ClickPopKey:
-                    return "A quick pop. Feedback for buttons; it doesn't hide anything.";
+                    return isShow ? "A quick pop while fading in." : "A quick pop, then fades out.";
                 case SettlePopKey:
-                    return "A gentle pulse. Feedback; it doesn't hide anything.";
+                    return isShow ? "A gentle pulse while fading in." : "A gentle pulse, then fades out.";
                 case ShakeKey:
-                    return "A short side-to-side shake (e.g. for errors). Feedback; it doesn't hide anything.";
+                    return isShow ? "A short side-to-side shake while fading in." : "A short side-to-side shake, then fades out.";
                 default:
                     return "Unknown preset; nothing plays.";
             }
@@ -106,6 +131,8 @@ namespace UiFramework.Tweening
                 return Task.CompletedTask;
             }
 
+            // Fade and Scale fade over their whole duration. Every other show / hide fades at its edges (in during the
+            // first part of a show, out during the last part of a hide), which softens the motion.
             switch (Normalize(presetKey))
             {
                 case FadeKey:
@@ -113,22 +140,62 @@ namespace UiFramework.Tweening
                 case ScaleKey:
                     return PlayZoomAsync(target, isShow);
                 case ClickPopKey:
-                    return ClickPop(target.transform);
+                    return WithEdgeFade(target, isShow, clickUp + clickDown, ClickPop(target.transform));
                 case SettlePopKey:
-                    return SettlePop(target.transform);
+                    return WithEdgeFade(target, isShow, settleUp + settleDown, SettlePop(target.transform));
                 case ShakeKey:
-                    return ShakeLocal(target.transform);
+                    return WithEdgeFade(target, isShow, defaultShakeDuration, ShakeLocal(target.transform));
                 case SlideLeftKey:
-                    return PlaySlideAsync(target, isShow, Vector2.left);
+                    return WithEdgeFade(target, isShow, GetSlideDuration(isShow), PlaySlideAsync(target, isShow, Vector2.left));
                 case SlideRightKey:
-                    return PlaySlideAsync(target, isShow, Vector2.right);
+                    return WithEdgeFade(target, isShow, GetSlideDuration(isShow), PlaySlideAsync(target, isShow, Vector2.right));
                 case SlideUpKey:
-                    return PlaySlideAsync(target, isShow, Vector2.up);
+                    return WithEdgeFade(target, isShow, GetSlideDuration(isShow), PlaySlideAsync(target, isShow, Vector2.up));
                 case SlideDownKey:
-                    return PlaySlideAsync(target, isShow, Vector2.down);
+                    return WithEdgeFade(target, isShow, GetSlideDuration(isShow), PlaySlideAsync(target, isShow, Vector2.down));
                 default:
                     return Task.CompletedTask;
             }
+        }
+
+        private static float GetSlideDuration(bool isShow)
+        {
+            return isShow ? slideShowDuration : slideHideDuration;
+        }
+
+        private static Task WithEdgeFade(GameObject target, bool isShow, float duration, Task motion)
+        {
+            return Task.WhenAll(motion, PlayEdgeFadeAsync(target, isShow, duration));
+        }
+
+        // Show: alpha 0 -> base during the first edgeFadePortion of the motion. Hide: alpha -> 0 during the last
+        // edgeFadePortion, so the element is fully visible while it moves and never pops in or out.
+        private static Task PlayEdgeFadeAsync(GameObject target, bool isShow, float duration)
+        {
+            UiTweenState state = GetOrCreateTweenState(target);
+            int run = state.BeginAnimation(UiTweenChannels.Alpha);
+            CanvasGroup group = GetOrAddCanvasGroup(target);
+
+            float visibleAlpha = isShow ? state.BaseAlpha : group.alpha;
+            if (isShow)
+            {
+                group.alpha = 0f;
+            }
+
+            return Tween.RunAsync(target, duration, TweenCurves.Linear, true, default,
+                () => state != null && state.IsCurrent(run, UiTweenChannels.Alpha), p =>
+                {
+                    if (isShow)
+                    {
+                        float fadeIn = Mathf.Clamp01(p / edgeFadePortion);
+                        group.alpha = visibleAlpha * TweenCurves.EaseOut.Evaluate(fadeIn);
+                    }
+                    else
+                    {
+                        float fadeOut = Mathf.Clamp01((p - (1f - edgeFadePortion)) / edgeFadePortion);
+                        group.alpha = visibleAlpha * (1f - TweenCurves.EaseIn.Evaluate(fadeOut));
+                    }
+                });
         }
 
         // Puts target in the pose its show animation starts from. Call it right after the element is loaded, before
@@ -174,6 +241,12 @@ namespace UiFramework.Tweening
                 case SlideDownKey:
                     SetSlideStart(target, state, Vector2.down);
                     break;
+            }
+
+            // Every show except None fades in at least at its start (see PlayAsync).
+            if (key != NoneKey && presetKeys.Contains(key))
+            {
+                GetOrAddCanvasGroup(target).alpha = 0f;
             }
         }
 

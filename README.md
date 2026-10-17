@@ -97,7 +97,9 @@ public class MainMenuUiElement : UiElement
 | `await UiManager.InitializeAsync()` | Create the manager and load `UiConfig` (no-op if already initialized) |
 | `await UiManager.ShowState<T>(context, additive)` | Show the state whose key equals `T`'s class name |
 | `await UiManager.ShowStateByKey("Key", context, additive)` | Show a state by its key |
+| `await UiManager.ShowState<T>(context, transition: UiTransition.ShowWith(TweenPresets.ScaleKey))` | Optional: play a different show animation for this call only |
 | `await UiManager.HideUI()` | Pop and unload the top state |
+| `await UiManager.HideUI(UiTransition.HideWith(TweenPresets.SlideRightKey))` | Optional: play a different hide animation for this call only |
 | `UiManager.GetCurrentState()` | Current (or currently loading) state |
 | `UiManager.IsLastSceneActive<T>()` | Whether `T` is the top state |
 | `await UiManager.ResetUIAsync()` | Hide and unload every state |
