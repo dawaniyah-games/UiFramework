@@ -1,32 +1,47 @@
-## What's Changed
+## UI Framework v1.1.0
 
-Merged `dev` → `main`
+A consistent layout for every UI element scene with one-click validation and fixes, a redesigned Elements tab with search, and much smoother animations.
 
+### Highlights
 
-### Version Information
-- **Version**: v1.0.39
-- **Package**: com.dawaniyahgames.uiframework
+**UI element scene contract**
+- Every element scene follows `<Name>Root → Canvas → one full-screen Root`, so show/hide animations move the whole screen.
+- New elements are created with this layout and the **Global Canvas Settings** (General tab) instead of Unity's canvas defaults.
+- Validation shows each element's status; **Fix Structure** only creates and reparents objects (never deletes or resizes), with Undo.
+- Every fix asks first in a clear popup: what will change, a **Now / After** hierarchy preview, and what still needs manual work.
+
+**Elements and States tabs**
+- Elements tab has the same layout as States: search, a list with status icons, and a settings panel per element (Open Scene, Structure, Animations, Canvas, Addressables).
+- Search by name or part of the name in both tabs; "Add element scene" in States suggests matching scenes as you type.
+
+**Smoother animations**
+- Fixed: `Scale` ended at 0.9× and shrank further every show/hide cycle; `ClickPop` grew buttons when tapped repeatedly.
+- Entrances ease out, exits are shorter and ease in; no more jump on the first frame after a scene loads; overlapping animations no longer fight.
+- `Scale` is now a subtle zoom with a fade; `Shake` is a smooth wiggle instead of random jitter.
+- Slides move in their named direction on show **and** hide (Slide Right enters from the left and leaves on the right).
+
+### Upgrade notes
+- No breaking API changes.
+- **Deprecated:** `UiManager.ResetUI()`. Use `await UiManager.ResetUIAsync()` (`ResetUI()` no longer blocks the main thread).
+- `TweenCurves.EaseIn` / `EaseOut` / `EaseInOut` now have the shapes their names describe, and preset timings changed slightly.
+- `UiGlobalCanvasSettings` is created automatically at `Assets/UiConfigs/UiGlobalCanvasSettings.asset`. Existing scenes are only changed when you run Fix Structure or Use Default Settings.
+
+Full details: [CHANGELOG.md](https://github.com/dawaniyah-games/UiFramework/blob/v1.1.0/CHANGELOG.md)
 
 ### Installation
 
+Package Manager → **+** → *Add package from git URL…*
 
-#### Via Package Manager UI
 ```
-  https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.0.39
+https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.1.0
 ```
 
-#### Via manifest.json
+Or in `Packages/manifest.json`:
+
 ```json
 {
   "dependencies": {
-      "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.0.39"
+    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.1.0"
   }
 }
 ```
-
-### Animation & Transition Improvements (v1.0.37)
-- Per-element animation system: each UI element can have its own show/hide preset (Fade, Scale, Slide, etc.)
-- SlideUp/Down/Left/Right now match movement direction (e.g. SlideUp moves up from below)
-- Shared UI elements (e.g. NavBar) animate only once, not on every state switch
-- Overlapping transitions: new UI animates in while old UI animates out (no empty gap)
-- Animation target auto-detection: animations run on the first child under a Canvas

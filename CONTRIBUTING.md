@@ -65,6 +65,7 @@ Common scopes: `runtime`, `core`, `editor`, `tweening`, `sample`, `release`.
 2. In `CHANGELOG.md`, rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD` and add a new empty `## [Unreleased]` above it.
 3. Update the version line at the top of `DESIGN.md` and the pinned example in `README.md`.
 4. Open a PR `dev → main` titled `release: vX.Y.Z - short description`, then merge.
+   - `main` is guarded by the **Protect-main** ruleset: 1 approving review and a required status check named "Bump Package Version". That check comes from a workflow that no longer exists, so it never reports. Until the ruleset is updated, repository admins merge release PRs with the bypass (*Merge without waiting for requirements*, or `gh pr merge <n> --merge --admin`).
 5. The **Auto release on main** workflow (`.github/workflows/release.yml`) reads the version, creates and pushes tag `vX.Y.Z`, and publishes a GitHub Release with generated notes.
    - It **fails if the tag already exists**, which almost always means step 1 was skipped. Bump the version and merge again.
 
