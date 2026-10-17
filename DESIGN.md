@@ -205,17 +205,18 @@ Validation issue codes (`UiElementStructureIssueCode`):
 
 ### 7.2 Presets
 
-Presets are strings stored on each `UiElement` (`showAnimationPreset`, `hideAnimationPreset`) and chosen in the **Elements** tab, which shows a one-line description of each choice (`TweenPresets.Describe`). All presets run on unscaled time. **Entrances use ease-out** (they slow down into place); **exits are shorter and use ease-in** (they speed up as they leave), the usual pattern for UI that feels calm rather than jumpy.
+Presets are strings stored on each `UiElement` (`showAnimationPreset`, `hideAnimationPreset`) and chosen in the **Elements** tab, which shows a one-line description of each choice (`TweenPresets.Describe`). All presets run on unscaled time. **Every show and hide fades** (Fade and Scale over their whole duration, the others at their edges), so nothing pops in or out. **Entrances use ease-out** (they slow down into place); **exits are shorter and use ease-in** (they speed up as they leave), the usual pattern for UI that feels calm rather than jumpy.
 
 | Key | Show | Hide |
 | --- | --- | --- |
 | `None` | appears instantly | disappears instantly |
 | `Fade` | alpha 0 → 1, 0.22 s (adds a `CanvasGroup` if missing) | alpha → 0, 0.16 s |
 | `Scale` | subtle zoom **with fade**: scale 0.94× → 1×, alpha 0 → 1, 0.26 s | scale → 0.96×, alpha → 0, 0.18 s |
-| `SlideRight` / `SlideLeft` / `SlideUp` / `SlideDown` | **moves in the named direction**: enters from the opposite edge (SlideRight enters from the left), 0.32 s | **keeps moving in the named direction** and leaves past that edge (SlideRight leaves on the right), 0.24 s |
-| `ClickPop`, `SettlePop`, `Shake` | feedback effects (pop 1.08×, pulse 1.04×, smooth fading side-to-side shake); they don't hide anything | same |
+| `SlideRight` / `SlideLeft` / `SlideUp` / `SlideDown` | **moves in the named direction**: enters from the opposite edge (SlideRight enters from the left), 0.32 s, fading in during the first 40% | **keeps moving in the named direction** and leaves past that edge (SlideRight leaves on the right), 0.24 s, fading out during the last 40% |
+| `ClickPop`, `SettlePop`, `Shake` | pop 1.08× / pulse 1.04× / smooth fading side-to-side shake, fading in during the first 40% | the same motion, fading out during the last 40% |
 
 - **Slides:** the name is always the direction of travel, for show and for hide. The distance is the canvas width or height (falling back to `Screen` size), so a screen enters and leaves fully off-screen.
+- **Edge fades:** slides, pops and shake fade in during the first 40% of a show and out during the last 40% of a hide, so the element is fully visible while it moves but never appears or vanishes abruptly. This applies only when they run as a show / hide (`PlayAsync`); calling `TweenPresets.ClickPop` / `SettlePop` / `ShakeLocal` directly as button feedback never fades.
 - **Base pose:** `UiTweenState` (added on demand) records the target's resting position, anchored position, scale and alpha the first time it animates. Every preset starts from and returns to that pose, so repeated, re-triggered or interrupted animations never drift. (Before 1.1.0, Scale used the current size as its base, so a shown screen ended at 0.9× and shrank further every cycle.)
 - **No skipped frames:** `Tween.RunAsync` advances by at most `Tween.MaxFrameStep` (1/30 s) per frame. A long frame, like the one where a scene loads, slows the animation slightly instead of jumping past half of it.
 - **One animation per channel:** a new animation stops older ones on the same object that drive the same thing (position, scale, alpha). A button pop doesn't stop a slide, but a new show stops a running hide.
