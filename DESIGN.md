@@ -204,23 +204,26 @@ Validation issue codes (`UiElementStructureIssueCode`):
 
 ### 7.2 Presets
 
-Presets are strings stored on each `UiElement` (`showAnimationPreset`, `hideAnimationPreset`) and chosen in the **Elements** tab. All presets use unscaled time, 0.20 s and an ease-out curve.
+Presets are strings stored on each `UiElement` (`showAnimationPreset`, `hideAnimationPreset`) and chosen in the **Elements** tab, which shows a one-line description of each choice (`TweenPresets.Describe`). All presets run on unscaled time. **Entrances use ease-out** (they slow down into place); **exits are shorter and use ease-in** (they speed up as they leave), the usual pattern for UI that feels calm rather than jumpy.
 
 | Key | Show | Hide |
 | --- | --- | --- |
-| `None` | none | none |
-| `Fade` | CanvasGroup alpha 0 → 1 (adds a `CanvasGroup` if missing) | 1 → 0 |
-| `Scale` | scale 0.9× → 1× | 1× → 0.9× |
-| `SlideUp` / `SlideDown` / `SlideLeft` / `SlideRight` | **moves in the named direction** from off-canvas to its base position (SlideUp enters from below) | keeps moving the same direction off-canvas |
-| `ClickPop`, `SettlePop`, `Shake` | feedback punches, the same for show and hide | |
+| `None` | appears instantly | disappears instantly |
+| `Fade` | alpha 0 → 1, 0.22 s (adds a `CanvasGroup` if missing) | alpha → 0, 0.16 s |
+| `Scale` | subtle zoom **with fade**: scale 0.94× → 1×, alpha 0 → 1, 0.26 s | scale → 0.96×, alpha → 0, 0.18 s |
+| `SlideRight` / `SlideLeft` / `SlideUp` / `SlideDown` | **moves in the named direction**: enters from the opposite edge (SlideRight enters from the left), 0.32 s | **keeps moving in the named direction** and leaves past that edge (SlideRight leaves on the right), 0.24 s |
+| `ClickPop`, `SettlePop`, `Shake` | feedback effects (pop 1.08×, pulse 1.04×, smooth fading side-to-side shake); they don't hide anything | same |
 
-- The slide distance is the parent canvas width or height, falling back to `Screen` size.
-- `UiTweenState` (added on demand) records the target's **base** position, anchored position and scale the first time it animates. Repeated slides always return to the authored layout instead of drifting.
-- `PrepareForShow()` applies the preset's starting pose immediately after each scene finishes loading, in the same continuation as `Populate`, so the element does not flash at its final pose before animating in.
+- **Slides:** the name is always the direction of travel, for show and for hide. The distance is the canvas width or height (falling back to `Screen` size), so a screen enters and leaves fully off-screen.
+- **Base pose:** `UiTweenState` (added on demand) records the target's resting position, anchored position, scale and alpha the first time it animates. Every preset starts from and returns to that pose, so repeated, re-triggered or interrupted animations never drift. (Before 1.0.41, Scale used the current size as its base, so a shown screen ended at 0.9× and shrank further every cycle.)
+- **No skipped frames:** `Tween.RunAsync` advances by at most `Tween.MaxFrameStep` (1/30 s) per frame. A long frame, like the one where a scene loads, slows the animation slightly instead of jumping past half of it.
+- **One animation per channel:** a new animation stops older ones on the same object that drive the same thing (position, scale, alpha). A button pop doesn't stop a slide, but a new show stops a running hide.
+- **No flash:** `PrepareForShow()` → `TweenPresets.PrepareShow` puts the element in its show start pose right after its scene loads, in the same continuation as `Populate`. It also undoes leftovers from an earlier hide (faded out, off-screen).
+- Stacked states hide in parallel during a non-additive switch, while the new state shows.
 
 ### 7.3 Extending
 
-Adding a preset means changing three places: the `TweenPresets` key constant + `presetKeys` list, the `TweenPresets.PlayAsync` branch, and the starting pose in `UiElement.PrepareForShow`. `ShowAsync`, `HideAsync` and `PrepareForShow` are `virtual` for per-element custom animation.
+Adding a preset means changing `TweenPresets` only: the key constant, the `presetKeys` list, the `PlayAsync` branch, its start pose in `PrepareShow`, and its text in `Describe`. Use `Tween.RunAsync` with a `UiTweenState` run so it can be interrupted cleanly. `ShowAsync`, `HideAsync` and `PrepareForShow` stay `virtual` for per-element custom animation.
 
 ## 8. Editor pipeline
 
@@ -274,7 +277,6 @@ These hold today. A change that breaks one is a design change and needs this doc
 | `ResetUI()` | Blocks with `Task.Wait()`. Can deadlock on the main thread, so avoid it. |
 | `IsLastSceneActive<T>()` | Throws on an empty stack. |
 | Type resolution | Reflection over all assemblies at init, matched by simple class name (§5.3). |
-| Tweens | Preset tweens are not cancellable. Starting a new animation on the same target mid-tween can leave a mixed pose. |
 | Non-`UiElement` `IUiElement`s | Receive `Populate` but never animate. |
 | Samples | `package.json` declares `Samples~/BasicSetup`, but that folder is empty. The working sample is the host project under `Assets/`. |
 

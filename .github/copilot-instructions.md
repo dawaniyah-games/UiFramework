@@ -31,8 +31,8 @@ Don't restate or override those documents here. If they and this file disagree, 
 
 ## When changing things
 
-- New tween preset: `TweenPresets` (key + list + `PlayAsync`) **and** `UiElement.PrepareForShow`.
+- New tween preset: only in `TweenPresets` (key + list + `PlayAsync` + `PrepareShow` + `Describe`), run via `Tween.RunAsync` with a `UiTweenState` run. Slides move in their named direction on show and hide.
 - New or changed generated code: edit `Editor/Templates/*.txt`. The output must satisfy CODING_STANDARDS.
 - Behaviour, API or editor workflow change: update DESIGN.md (and README.md if user-facing) and add a `CHANGELOG.md` `[Unreleased]` entry in the same change.
 - Version bumps: `package.json` `version`, SemVer. Release steps are in CONTRIBUTING.md.
-- Verify runtime changes in Play Mode (CODING_STANDARDS §11). There are no automated tests yet.
+- Run the EditMode and PlayMode tests in `Packages/com.dawaniyahgames.uiframework/Tests/`, and verify runtime changes in Play Mode with the sample project (CODING_STANDARDS §11).

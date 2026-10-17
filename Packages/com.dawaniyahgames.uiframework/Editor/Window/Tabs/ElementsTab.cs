@@ -754,26 +754,55 @@ namespace UiFramework.Editor.Window.Tabs
             string currentShow = string.IsNullOrWhiteSpace(info.ShowPreset) || !presetKeys.Contains(info.ShowPreset) ? TweenPresets.NoneKey : info.ShowPreset;
             string currentHide = string.IsNullOrWhiteSpace(info.HidePreset) || !presetKeys.Contains(info.HidePreset) ? TweenPresets.NoneKey : info.HidePreset;
 
-            DropdownField showDropdown = new DropdownField("Show", presetKeys, currentShow);
-            DropdownField hideDropdown = new DropdownField("Hide", presetKeys, currentHide);
-            SetLabelWidth(showDropdown);
-            SetLabelWidth(hideDropdown);
+            DropdownField showDropdown = CreatePresetDropdown("Show", presetKeys, currentShow);
+            DropdownField hideDropdown = CreatePresetDropdown("Hide", presetKeys, currentHide);
+            Label showDescription = CreatePresetDescription(TweenPresets.Describe(currentShow, true));
+            Label hideDescription = CreatePresetDescription(TweenPresets.Describe(currentHide, false));
 
             showDropdown.RegisterValueChangedCallback(evt =>
             {
                 WriteElementAnimationPresets(info.ScenePath, evt.newValue, hideDropdown.value);
                 info.ShowPreset = evt.newValue;
+                showDescription.text = TweenPresets.Describe(evt.newValue, true);
             });
 
             hideDropdown.RegisterValueChangedCallback(evt =>
             {
                 WriteElementAnimationPresets(info.ScenePath, showDropdown.value, evt.newValue);
                 info.HidePreset = evt.newValue;
+                hideDescription.text = TweenPresets.Describe(evt.newValue, false);
             });
 
             section.Add(showDropdown);
+            section.Add(showDescription);
             section.Add(hideDropdown);
+            section.Add(hideDescription);
+
+            Label directionNote = CreateLine("Slides move in the direction in their name, both when showing and hiding: Slide Right enters from the left and leaves on the right.", mutedColor);
+            directionNote.style.fontSize = 11;
+            directionNote.style.marginTop = 6;
+            section.Add(directionNote);
             return section;
+        }
+
+        private static DropdownField CreatePresetDropdown(string label, List<string> presetKeys, string current)
+        {
+            DropdownField dropdown = new DropdownField(label, presetKeys, current);
+            dropdown.formatListItemCallback = key => ObjectNames.NicifyVariableName(key);
+            dropdown.formatSelectedValueCallback = key => ObjectNames.NicifyVariableName(key);
+            SetLabelWidth(dropdown);
+            return dropdown;
+        }
+
+        private static Label CreatePresetDescription(string text)
+        {
+            Label description = new Label(text);
+            description.style.whiteSpace = WhiteSpace.Normal;
+            description.style.color = mutedColor;
+            description.style.fontSize = 11;
+            description.style.marginLeft = fieldLabelWidth + 6;
+            description.style.marginBottom = 4;
+            return description;
         }
 
         private VisualElement CreateCanvasSection(UiElementSceneInfo info, UiGlobalCanvasSettings canvasSettings)

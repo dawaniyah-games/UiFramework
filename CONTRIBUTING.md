@@ -55,7 +55,7 @@ Common scopes: `runtime`, `core`, `editor`, `tweening`, `sample`, `release`.
 - [ ] Assembly direction respected (`Tweening ← Core ← Runtime ← Editor`), with no `UnityEditor` usage in runtime assemblies.
 - [ ] No serialized field renamed or removed without `[FormerlySerializedAs]`.
 - [ ] `.meta` files committed for every new file or folder.
-- [ ] Verified in Play Mode with the sample project ([CODING_STANDARDS.md §11](CODING_STANDARDS.md#11-testing--verification)).
+- [ ] EditMode and PlayMode tests pass (Test Runner), and the change was checked in Play Mode with the sample project ([CODING_STANDARDS.md §11](CODING_STANDARDS.md#11-testing--verification)).
 - [ ] [DESIGN.md](DESIGN.md) / [README.md](README.md) updated if behaviour, API or editor workflow changed.
 - [ ] Entry added under `## [Unreleased]` in [CHANGELOG.md](CHANGELOG.md).
 

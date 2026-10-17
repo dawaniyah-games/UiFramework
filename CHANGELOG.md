@@ -23,10 +23,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Short plain-language issue summaries in the popup and tooltips (full details still in the Console)
   - Fixes only create and reparent objects (Undo-recorded, never delete). Content that doesn't fill the screen is always wrapped in a new full-screen Root and never resized, so the layout is unchanged
   - Default canvas values are written only when a scene or its Canvas is created, or by an element's Use Default Settings; sorting order/layer, override sorting, world camera, plane distance and shader channels are never touched
-- EditMode tests for the contract under `Tests/Editor`
+- EditMode tests for the contract under `Tests/Editor`, and PlayMode tests for the animations under `Tests/Runtime`
 - `com.unity.ugui` package dependency
+- `TweenPresets.PrepareShow` and `TweenPresets.Describe`; `Tween.RunAsync` (shared, interruptible animation loop); `UiTweenChannels`
+- Elements tab Animations section shows friendly preset names and what each choice does on show and on hide
+
+### Changed
+- Smoother, calmer animations: entrances ease out, exits are shorter and ease in, slides take 0.32 s in / 0.24 s out instead of 0.20 s, fades 0.22 / 0.16 s
+- `Scale` is now a subtle zoom combined with a fade (0.94× → 1× in, → 0.96× out) instead of a 0.9× scale that popped in and out
+- `Shake` is a smooth, fading side-to-side motion instead of random jitter; `ClickPop` / `SettlePop` are gentler (1.08× / 1.04×) with no bounce
+- `TweenCurves.EaseOut` / `EaseIn` are now true cubic ease-out / ease-in, and `EaseInOut` no longer pauses half-way (their old shapes didn't match their names)
+- A long frame (e.g. right after a scene loads) no longer makes an animation jump ahead: each frame advances at most 1/30 s
+- Stacked states hide in parallel instead of one after another
+- `UiElement.PrepareForShow` uses `TweenPresets.PrepareShow` (one place for start poses)
 
 ### Fixed
+- `Scale` show ended at 0.9× instead of the real size, and each show/hide cycle shrank the screen further; `ClickPop` grew a button when tapped repeatedly. Presets now use the recorded base pose
+- Starting an animation on an object while another was running left a mixed pose; the newer animation now stops the older one
+- Slide presets move in their named direction on show and on hide (SlideRight enters from the left and leaves on the right), now covered by tests
+- An element shown again after being hidden by a different preset could stay faded out or off-screen
 - Elements tab no longer closes scenes the user already had open when reading or writing animation presets. Open scenes are edited in place and left unsaved
 - Creating a UI element now asks to save modified open scenes before replacing them
 - `UiFramework.Tweening` and `UiFramework.Editor` now reference `UnityEngine.UI` explicitly (required on Unity 2021.3/2022.3)

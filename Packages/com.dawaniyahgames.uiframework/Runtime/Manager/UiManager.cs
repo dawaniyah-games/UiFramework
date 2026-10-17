@@ -253,11 +253,15 @@ namespace UiFramework.Runtime.Manager
                 return;
             }
 
+            // All stacked states hide together, so a deep stack doesn't stretch the transition out.
             UiState[] states = stateStack.ToArray();
+            List<Task> hides = new List<Task>(states.Length);
             for (int i = 0; i < states.Length; i++)
             {
-                await PlayTransitionAsync(states[i], false, skipElementIds);
+                hides.Add(PlayTransitionAsync(states[i], false, skipElementIds));
             }
+
+            await Task.WhenAll(hides);
         }
 
         private static async Task PlayTransitionAsync(UiState state, bool isShow, HashSet<int> skipElementIds)

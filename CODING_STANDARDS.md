@@ -101,7 +101,7 @@ Background for each rule is in [DESIGN.md](DESIGN.md).
 4. **One `UiManager`.** Create it only through `UiManager.InitializeAsync()`. Never add it to a scene or instantiate it by hand.
 5. **`UiState` subclasses are type markers.** The runtime always constructs a base `UiState` from `UiConfig`, so subclass constructors and overrides never run. Do not put behaviour there.
 6. **Identify scenes by GUID (`AssetReference.AssetGUID`), never by scene name.**
-7. **New tween presets** are added to `TweenPresets` (key constant + `presetKeys` list + `PlayAsync` branch) **and** to `UiElement.PrepareForShow`. If `PrepareForShow` is missed, the element flashes at its final pose before animating in.
+7. **New tween presets** live entirely in `TweenPresets`: key constant + `presetKeys` list + `PlayAsync` branch + start pose in `PrepareShow` + text in `Describe`. Run them through `Tween.RunAsync` with a `UiTweenState` run so they can be interrupted, and start from / return to the base pose. Entrances ease out, exits ease in, and full-screen motion never overshoots or bounces.
 8. **The package stays dependency-light:** Unity built-ins plus `com.unity.addressables`. A new package dependency needs a `package.json` change and maintainer approval.
 
 ## 8. Public API & versioning
@@ -128,9 +128,15 @@ Templates live in `Packages/com.dawaniyahgames.uiframework/Editor/Templates/`.
 
 ## 11. Testing & verification
 
-The repo has no automated tests yet. `com.unity.test-framework` is installed, and new tests go in `Packages/com.dawaniyahgames.uiframework/Tests/{Editor,Runtime}` with their own asmdefs.
+Automated tests live in `Packages/com.dawaniyahgames.uiframework/Tests/`:
 
-Until tests exist, every runtime change **MUST** be checked in Play Mode with the sample project:
+- `Tests/Editor` (EditMode): the editor tools, e.g. scene validation and fixes, the fix preview, canvas settings, search.
+- `Tests/Runtime` (PlayMode): animations played frame by frame, e.g. slide directions, base pose, interruptions, curve shapes.
+- `Tests/Support`: test-only MonoBehaviours (Editor-only assemblies can't hold components).
+
+Run them from *Window → General → Test Runner* (both EditMode and PlayMode tabs) before opening a PR. A change to editor tools or animations **SHOULD** come with a test.
+
+Tests don't cover the full UiManager flow (Addressables loading, state switching). Every runtime change **MUST** still be checked in Play Mode with the sample project:
 
 1. *UiFramework → UI Setup Manager → General → Build Runtime UiConfig*, then build Addressables content (or use *Use Asset Database* play mode).
 2. Run the bootstrap scene and switch states with the NavBar, or use `UiNavigationSmokeTest` (keys `1` / `2` / `` ` ``).
@@ -227,7 +233,6 @@ The rules above apply to all new and modified code. These pre-existing violation
 | `Core/UiCompoenets/IUiElement.cs`, `UiElement.cs`, `UiElementReference.cs`, `UiPopulationParams.cs`; `Editor/Window/Tabs/IVisualElementTab.cs`, `BaseVisualElementTab.cs` | `using` inside namespace; `UiElement.Populate` and `UiPopulationParams` use single-line `{ }` |
 | `Core/Config/UiConfig.cs`, `Editor/Data/UiStateRegistry.cs`, `Editor/Window/UiSetupEditorWindow.cs` | Target-typed `new()` |
 | `Core/Config/UiConfig.cs` | Lives in the `UiFramework.Core` assembly but declares `namespace UiFramework.Runtime` (kept for compatibility) |
-| `Runtime/Tweening/TweenPresets.cs` | Private constants in `PascalCase` |
 | `Runtime/Manager/UiManager.cs` | `ResetUI()` blocks with `Task.Wait()` (deadlock risk, §5); emoji in log messages; `IsLastSceneActive<T>()` calls `Peek()` without checking for an empty stack |
 | `Editor/CodeGeneration/UiElementScriptBinder.cs` | Declared in the global namespace; uses `?.` on a `MonoScript` (§4.1) |
 | `Editor/**` (pre-1.0.41 files) | Emoji and missing `[UiFramework]` tags in log messages |
