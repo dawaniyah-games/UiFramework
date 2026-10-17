@@ -78,6 +78,62 @@ namespace UiFramework.Tweening.Tests
             Assert.AreEqual(distance, along(), tolerance, "Hide must keep moving the same way and end just past the named edge.");
         }
 
+        // ---------- Edge fade: every show fades in, every hide fades out ----------
+
+        [UnityTest]
+        public IEnumerator EveryShowAndHide_FadesInAndOut()
+        {
+            string[] presets =
+            {
+                TweenPresets.SlideRightKey, TweenPresets.SlideLeftKey, TweenPresets.SlideUpKey, TweenPresets.SlideDownKey,
+                TweenPresets.ClickPopKey, TweenPresets.SettlePopKey, TweenPresets.ShakeKey, TweenPresets.ScaleKey, TweenPresets.FadeKey
+            };
+
+            for (int i = 0; i < presets.Length; i++)
+            {
+                RectTransform root = CreateContentRoot();
+                string preset = presets[i];
+
+                TweenPresets.PrepareShow(preset, root.gameObject);
+                CanvasGroup group = root.GetComponent<CanvasGroup>();
+                Assert.IsNotNull(group, preset + ": show must fade, so it needs a CanvasGroup.");
+                Assert.AreEqual(0f, group.alpha, 0.0001f, preset + ": show starts transparent (no flash).");
+
+                yield return Run(TweenPresets.PlayAsync(preset, root.gameObject, true), null, null);
+                Assert.AreEqual(1f, group.alpha, 0.0001f, preset + ": show ends fully visible.");
+                Assert.AreEqual(1f, root.localScale.x, 0.0001f, preset + ": show ends at full size.");
+
+                yield return Run(TweenPresets.PlayAsync(preset, root.gameObject, false), null, null);
+                Assert.AreEqual(0f, group.alpha, 0.0001f, preset + ": hide ends fully transparent.");
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator SlideHide_StaysFullyVisibleWhileItStartsMoving()
+        {
+            RectTransform root = CreateContentRoot();
+            TweenPresets.PrepareShow(TweenPresets.SlideLeftKey, root.gameObject);
+            yield return Run(TweenPresets.PlayAsync(TweenPresets.SlideLeftKey, root.gameObject, true), null, null);
+
+            CanvasGroup group = root.GetComponent<CanvasGroup>();
+            List<float> alpha = new List<float>();
+            yield return Run(TweenPresets.PlayAsync(TweenPresets.SlideLeftKey, root.gameObject, false), () => -group.alpha, alpha);
+
+            AssertMonotonicIncreasing(alpha, "hide alpha (never fades back in)");
+            Assert.AreEqual(-1f, alpha[alpha.Count / 3], 0.0001f, "The fade only happens at the end of the hide.");
+        }
+
+        [UnityTest]
+        public IEnumerator ClickPop_AsButtonFeedback_DoesNotFade()
+        {
+            RectTransform button = CreateContentRoot();
+
+            yield return Run(TweenPresets.ClickPop(button), null, null);
+
+            CanvasGroup group = button.GetComponent<CanvasGroup>();
+            Assert.IsTrue(group == null || Mathf.Approximately(group.alpha, 1f), "Direct feedback calls must not fade the button.");
+        }
+
         // ---------- Scale (subtle zoom + fade) ----------
 
         [UnityTest]

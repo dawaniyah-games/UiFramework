@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-17
+
+### Added
+- Optional per-call animation override: `UiManager.ShowState<T>` / `ShowStateByKey` / `HideUI` take an optional `UiTransition` (`UiTransition.ShowWith(TweenPresets.ScaleKey)`, `UiTransition.HideWith(...)`, or both). It replaces the elements' configured show / hide animations for that call only; unknown preset names log a warning and fall back to the configured ones
+- `UiElement.PrepareForShow(string presetKey)` and `TweenPresets.TryGetPresetKey`
+
+### Changed
+- Every show / hide animation now fades, which softens the motion: slides, pops and shake fade in during the first 40% of a show and out during the last 40% of a hide (Fade and Scale already fade throughout). Pops and shake used as show / hide now actually show and hide the element. Calling `ClickPop` / `SettlePop` / `ShakeLocal` directly for button feedback is unchanged (no fade)
+
 ## [1.1.0] - 2026-10-17
 
 ### Added

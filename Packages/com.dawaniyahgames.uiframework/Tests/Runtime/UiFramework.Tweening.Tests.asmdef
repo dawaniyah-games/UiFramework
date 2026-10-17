@@ -3,6 +3,8 @@
     "rootNamespace": "UiFramework.Tweening.Tests",
     "references": [
         "UiFramework.Tweening",
+        "UiFramework.Core",
+        "UiFramework.Tests.Support",
         "UnityEngine.TestRunner"
     ],
     "includePlatforms": [],
