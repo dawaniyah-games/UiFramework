@@ -95,10 +95,10 @@ The `defaultState` parameter of `InitializeAsync` is currently unused. There is 
 
 ### 5.2 Showing a state
 
-`ShowState<T>(context, additive)` resolves `T` to its key and delegates to `ShowStateByKey(key, context, additive)`, which calls `LoadAndPushState`:
+`ShowState<T>(context, additive, transition)` resolves `T` to its key and delegates to `ShowStateByKey(key, context, additive, transition)`, which calls `LoadAndPushState`:
 
 ```
-ShowStateByKey(key, ctx, additive)
+ShowStateByKey(key, ctx, additive, transition)
 │
 ├─ newState   = new UiState(key, entry.uiElementScenes)      ← always the base class
 ├─ loadingState = newState                                    ← GetCurrentState() returns it while loading
@@ -140,7 +140,7 @@ Consequences:
 
 ### 5.4 Hiding
 
-`HideUI()` pops the top state, plays its hide animations, releases its scene references (unloading at zero) and disposes it. It does **not** replay show animations on the state underneath.
+`HideUI(transition)` pops the top state, plays its hide animations (or `transition.HidePreset`), releases its scene references (unloading at zero) and disposes it. It does **not** replay show animations on the state underneath.
 
 ### 5.5 Queries
 
@@ -222,7 +222,27 @@ Presets are strings stored on each `UiElement` (`showAnimationPreset`, `hideAnim
 - **No flash:** `PrepareForShow()` → `TweenPresets.PrepareShow` puts the element in its show start pose right after its scene loads, in the same continuation as `Populate`. It also undoes leftovers from an earlier hide (faded out, off-screen).
 - Stacked states hide in parallel during a non-additive switch, while the new state shows.
 
-### 7.3 Extending
+### 7.3 Per-call animation override (`UiTransition`)
+
+Each element's show / hide presets are set in the Elements tab. A call can replace them **for that call only**, without changing the configuration:
+
+```csharp
+// Show the Store with a zoom this time, whatever its elements are configured to do.
+await UiManager.ShowState<StoreUiState>(context, transition: UiTransition.ShowWith(TweenPresets.ScaleKey));
+
+// Close the top state by sliding it out to the right.
+await UiManager.HideUI(UiTransition.HideWith(TweenPresets.SlideRightKey));
+
+// Both sides in a non-additive switch: new screen slides in moving left, old screen leaves moving left.
+await UiManager.ShowStateByKey("ProfileUiState", context, false, new UiTransition(TweenPresets.SlideLeftKey, TweenPresets.SlideLeftKey));
+```
+
+- `ShowPreset` replaces the show animation (and its start pose, via `UiElement.PrepareForShow(string)`) of every element that **appears** in the call. `HidePreset` replaces the hide animation of every element that **disappears** in it: the states leaving in a non-additive switch, or the popped state in `HideUI`.
+- `null` (or `UiTransition.Default`) keeps each element's own animation. Shared elements that stay on screen are still not animated.
+- Preset names are the `TweenPresets.*Key` constants and are matched ignoring case. An unknown name logs a `[UiTransition]` warning and falls back to the elements' own animations, so a typo never breaks navigation.
+- Subclasses that override `PrepareForShow()` keep working: `UiManager` calls the parameterless overload when there is no override, and `PrepareForShow(string)` only when there is one.
+
+### 7.4 Extending
 
 Adding a preset means changing `TweenPresets` only: the key constant, the `presetKeys` list, the `PlayAsync` branch, its start pose in `PrepareShow`, and its text in `Describe`. Use `Tween.RunAsync` with a `UiTweenState` run so it can be interrupted cleanly. `ShowAsync`, `HideAsync` and `PrepareForShow` stay `virtual` for per-element custom animation.
 
@@ -310,7 +330,8 @@ If nothing appears, check the following: the key matches the class name; *Build 
 | --- | --- |
 | `Runtime/Manager/UiManager.cs` | Stack, scene loading and ref counting, transitions, public API |
 | `Core/UiCompoenets/UiState.cs` | Per-state scene list, acquired GUIDs, element discovery and `Populate` |
-| `Core/UiCompoenets/UiElement.cs` | Element base: animation target, show/hide/prepare |
+| `Core/UiCompoenets/UiElement.cs` | Element base: animation target, show/hide/prepare (optionally with a per-call preset) |
+| `Core/Transitions/UiTransition.cs` | Optional per-call animation override for `ShowState*` / `HideUI` |
 | `Core/Config/UiConfig.cs` | Runtime state key → scenes map |
 | `Runtime/Tweening/TweenPresets.cs` | Preset catalogue and implementations |
 | `Editor/Window/UiSetupEditorWindow.cs` | Window host, *Build Runtime UiConfig*, config Addressables setup |

@@ -24,9 +24,10 @@ Don't restate or override those documents here. If they and this file disagree, 
 ## Mental model (details in DESIGN.md)
 
 - `UiManager.InitializeAsync()` creates a DontDestroyOnLoad singleton and loads `UiConfig` from Addressables (address `UiConfig`).
-- `ShowStateByKey(key, context, additive)` builds a **base** `UiState` from `UiConfig`, loads its element scenes by GUID with ref counting, calls `Populate(context)` on every `IUiElement`, then plays overlapping hide/show transitions. Elements already on screen are skipped.
+- `ShowStateByKey(key, context, additive, transition)` builds a **base** `UiState` from `UiConfig`, loads its element scenes by GUID with ref counting, calls `Populate(context)` on every `IUiElement`, then plays overlapping hide/show transitions. Elements already on screen are skipped.
 - `UiState` subclasses are **only type markers** for `ShowState<T>()`. Their class name must equal the state key, and their code never runs.
 - `Populate` can run several times on the same instance (shared scenes), so it must be idempotent.
+- An optional `UiTransition` overrides the show / hide animation for one call only; never change the elements' configured presets for a one-off.
 - The runtime `UiConfig` asset is **generated** by *UiFramework → UI Setup Manager → General → Build Runtime UiConfig* from `UiStateDefinition` assets. Don't hand-edit it.
 
 ## When changing things

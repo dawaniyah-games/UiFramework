@@ -69,6 +69,25 @@ namespace UiFramework.Tweening
             return presetKeys.AsReadOnly();
         }
 
+        // Finds a built-in preset by name, ignoring case ("slideleft" -> "SlideLeft").
+        public static bool TryGetPresetKey(string name, out string presetKey)
+        {
+            presetKey = null;
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return false;
+            }
+
+            string normalized = Normalize(name);
+            if (!presetKeys.Contains(normalized))
+            {
+                return false;
+            }
+
+            presetKey = normalized;
+            return true;
+        }
+
         // One plain sentence describing what the preset looks like when showing or hiding, for editor UI.
         public static string Describe(string presetKey, bool isShow)
         {

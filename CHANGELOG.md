@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Optional per-call animation override: `UiManager.ShowState<T>` / `ShowStateByKey` / `HideUI` take an optional `UiTransition` (`UiTransition.ShowWith(TweenPresets.ScaleKey)`, `UiTransition.HideWith(...)`, or both). It replaces the elements' configured show / hide animations for that call only; unknown preset names log a warning and fall back to the configured ones
+- `UiElement.PrepareForShow(string presetKey)` and `TweenPresets.TryGetPresetKey`
+
 ## [1.1.0] - 2026-10-17
 
 ### Added
