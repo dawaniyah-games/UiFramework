@@ -1,0 +1,2020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UI Framework for Unity</title>
+<meta name="description" content="Build Unity game UI from Addressable scenes on a state stack, with shared elements, built-in animations and an editor that generates the scripts, scenes and config for you.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script>
+// Apply a saved theme before the page paints. Storage can be unavailable (private mode), so failures keep light.
+try {
+    if (localStorage.getItem("uiframework-docs-theme") === "dark") {
+        document.documentElement.setAttribute("data-theme", "dark");
+    }
+} catch (error) {
+}
+</script>
+<style>
+/* Light by default for reading; [data-theme="dark"] switches the page. Code, diagrams and editor illustrations stay
+   dark in both themes, like Unity's own editor, so they read as product shots. */
+:root {
+    --bg: #f6f7fb;
+    --bg-soft: #eceff7;
+    --surface: #ffffff;
+    --surface-raised: #f1f3f9;
+    --border: #dde1ec;
+    --border-strong: #c9cfdf;
+    --heading: #0f1222;
+    --text: #23283f;
+    --text-muted: #4a5170;
+    --text-dim: #6a708c;
+    --primary: #5b3df5;
+    --primary-hover: #4a2ee0;
+    --primary-soft: #efebff;
+    --link: #4a2ee0;
+    --accent: #0a7fbf;
+    --ok: #0f8a5f;
+    --warn: #8a5a00;
+    --shadow: 0 1px 2px rgba(16, 20, 40, 0.06), 0 8px 24px rgba(16, 20, 40, 0.06);
+    --header-bg: rgba(255, 255, 255, 0.88);
+
+    --stage: #12142a;
+    --stage-border: #262a4d;
+    --stage-text: #e8eaff;
+    --stage-muted: #a3a8c7;
+    --code-bg: #12142a;
+
+    --purple: #7c5cff;
+    --cyan: #2ec5ff;
+    --gold: #ffc83d;
+    --pink: #ff4f8b;
+    --green: #34d399;
+    --orange: #ff8a3d;
+
+    --radius: 14px;
+    --max: 1160px;
+    --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+
+:root[data-theme="dark"] {
+    --bg: #0e1020;
+    --bg-soft: #151831;
+    --surface: #171a33;
+    --surface-raised: #20244a;
+    --border: #2b3060;
+    --border-strong: #3a4078;
+    --heading: #ffffff;
+    --text: #e3e6f7;
+    --text-muted: #b4b9d6;
+    --text-dim: #8d93b5;
+    --primary: #7c5cff;
+    --primary-hover: #8f74ff;
+    --primary-soft: rgba(124, 92, 255, 0.16);
+    --link: #a996ff;
+    --accent: #5fd0ff;
+    --ok: #4ade9f;
+    --warn: #ffcf5a;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.25);
+    --header-bg: rgba(14, 16, 32, 0.88);
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 17px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--link); text-decoration: none; font-weight: 500; }
+a:hover { text-decoration: underline; }
+
+h1, h2, h3, h4 { color: var(--heading); line-height: 1.2; margin: 0 0 0.6em; letter-spacing: -0.01em; }
+h1 { font-size: clamp(2.1rem, 4.6vw, 3.4rem); font-weight: 800; letter-spacing: -0.025em; }
+h2 { font-size: clamp(1.55rem, 3vw, 2rem); font-weight: 750; margin-top: 2.2em; }
+h3 { font-size: 1.25rem; font-weight: 700; margin-top: 1.8em; }
+h4 { font-size: 1.05rem; font-weight: 700; margin-top: 1.4em; }
+p { margin: 0 0 1em; }
+ul, ol { padding-left: 1.3em; margin: 0 0 1em; }
+li { margin: 0.3em 0; }
+strong { color: var(--heading); font-weight: 650; }
+
+code {
+    font-family: var(--mono);
+    font-size: 0.86em;
+    background: var(--primary-soft);
+    border: 1px solid transparent;
+    padding: 0.1em 0.4em;
+    border-radius: 6px;
+    color: var(--primary-hover);
+}
+
+:root[data-theme="dark"] code { color: #d9d0ff; }
+
+.menu-path {
+    font-weight: 600;
+    color: var(--heading);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.05em 0.45em;
+    white-space: nowrap;
+}
+
+/* ---------- Header and tabs ---------- */
+
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--header-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+}
+
+.header-inner {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    height: 64px;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    color: var(--heading);
+    white-space: nowrap;
+    font-size: 1.02rem;
+}
+
+.brand small { font-weight: 600; color: var(--text-dim); font-size: 0.82rem; }
+.brand:hover { text-decoration: none; }
+
+.brand-mark {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #7c5cff, #2ec5ff);
+    display: grid;
+    place-items: center;
+}
+
+.brand-mark svg { width: 18px; height: 18px; }
+
+.tabs {
+    display: flex;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex: 1;
+}
+
+.tabs::-webkit-scrollbar { display: none; }
+
+.tab {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font: 600 0.91rem var(--font);
+    padding: 7px 11px;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.tab:hover { color: var(--heading); background: var(--surface-raised); }
+.tab[aria-selected="true"] { color: #fff; background: var(--primary); }
+
+.header-actions { display: flex; gap: 8px; align-items: center; }
+
+.icon-button, .github-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--heading);
+    font: 600 0.9rem var(--font);
+    padding: 7px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.icon-button:hover, .github-link:hover { text-decoration: none; border-color: var(--primary); }
+.github-link svg, .icon-button svg { width: 17px; height: 17px; fill: currentColor; }
+
+@media (max-width: 820px) {
+    .header-inner { height: auto; flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; gap: 10px; }
+    .tabs { order: 3; flex-basis: 100%; }
+    .github-link span, .icon-button span, .brand small { display: none; }
+    .brand { flex: 1; }
+}
+
+/* ---------- Layout ---------- */
+
+main { max-width: var(--max); margin: 0 auto; padding: 0 16px 80px; }
+
+.panel[hidden] { display: none; }
+.panel { animation: panel-in 0.3s ease-out; }
+
+@keyframes panel-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+}
+
+.page-intro { padding: 44px 0 8px; max-width: 780px; }
+.page-intro p { color: var(--text-muted); font-size: 1.15rem; }
+
+.eyebrow {
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--primary);
+    margin-bottom: 12px;
+}
+
+.lead { font-size: 1.15rem; color: var(--text-muted); max-width: 820px; }
+
+.grid { display: grid; gap: 18px; }
+.grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+@media (max-width: 900px) {
+    .grid-3, .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 620px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: minmax(0, 1fr); }
+}
+
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+    box-shadow: var(--shadow);
+}
+
+.card h3, .card h4 { margin-top: 0; }
+.card p { color: var(--text-muted); }
+.card p:last-child { margin-bottom: 0; }
+
+/* Dark panel for diagrams and illustrations, in both themes. */
+.stage-panel {
+    background: var(--stage);
+    border: 1px solid var(--stage-border);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    margin-bottom: 1.4em;
+}
+
+.feature-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 11px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 14px;
+    background: var(--primary-soft);
+}
+
+.feature-icon svg { width: 22px; height: 22px; stroke: var(--primary); }
+
+.callout {
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin: 18px 0;
+    border: 1px solid;
+    border-left-width: 4px;
+    font-size: 0.97rem;
+    background: var(--surface);
+}
+
+.callout p:last-child { margin-bottom: 0; }
+.callout-title { font-weight: 700; display: block; margin-bottom: 4px; }
+.callout.tip { border-color: rgba(15, 138, 95, 0.35); border-left-color: var(--ok); }
+.callout.tip .callout-title { color: var(--ok); }
+.callout.warn { border-color: rgba(138, 90, 0, 0.3); border-left-color: #e0a100; }
+.callout.warn .callout-title { color: var(--warn); }
+.callout.note { border-color: rgba(10, 127, 191, 0.3); border-left-color: var(--accent); }
+.callout.note .callout-title { color: var(--accent); }
+
+.table-wrap {
+    overflow-x: auto;
+    margin: 0 0 1.2em;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+}
+
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { background: var(--surface-raised); color: var(--heading); font-weight: 700; white-space: nowrap; }
+tr:last-child td, tr:last-child th { border-bottom: 0; }
+td code { white-space: nowrap; }
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    padding: 12px 22px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-size: 1rem;
+    font-family: var(--font);
+}
+
+.btn:hover { text-decoration: none; }
+.btn-primary { background: var(--primary); color: #fff; box-shadow: 0 8px 22px rgba(91, 61, 245, 0.3); }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-ghost { background: var(--surface); color: var(--heading); border-color: var(--border-strong); }
+.btn-ghost:hover { border-color: var(--primary); }
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--surface);
+}
+
+h2 .pill { vertical-align: middle; margin-left: 6px; }
+
+/* ---------- Code (dark in both themes) ---------- */
+
+.code {
+    position: relative;
+    margin: 0 0 1.4em;
+    border: 1px solid var(--stage-border);
+    border-radius: 12px;
+    background: var(--code-bg);
+    overflow: hidden;
+}
+
+.code-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--stage-border);
+    background: rgba(255, 255, 255, 0.04);
+    font-size: 0.8rem;
+    color: var(--stage-muted);
+    font-family: var(--mono);
+}
+
+.copy {
+    appearance: none;
+    border: 1px solid var(--stage-border);
+    background: transparent;
+    color: var(--stage-muted);
+    font: 600 0.75rem var(--font);
+    border-radius: 6px;
+    padding: 3px 10px;
+    cursor: pointer;
+}
+
+.copy:hover { color: #fff; border-color: var(--purple); }
+
+pre {
+    margin: 0;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 0.86rem;
+    line-height: 1.65;
+    color: #dfe2fb;
+    tab-size: 4;
+}
+
+pre code { background: none; border: 0; padding: 0; color: inherit; font-size: inherit; }
+:root[data-theme="dark"] pre code { color: inherit; }
+
+.token.comment { color: #8a90b3; font-style: italic; }
+.token.keyword, .token.boolean { color: #c4b1ff; }
+.token.string, .token.char { color: #9ae6be; }
+.token.number { color: #ffbd80; }
+.token.class-name, .token.namespace { color: #8fdcff; }
+.token.function { color: #ffd98a; }
+.token.punctuation, .token.operator { color: #b4b9d6; }
+.token.attr-name, .token.property { color: #8fdcff; }
+
+/* ---------- Media slots ---------- */
+
+.shot { margin: 0 0 1.6em; }
+
+.shot-frame {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--bg-soft);
+    box-shadow: var(--shadow);
+}
+
+.shot-frame img { display: block; width: 100%; height: auto; }
+.shot-missing { display: none; }
+.shot.missing img { display: none; }
+
+.shot.missing .shot-missing {
+    display: grid;
+    place-items: center;
+    text-align: center;
+    min-height: 220px;
+    padding: 28px;
+    background: repeating-linear-gradient(45deg, rgba(91, 61, 245, 0.05) 0 12px, transparent 12px 24px), var(--bg-soft);
+    color: var(--text-dim);
+    font-size: 0.92rem;
+}
+
+.shot.missing .shot-missing strong { display: block; color: var(--text-muted); margin-bottom: 4px; }
+.shot.missing .shot-missing code { font-size: 0.8rem; }
+
+.shot.has-fallback.missing .shot-missing { display: none; }
+.shot .shot-fallback { display: none; }
+.shot.has-fallback.missing .shot-fallback { display: block; }
+
+figcaption { color: var(--text-dim); font-size: 0.88rem; margin-top: 8px; }
+
+.video {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--stage-border);
+    background: linear-gradient(135deg, #2a2160, #12142a);
+    aspect-ratio: 16 / 9;
+    margin: 0 0 1.4em;
+    color: #fff;
+}
+
+.video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+.video-soon { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 20px; }
+
+.video-soon .play {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    display: grid;
+    place-items: center;
+    margin: 0 auto 12px;
+}
+
+.video-soon .play svg { width: 22px; height: 22px; fill: #fff; margin-left: 4px; }
+.video-soon strong { display: block; font-size: 1.05rem; color: #fff; }
+.video-soon span { color: #c9cdf0; font-size: 0.88rem; }
+
+.video.compact { aspect-ratio: auto; min-height: 120px; }
+.video.compact .video-soon { position: relative; padding: 18px; }
+.video.compact .video-soon .play { width: 44px; height: 44px; margin-bottom: 8px; }
+
+.feature-video { max-width: 880px; }
+
+/* ---------- Hero ---------- */
+
+.hero { padding: 56px 0 24px; text-align: center; }
+.hero .lead { margin: 0 auto; }
+.hero h1 { max-width: 920px; margin-left: auto; margin-right: auto; }
+.hero h1 .accent { color: var(--primary); }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 26px 0 18px; justify-content: center; }
+.hero-meta { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 36px; }
+.hero-shot { max-width: 1080px; margin: 0 auto 8px; text-align: left; }
+.hero-shot figcaption { text-align: center; }
+
+/* Unity-editor-style illustration (until images/editor-overview.png exists). */
+.ue {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    font-size: 12px;
+    color: #d2d2d2;
+    background: #191919;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.ue-menu { display: flex; gap: 14px; padding: 5px 12px; background: #191919; color: #c4c4c4; border-bottom: 1px solid #0e0e0e; white-space: nowrap; overflow: hidden; }
+.ue-menu b { color: #fff; font-weight: 600; }
+.ue-toolbar { position: relative; height: 34px; background: #282828; border-bottom: 1px solid #111; display: flex; align-items: center; justify-content: center; gap: 2px; }
+.ue-toolbar .play { width: 30px; height: 22px; border-radius: 3px; background: #3c3c3c; display: grid; place-items: center; }
+.ue-toolbar .play.on { background: #3d7fd1; }
+.ue-toolbar .play svg { width: 11px; height: 11px; fill: #e8e8e8; }
+.ue-body { display: grid; grid-template-columns: 220px minmax(0, 1fr) 270px; height: 560px; background: #111; gap: 2px; }
+.ue-panel { background: #383838; overflow: hidden; display: flex; flex-direction: column; }
+.ue-tabbar { background: #282828; display: flex; align-items: flex-end; height: 24px; flex: none; }
+.ue-tab { background: #383838; color: #e6e6e6; padding: 3px 12px; border-radius: 3px 3px 0 0; font-weight: 600; white-space: nowrap; }
+.ue-tab.off { background: transparent; color: #9a9a9a; font-weight: 400; }
+.ue-tabbar .ue-res { margin-left: auto; color: #b0b0b0; padding: 0 8px 4px; white-space: nowrap; }
+
+.ue-tree { padding: 4px 0; overflow: hidden; }
+.ue-row { padding: 2px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; gap: 6px; align-items: center; }
+.ue-row.scene { color: #e8e8e8; font-weight: 600; background: #2f2f2f; margin-top: 3px; }
+.ue-row.scene::before { content: "\25BE"; color: #9a9a9a; font-size: 10px; }
+.ue-row.child { padding-left: 26px; color: #c8c8c8; }
+.ue-row.child.deep { padding-left: 40px; }
+.ue-row.sel { background: #2c5d87; color: #fff; }
+.ue-row i { width: 12px; height: 12px; border-radius: 2px; background: #6c8fbd; display: inline-block; flex: none; }
+.ue-row.scene i { background: transparent; border: 1px solid #aaa; border-radius: 2px; }
+.ue-note { margin-top: auto; padding: 8px 10px; color: #9fd3a6; font-size: 11px; border-top: 1px solid #2a2a2a; line-height: 1.4; }
+
+.ue-game { background: #1f1f1f; }
+.ue-game-view { flex: 1; display: grid; place-items: center; background: #202020; position: relative; }
+.ue-screen { width: 246px; height: 508px; position: relative; overflow: hidden; border-radius: 4px; box-shadow: 0 0 0 1px #000; }
+.ue-screen .scaler { position: absolute; left: 0; top: 0; width: 300px; height: 620px; transform: scale(0.82); transform-origin: 0 0; }
+
+.ue-setup .sec { margin: 6px 8px 0; background: #3e3e3e; border: 1px solid #2c2c2c; border-radius: 4px; }
+.ue-setup .sec-h { padding: 4px 8px; font-weight: 700; color: #ececec; border-bottom: 1px solid #333; }
+.ue-setup .sec-b { padding: 6px 8px; display: grid; gap: 4px; }
+.ue-setup .etabs { display: flex; gap: 2px; padding: 6px 8px 0; }
+.ue-setup .etab { padding: 3px 10px; border-radius: 4px 4px 0 0; background: #2e2e2e; color: #a8a8a8; }
+.ue-setup .etab.on { background: #464646; color: #fff; box-shadow: inset 0 2px 0 #3d7fd1; }
+.ue-setup .item { padding: 2px 8px; display: flex; gap: 6px; white-space: nowrap; overflow: hidden; }
+.ue-setup .item.sel { background: #2c5d87; color: #fff; }
+.ue-setup .kv { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 6px; align-items: center; }
+.ue-setup .drop { background: #515151; border: 1px solid #303030; border-radius: 3px; padding: 0 6px; color: #f0f0f0; white-space: nowrap; overflow: hidden; }
+.ue-setup .hint { color: #9a9a9a; font-style: italic; font-size: 11px; line-height: 1.35; }
+.ue-setup .btn-u { background: #2c5d87; border: 1px solid #1f4466; border-radius: 3px; padding: 3px 8px; color: #fff; text-align: center; margin: 8px; }
+.s-ok { color: #6bd36b; }
+.s-fix { color: #e5b94a; }
+.s-bad { color: #e06262; }
+
+@media (max-width: 980px) {
+    .ue-body { grid-template-columns: 200px minmax(0, 1fr); }
+    .ue-setup { display: none !important; }
+}
+
+@media (max-width: 640px) {
+    .ue-body { grid-template-columns: minmax(0, 1fr); }
+    .ue-hier { display: none !important; }
+    .ue-menu span:nth-child(n+4) { display: none; }
+}
+
+.unity-strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 36px 0 0; }
+.unity-strip .card { padding: 16px; text-align: center; box-shadow: none; }
+.unity-strip strong { display: block; font-size: 0.98rem; }
+.unity-strip span { color: var(--text-dim); font-size: 0.86rem; }
+
+@media (max-width: 900px) {
+    .unity-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Showcase screen mockup content (used inside the Game view illustration). */
+.mock { position: absolute; inset: 0; font-family: var(--font); color: #fff; overflow: hidden; background: #0f1020; }
+.mock .blob { position: absolute; border-radius: 50%; filter: blur(20px); }
+.mock .blob.a { width: 260px; height: 260px; left: -80px; top: -60px; background: rgba(124, 92, 255, 0.5); animation: drift 8s ease-in-out infinite alternate; }
+.mock .blob.b { width: 260px; height: 260px; right: -100px; bottom: 60px; background: rgba(255, 79, 139, 0.3); animation: drift 10s ease-in-out infinite alternate-reverse; }
+
+@keyframes drift { to { transform: translate(20px, 26px); } }
+
+.mock .topbar { position: absolute; left: 8px; right: 8px; top: 10px; height: 44px; border-radius: 16px; background: rgba(27, 29, 53, 0.95); display: flex; align-items: center; gap: 6px; padding: 0 8px; font-size: 9px; }
+.mock .avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--purple); border: 2px solid var(--gold); display: grid; place-items: center; font-weight: 800; font-size: 10px; }
+.mock .who { flex: 1; line-height: 1.15; }
+.mock .who b { display: block; font-size: 10px; }
+.mock .who span { color: #a3a8c7; }
+.mock .chip { background: #262a4d; border-radius: 10px; padding: 3px 7px; font-weight: 700; display: flex; align-items: center; gap: 3px; }
+.mock .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.mock .greet { position: absolute; left: 16px; top: 66px; font-weight: 800; font-size: 14px; }
+.mock .greet span { display: block; font-weight: 400; color: #a3a8c7; font-size: 10px; }
+.mock .hero-card { position: absolute; left: 12px; right: 12px; top: 112px; height: 150px; border-radius: 18px; background: linear-gradient(135deg, #4b34c9, #2b1f7c); overflow: hidden; padding: 12px 14px; }
+.mock .hero-card::after { content: ""; position: absolute; top: -40%; bottom: -40%; width: 40px; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent); transform: rotate(20deg); animation: shine 3.2s ease-in-out infinite; }
+
+@keyframes shine { 0%, 30% { left: -30%; } 60%, 100% { left: 130%; } }
+
+.mock .season { display: inline-block; background: var(--gold); color: #1a1530; font-weight: 800; font-size: 7px; border-radius: 6px; padding: 2px 6px; }
+.mock .hero-card h5 { margin: 6px 0 2px; font-size: 18px; font-weight: 800; color: #fff; }
+.mock .hero-card p { font-size: 8px; color: rgba(255, 255, 255, 0.8); margin: 0; width: 60%; line-height: 1.35; }
+.mock .crown { position: absolute; right: 12px; top: 18px; width: 64px; height: 64px; animation: float 3s ease-in-out infinite; }
+
+@keyframes float { 50% { transform: translateY(-6px) rotate(8deg); } }
+
+.mock .play-btn { position: absolute; left: 14px; bottom: 12px; background: var(--gold); color: #1a1530; font-weight: 800; font-size: 11px; padding: 7px 22px; border-radius: 999px; animation: pulse 1.6s ease-out infinite; }
+
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 200, 61, 0.55); } 100% { box-shadow: 0 0 0 12px rgba(255, 200, 61, 0); } }
+
+.mock .row { position: absolute; left: 12px; right: 12px; height: 40px; border-radius: 12px; background: #1b1d35; display: flex; align-items: center; gap: 8px; padding: 0 10px; font-size: 9px; opacity: 0; animation: rise 0.6s ease-out forwards; }
+.mock .row .bar { flex: 1; height: 5px; border-radius: 3px; background: #262a4d; position: relative; overflow: hidden; }
+.mock .row .bar i { position: absolute; inset: 0; width: 0; border-radius: 3px; animation: fill 1.2s ease-out forwards; }
+.mock .row .ico { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; }
+
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes fill { to { width: var(--w); } }
+
+.mock .navbar { position: absolute; left: 8px; right: 8px; bottom: 10px; height: 48px; border-radius: 18px; background: rgba(27, 29, 53, 0.97); display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; }
+.mock .navbar .ind { position: absolute; top: 6px; bottom: 6px; width: calc(25% - 8px); left: 4px; border-radius: 14px; background: var(--purple); box-shadow: 0 0 20px rgba(124, 92, 255, 0.6); animation: tabs 8s cubic-bezier(0.2, 0.8, 0.2, 1) infinite; }
+
+@keyframes tabs {
+    0%, 20% { transform: translateX(0); }
+    25%, 45% { transform: translateX(calc(100% + 8px)); }
+    50%, 70% { transform: translateX(calc(200% + 16px)); }
+    75%, 95% { transform: translateX(calc(300% + 24px)); }
+    100% { transform: translateX(0); }
+}
+
+.mock .navbar span { position: relative; text-align: center; font-size: 8px; font-weight: 700; color: rgba(255, 255, 255, 0.85); }
+.mock .navbar span i { display: block; width: 14px; height: 14px; margin: 0 auto 2px; border-radius: 4px; background: rgba(255, 255, 255, 0.85); }
+
+/* ---------- Diagrams and trees (dark in both themes) ---------- */
+
+.diagram { width: 100%; height: auto; display: block; }
+.diagram text { font-family: var(--font); }
+
+.tree {
+    font-family: var(--mono);
+    font-size: 0.86rem;
+    background: var(--code-bg);
+    border: 1px solid var(--stage-border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    line-height: 1.9;
+    overflow-x: auto;
+    white-space: pre;
+    color: #dfe2fb;
+    margin-bottom: 1.4em;
+}
+
+.tree .n { color: #fff; font-weight: 600; }
+.tree .c { color: #8a90b3; }
+.tree .t { color: var(--gold); }
+.tree .ok { color: var(--green); }
+
+/* ---------- Tutorial ---------- */
+
+.steps { counter-reset: step; list-style: none; padding: 0; margin: 0; }
+.step { position: relative; padding: 30px 0 8px 64px; border-top: 1px solid var(--border); }
+.step:first-child { border-top: 0; }
+
+.step::before {
+    counter-increment: step;
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 30px;
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    color: #fff;
+    background: var(--primary);
+}
+
+.step h3 { margin-top: 6px; }
+
+@media (max-width: 620px) {
+    .step { padding-left: 0; padding-top: 84px; }
+}
+
+.step-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 24px; align-items: start; }
+
+@media (max-width: 900px) {
+    .step-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+.toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 28px; }
+.toc a { font-size: 0.88rem; font-weight: 600; color: var(--text-muted); border: 1px solid var(--border); background: var(--surface); padding: 6px 12px; border-radius: 8px; }
+.toc a:hover { color: var(--heading); border-color: var(--primary); text-decoration: none; }
+
+.playlist { list-style: none; padding: 0; margin: 0 0 8px; display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+@media (max-width: 760px) {
+    .playlist { grid-template-columns: minmax(0, 1fr); }
+}
+
+.playlist li { display: flex; gap: 12px; align-items: center; padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); margin: 0; }
+.playlist li:hover { border-color: var(--primary); }
+.playlist .num { width: 30px; height: 30px; border-radius: 8px; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; font-weight: 800; font-size: 0.85rem; flex: none; }
+.playlist .meta { flex: 1; }
+.playlist .meta strong { display: block; font-size: 0.95rem; }
+.playlist .meta span { color: var(--text-dim); font-size: 0.84rem; }
+.playlist .state { font-size: 0.76rem; font-weight: 700; color: var(--warn); white-space: nowrap; }
+.playlist .state.live { color: var(--ok); }
+
+/* ---------- Elements tab illustration ---------- */
+
+.editor { font-family: "Segoe UI", system-ui, sans-serif; font-size: 12px; color: #d2d2d2; background: #383838; overflow: hidden; }
+.editor .titlebar { background: #282828; padding: 6px 10px; display: flex; gap: 8px; align-items: center; color: #bdbdbd; }
+.editor .titlebar b { color: #e6e6e6; font-weight: 600; }
+.editor .cfg { padding: 6px 10px; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid #2a2a2a; }
+.editor .field { flex: 1; background: #2a2a2a; border: 1px solid #212121; border-radius: 3px; padding: 2px 6px; color: #e0e0e0; }
+.editor .etabs { display: flex; gap: 2px; padding: 6px 10px 0; border-bottom: 1px solid #232323; }
+.editor .etab { padding: 5px 14px; border-radius: 4px 4px 0 0; background: #2e2e2e; color: #a8a8a8; }
+.editor .etab.on { background: #3e3e3e; color: #fff; box-shadow: inset 0 2px 0 #3d7fd1; }
+.editor .toolbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 10px; border-bottom: 1px solid #2a2a2a; }
+.editor .ebtn { background: #585858; border: 1px solid #303030; border-radius: 3px; padding: 2px 9px; color: #eee; white-space: nowrap; }
+.editor .ebtn.accent { background: #2c5d87; border-color: #1f4466; }
+.editor .chk { display: inline-flex; align-items: center; gap: 5px; color: #c8c8c8; white-space: nowrap; }
+.editor .chk i { width: 12px; height: 12px; border: 1px solid #222; background: #2a2a2a; border-radius: 2px; display: inline-block; }
+.editor .summary { padding: 6px 10px; color: #a9a9a9; border-bottom: 1px solid #2a2a2a; display: flex; flex-wrap: wrap; gap: 14px; }
+.editor .body { display: grid; grid-template-columns: 210px minmax(0, 1fr); min-height: 330px; }
+.editor .list { background: #323232; border-right: 1px solid #262626; padding: 4px 0; }
+.editor .item { padding: 4px 10px; display: flex; gap: 8px; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.editor .item.sel { background: #2c5d87; color: #fff; }
+.editor .detail { padding: 10px 14px; }
+.editor .sec { background: #3e3e3e; border: 1px solid #2c2c2c; border-radius: 4px; margin-bottom: 8px; }
+.editor .sec-h { padding: 5px 9px; font-weight: 700; color: #ececec; border-bottom: 1px solid #333; }
+.editor .sec-b { padding: 7px 9px; display: grid; gap: 5px; }
+.editor .kv { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 8px; align-items: center; }
+.editor .kv span:first-child { color: #b5b5b5; }
+.editor .drop { background: #515151; border: 1px solid #303030; border-radius: 3px; padding: 1px 7px; color: #f0f0f0; }
+.editor .hint { color: #9a9a9a; font-style: italic; }
+.editor .elname { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 8px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+@media (max-width: 700px) {
+    .editor .body { grid-template-columns: minmax(0, 1fr); }
+    .editor .list { border-right: 0; border-bottom: 1px solid #262626; }
+}
+
+/* ---------- Animation preset demos ---------- */
+
+.presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+.preset { border: 1px solid var(--border); border-radius: 14px; background: var(--surface); padding: 12px; box-shadow: var(--shadow); }
+.preset .stage { position: relative; height: 120px; border-radius: 10px; background: var(--stage); overflow: hidden; display: grid; place-items: center; }
+.preset .box { width: 64%; height: 66%; border-radius: 12px; background: linear-gradient(135deg, var(--purple), var(--cyan)); box-shadow: 0 10px 30px rgba(124, 92, 255, 0.4); animation-duration: 2.6s; animation-iteration-count: infinite; }
+.preset .box::before { content: ""; display: block; height: 10px; width: 50%; margin: 12px; border-radius: 5px; background: rgba(255, 255, 255, 0.7); }
+.preset .box::after { content: ""; display: block; height: 7px; width: 70%; margin: 0 12px; border-radius: 4px; background: rgba(255, 255, 255, 0.4); }
+.preset h4 { margin: 10px 0 2px; font-size: 0.95rem; }
+.preset p { margin: 0; color: var(--text-muted); font-size: 0.84rem; line-height: 1.45; }
+.preset code { font-size: 0.75rem; overflow-wrap: anywhere; }
+
+/* Show 0-12% (0.32 s, ease-out, fading in during its first 40%), hold, hide 62-71% (0.24 s, ease-in), pause. */
+.a-fade { animation-name: p-fade; }
+.a-scale { animation-name: p-scale; }
+.a-slide-left { animation-name: p-slide-left; }
+.a-slide-right { animation-name: p-slide-right; }
+.a-slide-up { animation-name: p-slide-up; }
+.a-slide-down { animation-name: p-slide-down; }
+.a-click { animation-name: p-click; }
+.a-settle { animation-name: p-settle; }
+.a-shake { animation-name: p-shake; }
+.a-none { animation-name: p-none; }
+
+@keyframes p-none { 0%, 62% { opacity: 1; } 62.1%, 100% { opacity: 0; } }
+@keyframes p-fade { 0% { opacity: 0; animation-timing-function: ease-out; } 9%, 62% { opacity: 1; animation-timing-function: ease-in; } 68%, 100% { opacity: 0; } }
+@keyframes p-scale { 0% { opacity: 0; transform: scale(0.94); animation-timing-function: ease-out; } 10%, 62% { opacity: 1; transform: none; animation-timing-function: ease-in; } 69%, 100% { opacity: 0; transform: scale(0.96); } }
+@keyframes p-slide-left { 0% { opacity: 0; transform: translateX(120%); animation-timing-function: ease-out; } 5% { opacity: 1; } 12%, 62% { transform: none; opacity: 1; animation-timing-function: ease-in; } 67% { opacity: 1; } 71%, 100% { transform: translateX(-120%); opacity: 0; } }
+@keyframes p-slide-right { 0% { opacity: 0; transform: translateX(-120%); animation-timing-function: ease-out; } 5% { opacity: 1; } 12%, 62% { transform: none; opacity: 1; animation-timing-function: ease-in; } 67% { opacity: 1; } 71%, 100% { transform: translateX(120%); opacity: 0; } }
+@keyframes p-slide-up { 0% { opacity: 0; transform: translateY(140%); animation-timing-function: ease-out; } 5% { opacity: 1; } 12%, 62% { transform: none; opacity: 1; animation-timing-function: ease-in; } 67% { opacity: 1; } 71%, 100% { transform: translateY(-140%); opacity: 0; } }
+@keyframes p-slide-down { 0% { opacity: 0; transform: translateY(-140%); animation-timing-function: ease-out; } 5% { opacity: 1; } 12%, 62% { transform: none; opacity: 1; animation-timing-function: ease-in; } 67% { opacity: 1; } 71%, 100% { transform: translateY(140%); opacity: 0; } }
+@keyframes p-click { 0% { opacity: 0; transform: scale(1); } 2% { opacity: 0.6; transform: scale(1.08); } 4% { opacity: 1; } 8%, 62% { transform: none; opacity: 1; } 64% { transform: scale(1.08); } 66% { opacity: 1; } 70%, 100% { transform: none; opacity: 0; } }
+@keyframes p-settle { 0% { opacity: 0; transform: scale(1); } 4% { opacity: 1; transform: scale(1.04); } 11%, 62% { transform: none; opacity: 1; } 66% { transform: scale(1.04); opacity: 1; } 72%, 100% { transform: none; opacity: 0; } }
+@keyframes p-shake { 0% { opacity: 0; transform: none; } 2% { transform: translateX(8px); } 4% { opacity: 1; transform: translateX(-6px); } 6% { transform: translateX(4px); } 8% { transform: translateX(-2px); } 12%, 62% { transform: none; opacity: 1; } 64% { transform: translateX(8px); } 66% { transform: translateX(-6px); opacity: 1; } 68% { transform: translateX(3px); } 71%, 100% { transform: none; opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+/* ---------- Misc ---------- */
+
+.footer { border-top: 1px solid var(--border); padding: 30px 16px; text-align: center; color: var(--text-dim); font-size: 0.88rem; }
+.next-link { display: flex; justify-content: flex-end; margin-top: 40px; }
+
+.check-list { list-style: none; padding: 0; }
+.check-list li { padding-left: 30px; position: relative; }
+.check-list li::before { content: ""; position: absolute; left: 0; top: 0.4em; width: 18px; height: 18px; border-radius: 50%; background: rgba(15, 138, 95, 0.12); border: 1px solid var(--ok); }
+.check-list li::after { content: ""; position: absolute; left: 6px; top: calc(0.4em + 4px); width: 5px; height: 9px; border: solid var(--ok); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+
+details { border: 1px solid var(--border); border-radius: 12px; padding: 0 18px; margin-bottom: 10px; background: var(--surface); }
+details[open] { padding-bottom: 6px; }
+summary { cursor: pointer; font-weight: 700; padding: 14px 0; list-style: none; color: var(--heading); }
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "+"; display: inline-block; width: 20px; color: var(--primary); font-weight: 800; }
+details[open] summary::before { content: "\2212"; }
+
+.gallery { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+
+@media (max-width: 900px) {
+    .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.gallery .shot { margin: 0; }
+.gallery .shot-frame { aspect-ratio: 9 / 16; border-radius: 16px; }
+.gallery .shot-frame img { height: 100%; object-fit: cover; }
+.gallery .shot.missing .shot-missing { min-height: 100%; height: 100%; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+    <div class="header-inner">
+        <a class="brand" href="#overview" data-go="overview">
+            <span class="brand-mark">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M3 9h18M9 21V9"/></svg>
+            </span>
+            UI Framework <small>for Unity</small>
+        </a>
+        <nav class="tabs" role="tablist" aria-label="Documentation sections">
+            <button class="tab" role="tab" data-tab="overview" aria-selected="true">Overview</button>
+            <button class="tab" role="tab" data-tab="start" aria-selected="false">Get started</button>
+            <button class="tab" role="tab" data-tab="tutorial" aria-selected="false">Tutorial</button>
+            <button class="tab" role="tab" data-tab="concepts" aria-selected="false">Concepts</button>
+            <button class="tab" role="tab" data-tab="animations" aria-selected="false">Animations</button>
+            <button class="tab" role="tab" data-tab="showcase" aria-selected="false">Showcase</button>
+            <button class="tab" role="tab" data-tab="api" aria-selected="false">API</button>
+            <button class="tab" role="tab" data-tab="faq" aria-selected="false">FAQ</button>
+        </nav>
+        <div class="header-actions">
+            <button class="icon-button" id="theme-toggle" type="button" aria-label="Switch between light and dark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg><span id="theme-label">Dark</span></button>
+            <a class="github-link" href="https://github.com/dawaniyah-games/UiFramework" target="_blank" rel="noopener">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                <span>GitHub</span>
+            </a>
+        </div>
+    </div>
+</header>
+
+<main>
+
+<!-- ======================================================================================= -->
+<!-- OVERVIEW                                                                                -->
+<!-- ======================================================================================= -->
+<section class="panel" id="overview" data-panel="overview" role="tabpanel">
+
+    <div class="hero">
+        <span class="eyebrow">Unity package &middot; UGUI &middot; Addressables &middot; free and open source</span>
+        <h1>The screen and popup framework for <span class="accent">Unity</span> game UI</h1>
+        <p class="lead">Build every screen as its own Addressable scene. A state stack decides what is on screen, shared elements like your nav bar stay put, every transition is animated with no flash, and a Unity editor window generates the scripts, scenes and config for you.</p>
+        <div class="hero-actions">
+            <a class="btn btn-primary" href="#start">Add it to your Unity project</a>
+            <a class="btn btn-ghost" href="#tutorial">Watch the tutorial</a>
+        </div>
+        <div class="hero-meta">
+            <span class="pill">Unity 2021.3 &ndash; Unity 6</span>
+            <span class="pill">Install with the Package Manager</span>
+            <span class="pill">UGUI &middot; Addressables</span>
+            <span class="pill">async / await</span>
+            <span class="pill">MIT license</span>
+        </div>
+
+        <figure class="shot has-fallback hero-shot" data-shot>
+            <div class="shot-frame" style="border-color:#0e0e0e">
+                <img src="images/editor-overview.png" alt="The Unity editor in Play mode: the Hierarchy lists the UI element scenes loaded additively, the Game view shows the showcase app, and the UI Setup Manager is docked on the right">
+                <div class="shot-fallback">
+                    <div class="ue" aria-hidden="true">
+                        <div class="ue-menu"><span>File</span><span>Edit</span><span>Assets</span><span>GameObject</span><span>Component</span><span><b>UiFramework</b></span><span>Window</span><span>Help</span></div>
+                        <div class="ue-toolbar">
+                            <span class="play on"><svg viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z"/></svg></span>
+                            <span class="play"><svg viewBox="0 0 10 10"><path d="M2 1h2v8H2zM6 1h2v8H6z"/></svg></span>
+                            <span class="play"><svg viewBox="0 0 10 10"><path d="M1 1l5 4-5 4zM7 1h2v8H7z"/></svg></span>
+                        </div>
+                        <div class="ue-body">
+                            <div class="ue-panel ue-hier">
+                                <div class="ue-tabbar"><span class="ue-tab">Hierarchy</span></div>
+                                <div class="ue-tree">
+                                    <div class="ue-row scene"><i></i>Bootstrapper</div>
+                                    <div class="ue-row child"><i></i>BootStrapper</div>
+                                    <div class="ue-row scene"><i></i>DontDestroyOnLoad</div>
+                                    <div class="ue-row child"><i></i>PersistentRoot</div>
+                                    <div class="ue-row child deep"><i></i>Main Camera</div>
+                                    <div class="ue-row child deep"><i></i>EventSystem</div>
+                                    <div class="ue-row child"><i></i>UiManager</div>
+                                    <div class="ue-row scene"><i></i>MainMenuUiElement</div>
+                                    <div class="ue-row child sel"><i></i>MainMenuUiElementRoot</div>
+                                    <div class="ue-row scene"><i></i>TopBarUiElement</div>
+                                    <div class="ue-row child"><i></i>TopBarUiElementRoot</div>
+                                    <div class="ue-row scene"><i></i>NavBarUiElement</div>
+                                    <div class="ue-row child"><i></i>NavBarUiElementRoot</div>
+                                </div>
+                                <div class="ue-note">Each UI element is its own scene, loaded additively by UiManager and unloaded when no state uses it.</div>
+                            </div>
+                            <div class="ue-panel ue-game">
+                                <div class="ue-tabbar"><span class="ue-tab off">Scene</span><span class="ue-tab">Game</span><span class="ue-res">1080x1920 Portrait</span></div>
+                                <div class="ue-game-view">
+                                    <div class="ue-screen">
+                                        <div class="scaler">
+                                            <div class="mock">
+                                                <div class="blob a"></div>
+                                                <div class="blob b"></div>
+                                                <div class="topbar">
+                                                    <div class="avatar">NQ</div>
+                                                    <div class="who"><b>Nova Quinn</b><span>Neon Rookie</span></div>
+                                                    <div class="chip"><i class="dot" style="background:var(--gold)"></i>1,250</div>
+                                                    <div class="chip"><i class="dot" style="background:var(--cyan)"></i>40</div>
+                                                </div>
+                                                <div class="greet">Good evening, Nova<span>Ready for today's run?</span></div>
+                                                <div class="hero-card">
+                                                    <span class="season">SEASON 3</span>
+                                                    <h5>Neon Nights</h5>
+                                                    <p>Race through 40 new levels and earn the legendary Neon Crown.</p>
+                                                    <svg class="crown" viewBox="0 0 24 24" fill="#ffc83d"><path d="M3 18h18v2H3zM3 7l4.5 4L12 4l4.5 7L21 7v9H3z"/></svg>
+                                                    <div class="play-btn">&#9654; PLAY</div>
+                                                </div>
+                                                <div class="row" style="top:276px; animation-delay:0.3s"><span class="ico" style="background:rgba(255,79,139,.2)"><i class="dot" style="background:var(--pink)"></i></span><b style="flex:1">Daily reward</b><span class="chip" style="background:var(--green); color:#1a1530">CLAIM</span></div>
+                                                <div class="row" style="top:326px; animation-delay:0.45s"><span class="ico" style="background:rgba(255,200,61,.2)"><i class="dot" style="background:var(--gold)"></i></span><span class="bar"><i style="--w:66%; background:var(--gold)"></i></span><span>2 / 3</span></div>
+                                                <div class="row" style="top:372px; animation-delay:0.55s"><span class="ico" style="background:rgba(46,197,255,.2)"><i class="dot" style="background:var(--cyan)"></i></span><span class="bar"><i style="--w:76%; background:var(--cyan)"></i></span><span>380 / 500</span></div>
+                                                <div class="row" style="top:418px; animation-delay:0.65s"><span class="ico" style="background:rgba(255,79,139,.2)"><i class="dot" style="background:var(--pink)"></i></span><span class="bar"><i style="--w:100%; background:var(--pink)"></i></span><span>1 / 1</span></div>
+                                                <div class="navbar">
+                                                    <div class="ind"></div>
+                                                    <span><i></i>Home</span><span><i></i>Store</span><span><i></i>Ranks</span><span><i></i>Profile</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ue-panel ue-setup">
+                                <div class="ue-tabbar"><span class="ue-tab off">Inspector</span><span class="ue-tab">UI Setup Manager</span></div>
+                                <div class="etabs"><span class="etab">General</span><span class="etab on">Elements</span><span class="etab">States</span></div>
+                                <div class="sec"><div class="sec-h">UI Elements</div><div class="sec-b" style="gap:0">
+                                    <div class="item"><span class="s-ok">&#10003;</span>IntroUiElement</div>
+                                    <div class="item sel"><span class="s-ok">&#10003;</span>MainMenuUiElement</div>
+                                    <div class="item"><span class="s-ok">&#10003;</span>NavBarUiElement</div>
+                                    <div class="item"><span class="s-ok">&#10003;</span>StoreUiElement</div>
+                                    <div class="item"><span class="s-ok">&#10003;</span>TopBarUiElement</div>
+                                </div></div>
+                                <div class="sec"><div class="sec-h">Animations</div><div class="sec-b">
+                                    <div class="kv"><span>Show</span><span class="drop">Scale &#9662;</span></div>
+                                    <span class="hint">Fades in while growing slightly to full size.</span>
+                                    <div class="kv"><span>Hide</span><span class="drop">Fade &#9662;</span></div>
+                                    <span class="hint">Fades out.</span>
+                                </div></div>
+                                <div class="sec"><div class="sec-h">Structure</div><div class="sec-b"><span class="s-ok">&#10003; Follows the scene contract.</span></div></div>
+                                <div class="btn-u">&#9881; Build Runtime UiConfig</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <figcaption>The showcase app in Play mode in the Unity editor: each UI element is its own scene, loaded additively (Hierarchy), and the Console stays free of warnings and errors.</figcaption>
+        </figure>
+
+        <div class="unity-strip">
+            <div class="card"><strong>Package Manager</strong><span>Add by git URL, pin a version</span></div>
+            <div class="card"><strong>Editor window</strong><span>UiFramework &rarr; UI Setup Manager</span></div>
+            <div class="card"><strong>Scenes as screens</strong><span>Addressable, loaded additively</span></div>
+            <div class="card"><strong>UGUI native</strong><span>Canvas, Text, TMP, your components</span></div>
+            <div class="card"><strong>Tested</strong><span>EditMode and PlayMode tests</span></div>
+        </div>
+    </div>
+
+    <h2>Why teams use it</h2>
+    <div class="grid grid-3">
+        <div class="card">
+            <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#b69dff" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M7 21h10M12 18v3"/></svg></div>
+            <h3>One scene per screen</h3>
+            <p>Each UI element is an Addressable scene. Artists and designers work in their own scene without merge fights, and memory follows exactly what is on screen.</p>
+        </div>
+        <div class="card">
+            <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#7fd8ff" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg></div>
+            <h3>A real state stack</h3>
+            <p>Replace the whole UI, or push popups and overlays on top. Close them with one call. No hand-rolled screen managers, no forgotten canvases.</p>
+        </div>
+        <div class="card">
+            <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4"/></svg></div>
+            <h3>Shared elements stay put</h3>
+            <p>A nav bar or currency header used by several screens stays loaded and on screen while the screens change underneath it. It never reloads and never re-animates.</p>
+        </div>
+        <div class="card">
+            <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#ffc83d" stroke-width="2" stroke-linecap="round"><path d="M5 12c3-6 11-6 14 0M5 12c3 6 11 6 14 0"/><circle cx="12" cy="12" r="2"/></svg></div>
+            <h3>Animated by default</h3>
+            <p>Ten calm, tuned presets: fade, zoom, four slides, pops and shake. Pick one per element in the editor, or override it for a single call from code.</p>
+        </div>
+        <div class="card">
+            <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#ff7aa8" stroke-width="2" stroke-linecap="round"><path d="M4 4h16v12H4zM8 20h8"/><path d="M8 9l2 2 4-4"/></svg></div>
+            <h3>No flash, no empty frame</h3>
+            <p>The new screen animates in while the old one animates out. Elements are prepared in their start pose before their first frame, so nothing pops.</p>
+        </div>
+        <div class="card">
+            <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#ffab76" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z"/></svg></div>
+            <h3>Editor tooling</h3>
+            <p>The UI Setup Manager creates element scripts and scenes, builds states, validates every scene, fixes structure in one click and generates the runtime config.</p>
+        </div>
+    </div>
+
+    <h2>How it works, in one picture</h2>
+    <p class="lead">You define <strong>states</strong> (a screen, a popup) as lists of <strong>element scenes</strong>. At runtime, <code>UiManager</code> loads the scenes a state needs, hands every element its data, plays the transitions and unloads what nothing uses any more.</p>
+
+    <div class="stage-panel">
+        <svg class="diagram" viewBox="0 0 1060 300" role="img" aria-label="Diagram: a ShowState call loads the state's element scenes through Addressables, populates each element and pushes the state on the stack">
+            <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#7c5cff"/></marker>
+                <linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#4b34c9"/></linearGradient>
+            </defs>
+            <rect x="10" y="100" width="210" height="96" rx="16" fill="#171a36" stroke="#2a2f5c"/>
+            <text x="115" y="136" text-anchor="middle" fill="#a3a8c7" font-size="13">your code</text>
+            <text x="115" y="166" text-anchor="middle" fill="#fff" font-size="15" font-weight="700" font-family="JetBrains Mono, monospace">ShowState&lt;StoreUiState&gt;()</text>
+
+            <path d="M222 148 H300" stroke="#7c5cff" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+            <rect x="304" y="40" width="230" height="216" rx="16" fill="url(#g1)"/>
+            <text x="419" y="76" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">UiManager</text>
+            <text x="419" y="110" text-anchor="middle" fill="#e6e0ff" font-size="13">1. find the state in UiConfig</text>
+            <text x="419" y="140" text-anchor="middle" fill="#e6e0ff" font-size="13">2. load missing scenes</text>
+            <text x="419" y="170" text-anchor="middle" fill="#e6e0ff" font-size="13">3. Populate(context)</text>
+            <text x="419" y="200" text-anchor="middle" fill="#e6e0ff" font-size="13">4. animate out / in</text>
+            <text x="419" y="230" text-anchor="middle" fill="#e6e0ff" font-size="13">5. unload unused scenes</text>
+
+            <path d="M536 148 H612" stroke="#7c5cff" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+            <text x="826" y="30" text-anchor="middle" fill="#a3a8c7" font-size="13">StoreUiState = three Addressable element scenes</text>
+            <rect x="616" y="46" width="420" height="58" rx="12" fill="#20244a" stroke="#ffc83d" stroke-opacity=".6"/>
+            <text x="636" y="81" fill="#fff" font-size="15" font-weight="700">TopBarUiElement</text>
+            <text x="1016" y="81" text-anchor="end" fill="#ffc83d" font-size="12" font-weight="700">shared: stays on screen</text>
+            <rect x="616" y="118" width="420" height="72" rx="12" fill="#20244a" stroke="#2ec5ff" stroke-opacity=".6"/>
+            <text x="636" y="152" fill="#fff" font-size="15" font-weight="700">StoreUiElement</text>
+            <text x="636" y="174" fill="#a3a8c7" font-size="12">loaded, populated, slides in</text>
+            <text x="1016" y="160" text-anchor="end" fill="#2ec5ff" font-size="12" font-weight="700">new</text>
+            <rect x="616" y="204" width="420" height="58" rx="12" fill="#20244a" stroke="#ffc83d" stroke-opacity=".6"/>
+            <text x="636" y="239" fill="#fff" font-size="15" font-weight="700">NavBarUiElement</text>
+            <text x="1016" y="239" text-anchor="end" fill="#ffc83d" font-size="12" font-weight="700">shared: stays on screen</text>
+        </svg>
+    </div>
+
+    <h2>As simple as it looks</h2>
+    <div class="grid grid-2">
+        <div>
+            <div class="code"><div class="code-head"><span>Bootstrap.cs</span><button class="copy">Copy</button></div>
+<pre><code class="language-csharp">private async void Start()
+{
+    try
+    {
+        await UiManager.InitializeAsync();
+        await UiManager.ShowState&lt;MainMenuUiState&gt;();
+    }
+    catch (Exception exception)
+    {
+        Debug.LogError("[Bootstrap] UI failed to start: " + exception);
+    }
+}</code></pre></div>
+        </div>
+        <div>
+            <div class="code"><div class="code-head"><span>Open a popup, then close it</span><button class="copy">Copy</button></div>
+<pre><code class="language-csharp">RewardParams reward = new RewardParams();
+reward.Coins = 250;
+
+// additive: true pushes the popup on top of the current screen.
+await UiManager.ShowState&lt;RewardUiState&gt;(reward, additive: true);
+
+// Later, from the popup's Claim button:
+await UiManager.HideUI();</code></pre></div>
+        </div>
+    </div>
+
+    <h2>Built for production</h2>
+    <div class="grid grid-4">
+        <div class="card"><h4>Ref-counted scenes</h4><p>Scenes are keyed by Addressables GUID and unloaded only when no state on the stack uses them.</p></div>
+        <div class="card"><h4>Resilient transitions</h4><p>An exception in your <code>Populate</code> is logged, and the stack is cleaned up anyway.</p></div>
+        <div class="card"><h4>Scene contract</h4><p>Every element scene has the same shape, checked and fixed by the editor, so animation always works.</p></div>
+        <div class="card"><h4>Tested</h4><p>EditMode tests for the editor tools, PlayMode tests that play the animations frame by frame.</p></div>
+    </div>
+
+    <div class="next-link"><a class="btn btn-primary" href="#start" data-go="start">Install it in two minutes &rarr;</a></div>
+</section>
+
+<!-- ======================================================================================= -->
+<!-- GET STARTED                                                                             -->
+<!-- ======================================================================================= -->
+<section class="panel" id="start" data-panel="start" role="tabpanel" hidden>
+    <div class="page-intro">
+        <span class="eyebrow">Get started</span>
+        <h1>From install to your first screen</h1>
+        <p>Install the package, open the UI Setup Manager and show a screen from code. The <a href="#tutorial" data-go="tutorial">Tutorial</a> walks through every step with screenshots and videos.</p>
+    </div>
+
+    <h2 id="requirements">Requirements</h2>
+    <div class="table-wrap"><table>
+        <tr><th>Unity</th><td>2021.3 or newer (the showcase project uses Unity 6)</td></tr>
+        <tr><th>Addressables</th><td>1.21.0 or newer, installed automatically as a dependency</td></tr>
+        <tr><th>UI</th><td>UGUI (<code>com.unity.ugui</code>). Any content works inside your scenes: Text, TextMeshPro, images, your own components</td></tr>
+        <tr><th>Platforms</th><td>Everything Unity and Addressables support. All animation runs on unscaled time</td></tr>
+    </table></div>
+
+    <h2 id="install">1. Install the package</h2>
+    <p>In Unity, open <span class="menu-path">Window &rarr; Package Manager &rarr; + &rarr; Add package from git URL&hellip;</span> and paste:</p>
+    <div class="code"><div class="code-head"><span>Package URL</span><button class="copy">Copy</button></div>
+<pre><code>https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework</code></pre></div>
+    <p>To pin a version, append <code>#vX.Y.Z</code> (see <a href="https://github.com/dawaniyah-games/UiFramework/releases" target="_blank" rel="noopener">Releases</a>), or add it to <code>Packages/manifest.json</code>:</p>
+    <div class="code"><div class="code-head"><span>Packages/manifest.json</span><button class="copy">Copy</button></div>
+<pre><code class="language-json">{
+  "dependencies": {
+    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.2.0"
+  }
+}</code></pre></div>
+
+    <h2 id="setup">2. Set up the project</h2>
+    <ol>
+        <li>Open <span class="menu-path">UiFramework &rarr; UI Setup Manager</span>.</li>
+        <li>In the <strong>General</strong> tab press <strong>Create Config</strong>. Set your script and scene folders and your game's namespaces on the created <code>UiEditorConfig</code>.</li>
+        <li>Check the <strong>Global Canvas Settings</strong> in the same tab: every new element scene starts with them.</li>
+    </ol>
+
+    <h2 id="first-screen">3. Make your first screen</h2>
+    <ol>
+        <li><strong>Elements</strong> tab &rarr; <strong>&#10133; New Element</strong> &rarr; name it <code>MainMenuUiElement</code> &rarr; <strong>Create</strong>. You get the script and a scene laid out as <code>MainMenuUiElementRoot &rarr; Canvas &rarr; Root</code>.</li>
+        <li>Build your UI under <code>Root</code> and pick a show and hide animation in the element's <strong>Animations</strong> section.</li>
+        <li><strong>States</strong> tab &rarr; type <code>MainMenuUiState</code> next to <em>New state</em> &rarr; <strong>&#10133;</strong>. Add the <code>MainMenuUiElement</code> scene to it.</li>
+        <li><strong>General</strong> tab &rarr; <strong>Build Runtime UiConfig</strong>. Run it again after every state or scene change.</li>
+    </ol>
+
+    <h2 id="show">4. Show it from code</h2>
+    <p><code>UiManager</code> creates itself; don't add it to a scene. It loads the generated config from Addressables.</p>
+    <div class="code"><div class="code-head"><span>GameBootstrap.cs</span><button class="copy">Copy</button></div>
+<pre><code class="language-csharp">using System;
+using UiFramework.Runtime.Manager;
+using UnityEngine;
+
+public class GameBootstrap : MonoBehaviour
+{
+    // async void is fine for Unity messages, as long as exceptions are caught and logged.
+    private async void Start()
+    {
+        try
+        {
+            if (!UiManager.IsInitialized)
+            {
+                await UiManager.InitializeAsync();
+            }
+
+            await UiManager.ShowState&lt;MainMenuUiState&gt;();
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError("[GameBootstrap] UI failed to start: " + exception);
+        }
+    }
+}</code></pre></div>
+    <div class="callout note"><span class="callout-title">Press Play</span>
+        <p>With the Addressables play mode set to <em>Use Asset Database</em> (<span class="menu-path">Window &rarr; Asset Management &rarr; Addressables &rarr; Groups &rarr; Play Mode Script</span>), the screen appears right away. For a player build, build Addressables content first.</p>
+    </div>
+
+    <h2 id="data">5. Give the screen its data</h2>
+    <p>Whatever you pass to <code>ShowState</code> reaches every element of the state in <code>Populate</code>. Keep <code>Populate</code> idempotent: it runs again when another state reuses the scene.</p>
+    <div class="grid grid-2">
+        <div class="code"><div class="code-head"><span>MainMenuUiElement.cs</span><button class="copy">Copy</button></div>
+<pre><code class="language-csharp">using UiFramework.Core;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class MainMenuParams : UiPopulationParams
+{
+    public string PlayerName { get; set; }
+}
+
+public class MainMenuUiElement : UiElement
+{
+    [SerializeField] private Text welcomeLabel;
+
+    public override void Populate(object context = null)
+    {
+        base.Populate(context);
+
+        MainMenuParams data = context as MainMenuParams;
+        if (data == null)
+        {
+            return;
+        }
+
+        welcomeLabel.text = "Welcome back, " + data.PlayerName;
+    }
+}</code></pre></div>
+        <div>
+            <div class="code"><div class="code-head"><span>Showing it with data</span><button class="copy">Copy</button></div>
+<pre><code class="language-csharp">MainMenuParams data = new MainMenuParams();
+data.PlayerName = "Alex";
+
+await UiManager.ShowState&lt;MainMenuUiState&gt;(data);</code></pre></div>
+            <div class="callout tip"><span class="callout-title">Plain values work too</span>
+                <p>Context is just an <code>object</code>. Pass a primitive and read it with <code>context is int coins</code>.</p>
+            </div>
+        </div>
+    </div>
+
+    <h2 id="layout">Default project layout</h2>
+    <p>All paths are settings on your <code>UiEditorConfig</code>; these are the defaults.</p>
+    <div class="table-wrap"><table>
+        <tr><th>What</th><th>Where</th></tr>
+        <tr><td>Element scripts</td><td><code>Assets/Scripts/Ui/UiElements</code></td></tr>
+        <tr><td>Element scenes</td><td><code>Assets/Scenes/UiElements</code></td></tr>
+        <tr><td>State scripts</td><td><code>Assets/Scripts/Ui/UiStates</code></td></tr>
+        <tr><td>State definitions</td><td><code>Assets/UiConfigs/UiStateDefinitions</code></td></tr>
+        <tr><td>Runtime config (generated)</td><td><code>Assets/UiConfigs/RuntimeUiConfig.asset</code></td></tr>
+        <tr><td>Global canvas settings</td><td><code>Assets/UiConfigs/UiGlobalCanvasSettings.asset</code></td></tr>
+    </table></div>
+
+    <div class="next-link"><a class="btn btn-primary" href="#tutorial" data-go="tutorial">Follow the full tutorial &rarr;</a></div>
+</section>
+
+<!-- ======================================================================================= -->
+<!-- TUTORIAL                                                                                -->
+<!-- ======================================================================================= -->
+<section class="panel" id="tutorial" data-panel="tutorial" role="tabpanel" hidden>
+    <div class="page-intro">
+        <span class="eyebrow">Tutorial</span>
+        <h1>Build a screen with the UI Setup Manager</h1>
+        <p>Ten steps from an empty project to a working screen with a popup. Every step has a short video. Open the editor with <span class="menu-path">UiFramework &rarr; UI Setup Manager</span>.</p>
+    </div>
+
+    <div class="video feature-video" data-video-id="" data-title="The whole tutorial in one video" data-length="about 12 minutes"></div>
+    <h3>Video series</h3>
+    <ol class="playlist" id="playlist"></ol>
+
+    <h3>Steps</h3>
+    <nav class="toc" aria-label="Tutorial steps">
+        <a href="#t-config">1. Config</a>
+        <a href="#t-element">2. New element</a>
+        <a href="#t-build">3. Build the screen</a>
+        <a href="#t-animate">4. Animations</a>
+        <a href="#t-validate">5. Validate</a>
+        <a href="#t-canvas">6. Canvas &amp; Addressables</a>
+        <a href="#t-state">7. States</a>
+        <a href="#t-runtime">8. Build config</a>
+        <a href="#t-code">9. Show it</a>
+        <a href="#t-popup">10. Add a popup</a>
+    </nav>
+
+    <ol class="steps">
+
+        <li class="step" id="t-config">
+            <h3>Create the config and check the canvas defaults</h3>
+            <div class="step-grid">
+                <div>
+                    <p>Open the <strong>General</strong> tab and press <strong>Create Config</strong>. It finds or creates a <code>UiEditorConfig</code> asset that tells the tools where your scripts and scenes live and which namespaces to generate into.</p>
+                    <ul>
+                        <li>Set <code>ElementNamespace</code> and <code>StateNamespace</code> to your game's namespaces.</li>
+                        <li>In <strong>Global Canvas Settings</strong>, choose the render mode and the Canvas Scaler values (default: Scale With Screen Size, 1080 &times; 1920, Expand). Every new element scene starts with them.</li>
+                    </ul>
+                    <div class="callout note"><span class="callout-title">Defaults, not enforcement</span><p>Changing the global settings never edits existing scenes. Each element can still differ, or adopt the defaults with <strong>Use Default Settings&hellip;</strong>.</p></div>
+                </div>
+                <div class="video compact" data-video-id="" data-title="Step 1: Install and create the config" data-length="2 min"></div>
+            </div>
+            <figure class="shot" data-shot>
+                <div class="shot-frame"><img src="images/setup-general.png" alt="UI Setup Manager, General tab with the config paths and Global Canvas Settings"><div class="shot-missing"><div><strong>Screenshot: General tab</strong><code>docs/images/setup-general.png</code></div></div></div>
+                <figcaption>The General tab: config paths, namespaces, Global Canvas Settings and Build Runtime UiConfig.</figcaption>
+            </figure>
+        </li>
+
+        <li class="step" id="t-element">
+            <h3>Create a UI element</h3>
+            <div class="step-grid">
+                <div>
+                    <p>Open the <strong>Elements</strong> tab and press <strong>&#10133; New Element</strong>. The form opens in the right panel:</p>
+                    <div class="table-wrap"><table>
+                        <tr><th>Name</th><td>The class and scene name, e.g. <code>StoreUiElement</code></td></tr>
+                        <tr><th>From Existing Scene</th><td>Optional: convert a scene you already have. Its objects move under the new root, and you are offered a structure fix</td></tr>
+                        <tr><th>Include Parameters Class</th><td>Also generates <code>StoreUiElementParams</code> for the data you pass in</td></tr>
+                        <tr><th>Include Reference Class</th><td>Also generates a <code>StoreUiElementReference</code> helper</td></tr>
+                    </table></div>
+                    <p>Press <strong>Create</strong>. You get the script and a scene built to the scene contract. After Unity compiles, the script is attached to <code>StoreUiElementRoot</code> automatically. An existing script with the same name is never overwritten.</p>
+                </div>
+                <div class="video compact" data-video-id="" data-title="Step 2: Create your first element" data-length="2 min"></div>
+            </div>
+            <figure class="shot" data-shot>
+                <div class="shot-frame"><img src="images/setup-new-element.png" alt="The New UI Element form in the Elements tab"><div class="shot-missing"><div><strong>Screenshot: New Element form</strong><code>docs/images/setup-new-element.png</code></div></div></div>
+                <figcaption>The New Element form.</figcaption>
+            </figure>
+        </li>
+
+        <li class="step" id="t-build">
+            <h3>Build the screen under Root</h3>
+            <div class="step-grid">
+                <div>
+                    <p>Open the scene (double-click it in the list). Every element scene has the same shape. Put <strong>all</strong> of your content under <code>Root</code>: that object is what animates.</p>
+                    <ul>
+                        <li>Lay things out with normal anchors; the Canvas Scaler handles screen sizes.</li>
+                        <li>Nested canvases are fine under <code>Root</code> (for example a layer with a high sorting order).</li>
+                        <li>Nothing may sit next to <code>Root</code> under the Canvas, or it won't animate.</li>
+                        <li>Popups usually put a full-screen dimmed backdrop as the first child of <code>Root</code>.</li>
+                    </ul>
+                </div>
+                <div>
+<div class="tree"><span class="n">StoreUiElementRoot</span>     <span class="c">UiElement script, the only root object</span>
+<span class="c">└─</span> <span class="n">Canvas</span>              <span class="c">Canvas + CanvasScaler + GraphicRaycaster</span>
+   <span class="c">└─</span> <span class="t">Root</span>             <span class="c">stretched, the animation target</span>
+      <span class="c">├─</span> Header
+      <span class="c">├─</span> ItemsGrid
+      <span class="c">└─</span> &hellip; <span class="ok">all your content</span></div>
+                    <div class="video compact" style="margin-top:14px" data-video-id="" data-title="Step 3: Build a screen under Root" data-length="3 min"></div>
+                </div>
+            </div>
+            <figure class="shot" data-shot style="margin-top:18px">
+                <div class="shot-frame"><img src="images/scene-hierarchy.png" alt="Unity Hierarchy showing an element scene with Root, Canvas and content"><div class="shot-missing"><div><strong>Screenshot: element scene in the Hierarchy and Scene view</strong><code>docs/images/scene-hierarchy.png</code></div></div></div>
+                <figcaption>An element scene: one root, one Canvas, one Root, then your content.</figcaption>
+            </figure>
+        </li>
+
+        <li class="step" id="t-animate">
+            <h3>Pick the show and hide animations</h3>
+            <div class="step-grid">
+                <div>
+                    <p>Select the element in the list. In its <strong>Animations</strong> section, choose a <strong>Show</strong> and a <strong>Hide</strong> preset. Each choice shows one line describing what it looks like, and the change is written straight into the scene.</p>
+                    <p>See every preset moving on the <a href="#animations" data-go="animations">Animations</a> tab. Code can still override them for a single call with <code>UiTransition</code>.</p>
+                </div>
+                <div class="video compact" data-video-id="" data-title="Step 4: Choose animations" data-length="1 min"></div>
+            </div>
+            <figure class="shot has-fallback" data-shot>
+                <div class="shot-frame"><img src="images/setup-elements.png" alt="UI Setup Manager, Elements tab with the element list and the selected element's settings">
+                    <div class="shot-fallback">
+                        <div class="editor" aria-hidden="true">
+                            <div class="titlebar"><b>UI Setup Manager</b></div>
+                            <div class="cfg"><span>UI Config</span><span class="field">UiEditorConfig (UiEditorConfig)</span></div>
+                            <div class="etabs"><span class="etab">General</span><span class="etab on">Elements</span><span class="etab">States</span></div>
+                            <div class="toolbar">
+                                <span class="field" style="flex:0 1 180px">store</span>
+                                <span class="ebtn accent">&#10133; New Element</span>
+                                <span class="ebtn">Refresh</span>
+                                <span class="ebtn">Validate All</span>
+                                <span class="ebtn">Fix All Structure&hellip;</span>
+                                <span class="chk"><i></i>Only show elements with issues</span>
+                            </div>
+                            <div class="summary"><span><b class="s-ok">&#10003;</b> 9 OK</span><span><b class="s-fix">&#9888;</b> 1 fixable</span><span><b class="s-bad">&#10006;</b> 0 need manual work</span></div>
+                            <div class="body">
+                                <div class="list">
+                                    <div class="item"><b class="s-ok">&#10003;</b>IntroUiElement</div>
+                                    <div class="item"><b class="s-ok">&#10003;</b>MainMenuUiElement</div>
+                                    <div class="item"><b class="s-ok">&#10003;</b>NavBarUiElement</div>
+                                    <div class="item"><b class="s-fix">&#9888;</b>ProfileUiElement</div>
+                                    <div class="item sel"><b class="s-ok">&#10003;</b>StoreUiElement (open)</div>
+                                    <div class="item"><b class="s-ok">&#10003;</b>TopBarUiElement</div>
+                                </div>
+                                <div class="detail">
+                                    <div class="elname">StoreUiElement <span class="ebtn">Open Scene</span><span class="ebtn">Select Asset</span></div>
+                                    <div class="sec"><div class="sec-h">Structure</div><div class="sec-b"><span class="s-ok">&#10003; Follows the UI element scene contract.</span></div></div>
+                                    <div class="sec"><div class="sec-h">Animations</div><div class="sec-b">
+                                        <div class="kv"><span>Show</span><span class="drop">Slide Left &#9662;</span></div>
+                                        <span class="hint">Fades in while entering from the right edge, moving left.</span>
+                                        <div class="kv"><span>Hide</span><span class="drop">Slide Left &#9662;</span></div>
+                                        <span class="hint">Keeps moving left and fades out as it leaves past the left edge.</span>
+                                    </div></div>
+                                    <div class="sec"><div class="sec-h">Canvas</div><div class="sec-b">
+                                        <div class="kv"><span>Render Mode</span><span class="drop">Screen Space - Camera &#9662;</span></div>
+                                        <div class="kv"><span>Sorting Order</span><span class="field">0</span></div>
+                                        <div class="kv"><span>Reference Resolution</span><span class="field">1080 &times; 1920</span></div>
+                                    </div></div>
+                                    <div class="sec"><div class="sec-h">Addressables</div><div class="sec-b">
+                                        <div class="kv"><span>Addressable</span><span class="chk"><i style="background:#3d7fd1"></i>on</span></div>
+                                        <div class="kv"><span>Group</span><span class="drop">UiElements &#9662;</span></div>
+                                    </div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <figcaption>The Elements tab: search, status of every scene, and the selected element's Structure, Animations, Canvas and Addressables settings. (Illustration until the screenshot is added.)</figcaption>
+            </figure>
+        </li>
+
+        <li class="step" id="t-validate">
+            <h3>Validate and fix scene structure</h3>
+            <div class="step-grid">
+                <div>
+                    <p>Every scene in the list has a status: <strong style="color:var(--ok)">&#10003;</strong> OK, <strong style="color:var(--warn)">&#9888;</strong> fixable, <strong style="color:#c62f63">&#10006;</strong> needs work by hand.</p>
+                    <ul>
+                        <li><strong>Validate All</strong> logs one line per scene with its issues.</li>
+                        <li><strong>Fix Structure&hellip;</strong> (one element) or <strong>Fix All Structure&hellip;</strong> shows exactly what will change, with a <em>Now / After</em> preview of the hierarchy, before it touches anything.</li>
+                        <li>Fixes only create and reparent objects, with Undo. They never delete anything; what needs manual work is listed under <strong>What to fix by hand&hellip;</strong>.</li>
+                        <li><strong>Only show elements with issues</strong> filters the list.</li>
+                    </ul>
+                </div>
+                <div class="video compact" data-video-id="" data-title="Step 5: Validate and fix scenes" data-length="2 min"></div>
+            </div>
+            <figure class="shot" data-shot>
+                <div class="shot-frame"><img src="images/setup-fix-dialog.png" alt="Confirmation popup for a structure fix, with the Now / After hierarchy preview"><div class="shot-missing"><div><strong>Screenshot: Fix Structure confirmation with the Now / After preview</strong><code>docs/images/setup-fix-dialog.png</code></div></div></div>
+                <figcaption>Every fix asks first and shows the hierarchy before and after.</figcaption>
+            </figure>
+        </li>
+
+        <li class="step" id="t-canvas">
+            <h3>Canvas, sorting and Addressables per element</h3>
+            <div class="step-grid">
+                <div>
+                    <p>The <strong>Canvas</strong> section edits this scene's Render Mode, <strong>Sorting Order</strong>, UI Scale Mode, Reference Resolution, Screen Match Mode and Reference PPU in place. Use sorting order to stack layers, for example screens 0, bars 10, popups 100.</p>
+                    <p>The <strong>Addressables</strong> section shows whether the scene is Addressable, its group and labels. <em>Build Runtime UiConfig</em> registers every scene a state uses for you.</p>
+                </div>
+                <div class="video compact" data-video-id="" data-title="Step 6: Canvas and Addressables settings" data-length="1 min"></div>
+            </div>
+        </li>
+
+        <li class="step" id="t-state">
+            <h3>Create a state and add its scenes</h3>
+            <div class="step-grid">
+                <div>
+                    <p>Open the <strong>States</strong> tab. Type the state name next to <strong>New state</strong> (for example <code>StoreUiState</code>) and press <strong>&#10133;</strong>. It generates the state class: a type marker for <code>ShowState&lt;StoreUiState&gt;()</code>. Its name must equal the state key.</p>
+                    <p>Select the state and use <strong>Add element scene</strong>: start typing and pick from the suggestions. Add the screen and every shared element it shows, for example <code>StoreUiElement</code>, <code>TopBarUiElement</code> and <code>NavBarUiElement</code>.</p>
+                    <div class="callout tip"><span class="callout-title">Shared elements</span><p>List your nav bar in every tab state. While you switch tabs it stays loaded and on screen, and only the screens animate.</p></div>
+                </div>
+                <div class="video compact" data-video-id="" data-title="Step 7: States and shared elements" data-length="2 min"></div>
+            </div>
+            <figure class="shot" data-shot>
+                <div class="shot-frame"><img src="images/setup-states.png" alt="UI Setup Manager, States tab with a state and its element scenes"><div class="shot-missing"><div><strong>Screenshot: States tab</strong><code>docs/images/setup-states.png</code></div></div></div>
+                <figcaption>A state is a named list of element scenes.</figcaption>
+            </figure>
+        </li>
+
+        <li class="step" id="t-runtime">
+            <h3>Build the runtime config</h3>
+            <div class="step-grid">
+                <div>
+                    <p>Back in <strong>General</strong>, press <strong>Build Runtime UiConfig</strong>. It turns your state definitions into the runtime <code>UiConfig</code>, makes every element scene Addressable (group <code>UiElements</code>) and registers the config under the address <code>UiConfig</code>.</p>
+                    <div class="callout warn"><span class="callout-title">Run it after every change</span><p>New state, renamed scene, added element: build again. The config is generated, so never edit it by hand. For player builds, also build Addressables content.</p></div>
+                </div>
+                <div class="video compact" data-video-id="" data-title="Step 8: Build the runtime config" data-length="1 min"></div>
+            </div>
+        </li>
+
+        <li class="step" id="t-code">
+            <h3>Show it from code and press Play</h3>
+            <div class="step-grid">
+                <div>
+                    <p>Initialize once at startup, then show states from anywhere: buttons, game events, your flow controller.</p>
+                    <div class="code"><div class="code-head"><span>From a button</span><button class="copy">Copy</button></div>
+<pre><code class="language-csharp">private async void OnStoreClicked()
+{
+    try
+    {
+        await UiManager.ShowState&lt;StoreUiState&gt;();
+    }
+    catch (Exception exception)
+    {
+        Debug.LogError("[HomeUiElement] Could not open the store: " + exception);
+    }
+}</code></pre></div>
+                </div>
+                <div class="video compact" data-video-id="" data-title="Step 9: Show states from code" data-length="2 min"></div>
+            </div>
+        </li>
+
+        <li class="step" id="t-popup">
+            <h3>Add a popup</h3>
+            <div class="step-grid">
+                <div>
+                    <p>A popup is a state shown with <code>additive: true</code>. It goes on top; the screen below stays loaded and visible. <code>HideUI</code> pops it again.</p>
+                    <ol>
+                        <li>Create <code>ConfirmPurchaseUiElement</code>, give it a dimmed backdrop and a panel, and set its Canvas <strong>Sorting Order</strong> above your screens.</li>
+                        <li>Create <code>ConfirmPurchaseUiState</code> with just that scene, and build the runtime config.</li>
+                        <li>Open it with data, close it from its buttons:</li>
+                    </ol>
+                    <div class="code"><div class="code-head"><span>Popup</span><button class="copy">Copy</button></div>
+<pre><code class="language-csharp">ConfirmPurchaseParams purchase = new ConfirmPurchaseParams();
+purchase.ProductId = "neon_blade";
+
+await UiManager.ShowState&lt;ConfirmPurchaseUiState&gt;(purchase, additive: true);
+
+// In the popup's Cancel / Buy handler:
+await UiManager.HideUI();</code></pre></div>
+                </div>
+                <div class="video compact" data-video-id="" data-title="Step 10: Popups and overlays" data-length="2 min"></div>
+            </div>
+        </li>
+    </ol>
+
+    <h2>Checklist when something doesn't show</h2>
+    <ul class="check-list">
+        <li>The state class name equals the state key exactly.</li>
+        <li><em>Build Runtime UiConfig</em> ran after your last change.</li>
+        <li>The Addressables play mode script is <em>Use Asset Database</em>, or content is built.</li>
+        <li>The element's scene shows &#10003; in the Elements tab.</li>
+        <li>There is one EventSystem and, for Screen Space &ndash; Camera canvases, a camera assigned at runtime.</li>
+        <li>The Console has no <code>[UiManager]</code> errors.</li>
+    </ul>
+</section>
+
+<!-- ======================================================================================= -->
+<!-- CONCEPTS                                                                                -->
+<!-- ======================================================================================= -->
+<section class="panel" id="concepts" data-panel="concepts" role="tabpanel" hidden>
+    <div class="page-intro">
+        <span class="eyebrow">Concepts</span>
+        <h1>How the framework thinks</h1>
+        <p>Five ideas explain everything: element scenes, states, the stack, context and shared elements.</p>
+    </div>
+
+    <h2 id="vocabulary">Vocabulary</h2>
+    <div class="table-wrap"><table>
+        <tr><th>Term</th><th>Meaning</th></tr>
+        <tr><td><strong>Element scene</strong></td><td>A Unity scene with one root object <code>&lt;Name&gt;Root</code> holding a <code>UiElement</code>. The unit of loading.</td></tr>
+        <tr><td><strong>UiElement</strong></td><td>A MonoBehaviour that receives data in <code>Populate(object context)</code> and owns its show / hide animation presets.</td></tr>
+        <tr><td><strong>State</strong></td><td>A named set of element scenes, identified by a <strong>state key</strong>, e.g. <code>StoreUiState</code>.</td></tr>
+        <tr><td><strong>Context</strong></td><td>The object passed to <code>ShowState</code>, forwarded unchanged to every element of the state. Usually a <code>UiPopulationParams</code> subclass.</td></tr>
+        <tr><td><strong>Shared element</strong></td><td>A scene used by consecutive states. It stays loaded, is re-populated, and is not animated.</td></tr>
+    </table></div>
+
+    <h2 id="lifecycle">An element's lifecycle</h2>
+    <div class="stage-panel">
+        <svg class="diagram" viewBox="0 0 1060 170" role="img" aria-label="Lifecycle: scene loads, Populate, PrepareForShow, ShowAsync, then HideAsync and unload">
+            <defs><marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2ec5ff"/></marker></defs>
+            <g font-size="14" font-weight="700" fill="#fff" text-anchor="middle">
+                <rect x="10" y="40" width="170" height="70" rx="14" fill="#20244a" stroke="#2a2f5c"/><text x="95" y="72">Scene loads</text><text x="95" y="94" font-size="11" font-weight="400" fill="#a3a8c7">Awake picks the target</text>
+                <rect x="222" y="40" width="170" height="70" rx="14" fill="#20244a" stroke="#7c5cff"/><text x="307" y="72" font-family="JetBrains Mono, monospace">Populate(ctx)</text><text x="307" y="94" font-size="11" font-weight="400" fill="#a3a8c7">may run again: idempotent</text>
+                <rect x="434" y="40" width="170" height="70" rx="14" fill="#20244a" stroke="#7c5cff"/><text x="519" y="72" font-family="JetBrains Mono, monospace">PrepareForShow</text><text x="519" y="94" font-size="11" font-weight="400" fill="#a3a8c7">start pose, no flash</text>
+                <rect x="646" y="40" width="170" height="70" rx="14" fill="#4b34c9"/><text x="731" y="72" font-family="JetBrains Mono, monospace">ShowAsync</text><text x="731" y="94" font-size="11" font-weight="400" fill="#e6e0ff">plays the show preset</text>
+                <rect x="858" y="40" width="190" height="70" rx="14" fill="#20244a" stroke="#2a2f5c"/><text x="953" y="72" font-family="JetBrains Mono, monospace">HideAsync</text><text x="953" y="94" font-size="11" font-weight="400" fill="#a3a8c7">then unloaded at ref 0</text>
+            </g>
+            <g stroke="#2ec5ff" stroke-width="2.5" marker-end="url(#arrow2)"><path d="M182 75H218"/><path d="M394 75H430"/><path d="M606 75H642"/><path d="M818 75H854"/></g>
+            <text x="530" y="150" text-anchor="middle" fill="#6f7499" font-size="12">Elements already on screen (shared) skip PrepareForShow, ShowAsync and HideAsync, and only receive Populate again.</text>
+        </svg>
+    </div>
+
+    <h2 id="stack">The state stack</h2>
+    <div class="grid grid-2">
+        <div>
+            <p><strong>Non-additive</strong> (the default) replaces the whole stack: the new state animates in while every state on the stack animates out, then the old states are released.</p>
+            <p><strong>Additive</strong> pushes on top, for popups and overlays. The states below stay loaded and visible.</p>
+            <p><strong><code>HideUI()</code></strong> pops the top state, plays its hide animations and releases its scenes.</p>
+            <p><strong><code>ResetUIAsync()</code></strong> hides and unloads everything.</p>
+        </div>
+        <div class="stage-panel">
+            <svg class="diagram" viewBox="0 0 480 300" role="img" aria-label="Stack: MainMenuUiState at the bottom, RewardUiState pushed on top with additive true">
+                <text x="240" y="24" text-anchor="middle" fill="#a3a8c7" font-size="13">the stack after ShowState(Reward, additive: true)</text>
+                <rect x="60" y="44" width="360" height="70" rx="14" fill="#4b34c9"/>
+                <text x="84" y="76" fill="#fff" font-size="15" font-weight="800">RewardUiState</text>
+                <text x="84" y="98" fill="#e6e0ff" font-size="12">RewardPopupUiElement &middot; top, HideUI pops it</text>
+                <rect x="60" y="126" width="360" height="110" rx="14" fill="#20244a" stroke="#2a2f5c"/>
+                <text x="84" y="158" fill="#fff" font-size="15" font-weight="800">MainMenuUiState</text>
+                <text x="84" y="182" fill="#a3a8c7" font-size="12">MainMenuUiElement</text>
+                <text x="84" y="202" fill="#a3a8c7" font-size="12">TopBarUiElement</text>
+                <text x="84" y="222" fill="#a3a8c7" font-size="12">NavBarUiElement &middot; still loaded and visible</text>
+                <text x="240" y="276" text-anchor="middle" fill="#6f7499" font-size="12">ShowState(Store) without additive replaces both</text>
+            </svg>
+        </div>
+    </div>
+
+    <h2 id="shared">Shared elements and reference counting</h2>
+    <p>Scenes are identified by their Addressables GUID and counted per state on the stack. The new state's scenes are counted <em>before</em> the old ones are released, so a scene used by both never unloads and reloads in between. A scene unloads only when its count reaches zero.</p>
+    <div class="stage-panel">
+        <svg class="diagram" viewBox="0 0 1060 210" role="img" aria-label="Switching from Home to Store: TopBar and NavBar stay, Home slides out and Store slides in">
+            <text x="20" y="24" fill="#a3a8c7" font-size="13">MainMenuUiState &rarr; StoreUiState (tab switch with a SlideLeft transition)</text>
+            <rect x="20" y="40" width="1020" height="36" rx="10" fill="#20244a" stroke="#ffc83d" stroke-opacity=".6"/><text x="40" y="63" fill="#fff" font-size="13" font-weight="700">TopBarUiElement</text><text x="1020" y="63" text-anchor="end" fill="#ffc83d" font-size="12">shared &middot; re-populated &middot; not animated</text>
+            <rect x="20" y="88" width="480" height="66" rx="10" fill="#20244a" stroke="#2a2f5c"/><text x="40" y="118" fill="#fff" font-size="13" font-weight="700">MainMenuUiElement</text><text x="40" y="138" fill="#a3a8c7" font-size="12">hide: leaves moving left, then unloaded</text>
+            <path d="M330 121 H180" stroke="#ff4f8b" stroke-width="2.5" marker-end="url(#arrow2)"/>
+            <rect x="560" y="88" width="480" height="66" rx="10" fill="#20244a" stroke="#2ec5ff" stroke-opacity=".7"/><text x="580" y="118" fill="#fff" font-size="13" font-weight="700">StoreUiElement</text><text x="580" y="138" fill="#a3a8c7" font-size="12">show: enters from the right moving left</text>
+            <path d="M1000 121 H850" stroke="#2ec5ff" stroke-width="2.5" marker-end="url(#arrow2)"/>
+            <rect x="20" y="166" width="1020" height="36" rx="10" fill="#20244a" stroke="#ffc83d" stroke-opacity=".6"/><text x="40" y="189" fill="#fff" font-size="13" font-weight="700">NavBarUiElement</text><text x="1020" y="189" text-anchor="end" fill="#ffc83d" font-size="12">shared &middot; re-populated &middot; not animated</text>
+        </svg>
+    </div>
+
+    <h2 id="type-markers">State classes are type markers</h2>
+    <p><code>ShowState&lt;StoreUiState&gt;()</code> finds the state whose key equals the class name. The runtime builds the state from the config, so code inside a <code>UiState</code> subclass never runs: keep behaviour in your elements. For keys without a class, use <code>ShowStateByKey("StoreUiState")</code>.</p>
+
+    <h2 id="contract">The element scene contract</h2>
+    <p>Animation targets the one object under the Canvas, so every element scene has the same shape. The Elements tab checks it and fixes it in one click.</p>
+<div class="tree"><span class="n">&lt;Name&gt;Root</span>   <span class="c">plain Transform with the UiElement subclass; the ONLY root object in the scene</span>
+<span class="c">└─</span> <span class="n">Canvas</span>    <span class="c">child 0: root Canvas + CanvasScaler + GraphicRaycaster</span>
+   <span class="c">└─</span> <span class="t">Root</span>   <span class="c">the ONLY Canvas child: stretched RectTransform, the animation target</span>
+      <span class="c">└─</span> <span class="ok">&hellip; all content (nested canvases are fine here)</span></div>
+
+    <h2 id="limits">Good to know</h2>
+    <div class="grid grid-2">
+        <div class="card"><h4>One call at a time</h4><p>Overlapping <code>ShowState</code> / <code>HideUI</code> calls are not queued for you. Await each call, or route navigation through one place that queues them (the showcase's <code>ShowcaseNavigator</code> does).</p></div>
+        <div class="card"><h4>HideUI and shared elements</h4><p><code>HideUI</code> doesn't skip elements shared with the state underneath, so keep popups to their own scenes.</p></div>
+        <div class="card"><h4>Initialization</h4><p><code>IsInitialized</code> is true as soon as the manager exists, before the config has loaded. Await <code>InitializeAsync()</code> before showing states.</p></div>
+        <div class="card"><h4>No data binding</h4><p>The framework hands each element its context. Updating what is already on screen (a coin counter) is your code, for example events on your data.</p></div>
+    </div>
+</section>
+
+<!-- ======================================================================================= -->
+<!-- ANIMATIONS                                                                              -->
+<!-- ======================================================================================= -->
+<section class="panel" id="animations" data-panel="animations" role="tabpanel" hidden>
+    <div class="page-intro">
+        <span class="eyebrow">Animations</span>
+        <h1>Calm, tuned motion out of the box</h1>
+        <p>Every element has a show and a hide preset, chosen in the Elements tab. Entrances ease out, exits are shorter and ease in, and every show and hide fades, so nothing pops in or out.</p>
+    </div>
+
+    <h2 id="presets">The ten presets</h2>
+    <p>Each card loops: show, hold, hide.</p>
+    <div class="presets" id="preset-grid"></div>
+
+    <h2 id="feel">What makes them feel good</h2>
+    <div class="grid grid-3">
+        <div class="card"><h4>Base pose</h4><p>Each object's resting position, scale and alpha are recorded once. Every preset starts from it and returns to it, so repeated or interrupted animations never drift.</p></div>
+        <div class="card"><h4>No skipped frames</h4><p>A long frame, like the one where a scene loads, slows an animation slightly instead of jumping past half of it.</p></div>
+        <div class="card"><h4>One animation per channel</h4><p>A new animation stops older ones driving the same thing (position, scale, alpha). A button pop doesn't stop a slide; a new show stops a running hide.</p></div>
+        <div class="card"><h4>No flash</h4><p>Right after its scene loads, an element is put in its show start pose, in the same frame as <code>Populate</code>.</p></div>
+        <div class="card"><h4>Overlapping transitions</h4><p>In a screen switch, the old state hides while the new one shows: no empty frame in between.</p></div>
+        <div class="card"><h4>Unscaled time</h4><p>UI keeps animating while the game is paused (<code>Time.timeScale = 0</code>).</p></div>
+    </div>
+
+    <h2 id="transition">Override the animation for one call</h2>
+    <p><code>UiTransition</code> replaces the presets for a single <code>ShowState</code> or <code>HideUI</code> call, without changing the elements' configuration. Shared elements stay still either way.</p>
+    <div class="code"><div class="code-head"><span>UiTransition</span><button class="copy">Copy</button></div>
+<pre><code class="language-csharp">// Show the Store with a zoom this time, whatever its elements are configured to do.
+await UiManager.ShowState&lt;StoreUiState&gt;(context, transition: UiTransition.ShowWith(TweenPresets.ScaleKey));
+
+// Close the top state by sliding it out to the right.
+await UiManager.HideUI(UiTransition.HideWith(TweenPresets.SlideRightKey));
+
+// Both sides at once: the new screen enters moving left, the old screen leaves moving left.
+await UiManager.ShowStateByKey("ProfileUiState", context, false,
+    new UiTransition(TweenPresets.SlideLeftKey, TweenPresets.SlideLeftKey));</code></pre></div>
+
+    <h3>Recipe: tabs that slide in the direction you tap</h3>
+    <div class="code"><div class="code-head"><span>From the showcase's ShowcaseNavigator</span><button class="copy">Copy</button></div>
+<pre><code class="language-csharp">// Moving to a tab on the right slides everything left (like swiping), and the other way round.
+private static UiTransition GetTabTransition(ShowcaseTab from, ShowcaseTab to)
+{
+    if (from == to)
+    {
+        return UiTransition.Default;
+    }
+
+    string preset = (int)to &gt; (int)from ? TweenPresets.SlideLeftKey : TweenPresets.SlideRightKey;
+    return new UiTransition(preset, preset);
+}</code></pre></div>
+
+    <h2 id="feedback">Button feedback</h2>
+    <p>The pops and shake also work on any transform, without fading, as feedback:</p>
+    <div class="code"><div class="code-head"><span>Feedback</span><button class="copy">Copy</button></div>
+<pre><code class="language-csharp">await TweenPresets.ClickPop(buyButton.transform);    // quick 1.08x pop
+await TweenPresets.SettlePop(coinIcon.transform);    // gentle 1.04x pulse
+await TweenPresets.ShakeLocal(buyButton.transform);  // "no": not enough coins</code></pre></div>
+
+    <h2 id="custom">Your own animation</h2>
+    <p><code>ShowAsync</code>, <code>HideAsync</code> and <code>PrepareForShow</code> are virtual. Run extra motion next to the preset, or replace it completely. <code>Tween.RunAsync</code> gives you the same interruptible, frame-capped loop the presets use.</p>
+    <div class="code"><div class="code-head"><span>Stagger the cards in after the screen's own preset</span><button class="copy">Copy</button></div>
+<pre><code class="language-csharp">public class StoreUiElement : UiElement
+{
+    [SerializeField] private RectTransform[] cards;
+
+    public override void PrepareForShow()
+    {
+        base.PrepareForShow();
+        for (int i = 0; i &lt; cards.Length; i++)
+        {
+            cards[i].localScale = Vector3.zero;
+        }
+    }
+
+    public override async Task ShowAsync(string presetKey = null)
+    {
+        Task screen = base.ShowAsync(presetKey);
+        for (int i = 0; i &lt; cards.Length; i++)
+        {
+            RectTransform card = cards[i];
+            await Tween.RunAsync(card, 0.18f, TweenCurves.EaseOut, true, CancellationToken.None, null, eased =&gt;
+            {
+                card.localScale = Vector3.one * eased;
+            });
+        }
+
+        await screen;
+    }
+}</code></pre></div>
+
+    <div class="callout note"><span class="callout-title">No-code choreography in the showcase</span>
+        <p>The showcase app adds Inspector components on top of these hooks: <code>RevealOnShow</code>, <code>StaggeredReveal</code>, <code>FillBar</code>, <code>CountUpText</code>, <code>LoopMotion</code>, <code>PressFeedback</code> and more. Designers add them to objects and the element plays them with its preset. They live in the sample project, so copy the ones you like. See <a href="#showcase" data-go="showcase">Showcase</a>.</p>
+    </div>
+</section>
+
+<!-- ======================================================================================= -->
+<!-- SHOWCASE                                                                                -->
+<!-- ======================================================================================= -->
+<section class="panel" id="showcase" data-panel="showcase" role="tabpanel" hidden>
+    <div class="page-intro">
+        <span class="eyebrow">Showcase app</span>
+        <h1>A complete mobile game UI, included</h1>
+        <p>The repository's host project is a small mobile-game shell built only from framework features: an intro, four tabs under a shared TopBar and NavBar, and three popups. Clone it, press Play, and read the code.</p>
+    </div>
+
+    <div class="gallery">
+        <figure class="shot" data-shot><div class="shot-frame"><img src="images/showcase-intro.png" alt="Intro screen"><div class="shot-missing"><div><strong>Intro</strong><code>showcase-intro.png</code></div></div></div><figcaption>Intro: logo choreography and a loading bar.</figcaption></figure>
+        <figure class="shot" data-shot><div class="shot-frame"><img src="images/showcase-home.png" alt="Home tab"><div class="shot-missing"><div><strong>Home</strong><code>showcase-home.png</code></div></div></div><figcaption>Home: season card, daily reward, quests.</figcaption></figure>
+        <figure class="shot" data-shot><div class="shot-frame"><img src="images/showcase-store.png" alt="Store tab"><div class="shot-missing"><div><strong>Store</strong><code>showcase-store.png</code></div></div></div><figcaption>Store: offer banner, item grid, coin packs.</figcaption></figure>
+        <figure class="shot" data-shot><div class="shot-frame"><img src="images/showcase-leaderboard.png" alt="Leaderboard tab"><div class="shot-missing"><div><strong>Leaderboard</strong><code>showcase-leaderboard.png</code></div></div></div><figcaption>Leaderboard: rising podium, ranked rows.</figcaption></figure>
+        <figure class="shot" data-shot><div class="shot-frame"><img src="images/showcase-profile.png" alt="Profile tab"><div class="shot-missing"><div><strong>Profile</strong><code>showcase-profile.png</code></div></div></div><figcaption>Profile: XP bar, stats, achievements.</figcaption></figure>
+        <figure class="shot" data-shot><div class="shot-frame"><img src="images/showcase-reward.png" alt="Reward popup"><div class="shot-missing"><div><strong>Reward popup</strong><code>showcase-reward.png</code></div></div></div><figcaption>Reward: confetti, then coins fly to the TopBar.</figcaption></figure>
+        <figure class="shot" data-shot><div class="shot-frame"><img src="images/showcase-purchase.png" alt="Confirm purchase sheet"><div class="shot-missing"><div><strong>Confirm purchase</strong><code>showcase-purchase.png</code></div></div></div><figcaption>Bottom sheet popup with a shake when you can't afford it.</figcaption></figure>
+        <figure class="shot" data-shot><div class="shot-frame"><img src="images/showcase-settings.png" alt="Settings popup"><div class="shot-missing"><div><strong>Settings popup</strong><code>showcase-settings.png</code></div></div></div><figcaption>Settings: animated toggles.</figcaption></figure>
+    </div>
+
+    <h2 id="run">Run it</h2>
+    <ol>
+        <li>Clone <a href="https://github.com/dawaniyah-games/UiFramework" target="_blank" rel="noopener">dawaniyah-games/UiFramework</a> and open it in Unity 6.</li>
+        <li>Open <code>Assets/Scenes/Bootstrapper.unity</code>, set the Game view to portrait 1080 &times; 1920, and press Play.</li>
+        <li>Open <span class="menu-path">UiFramework &rarr; UI Setup Manager &rarr; Elements</span>, change a screen's animation, and play again.</li>
+    </ol>
+
+    <h2 id="states">States in the app</h2>
+    <div class="table-wrap"><table>
+        <tr><th>State</th><th>Element scenes</th><th>How it is shown</th></tr>
+        <tr><td><code>IntroUiState</code></td><td>IntroUiElement</td><td>First, by the bootstrapper. Its loading ends by entering Home</td></tr>
+        <tr><td><code>MainMenuUiState</code>, <code>StoreUiState</code>, <code>LeaderboardUiState</code>, <code>ProfileUiState</code></td><td>screen + TopBarUiElement + NavBarUiElement</td><td>Non-additive; the bars are shared and never re-animate</td></tr>
+        <tr><td><code>SettingsUiState</code>, <code>RewardUiState</code>, <code>ConfirmPurchaseUiState</code></td><td>one popup scene each</td><td>Additive over the current tab, closed with <code>HideUI</code></td></tr>
+    </table></div>
+
+    <h2 id="patterns">Patterns worth copying</h2>
+    <div class="grid grid-2">
+        <div class="card"><h4>One navigator</h4><p><code>ShowcaseNavigator</code> is the only caller of <code>ShowState</code> / <code>HideUI</code>. It queues calls so they never overlap, keeps only the last tab tapped, and allows one popup at a time.</p></div>
+        <div class="card"><h4>Context everywhere</h4><p>Tab states get a <code>TabUiParams</code>; the shared NavBar reads the tab from the same object, so it is right however the tab was reached.</p></div>
+        <div class="card"><h4>Shared re-population</h4><p>The TopBar wires itself once and refreshes on every <code>Populate</code>. When the Store is already on screen, a second <code>Populate</code> switches its page in place.</p></div>
+        <div class="card"><h4>Popups that look right</h4><p>The popup's Fade preset fades the dimmed backdrop; only the panel moves, through a <code>RevealOnShow</code>, so the backdrop never slides.</p></div>
+        <div class="card"><h4>Inspector choreography</h4><p><code>RevealOnShow</code>, <code>StaggeredReveal</code>, <code>FillBar</code> and <code>CountUpText</code> play when the element shows; <code>LoopMotion</code>, <code>ShimmerSweep</code>, <code>ConfettiBurst</code> and <code>CoinFlyLayer</code> add life.</p></div>
+        <div class="card"><h4>One camera, one EventSystem</h4><p>The bootstrapper keeps them in a <code>DontDestroyOnLoad</code> root, and <code>UiCanvasCamera</code> assigns the camera to every Screen Space &ndash; Camera canvas as its scene loads.</p></div>
+    </div>
+
+    <h2 id="showcase-video">See it in motion</h2>
+    <div class="video feature-video" data-video-id="" data-title="The showcase app in the Unity editor" data-length="about 1 minute"></div>
+</section>
+
+<!-- ======================================================================================= -->
+<!-- API                                                                                     -->
+<!-- ======================================================================================= -->
+<section class="panel" id="api" data-panel="api" role="tabpanel" hidden>
+    <div class="page-intro">
+        <span class="eyebrow">API reference</span>
+        <h1>Everything you call</h1>
+        <p>The public surface is small on purpose. All async calls return a plain <code>System.Threading.Tasks.Task</code>.</p>
+    </div>
+
+    <h2 id="api-manager">UiManager <span class="pill">UiFramework.Runtime.Manager</span></h2>
+    <div class="table-wrap"><table>
+        <tr><th>Call</th><th>What it does</th></tr>
+        <tr><td><code>InitializeAsync(UiState defaultState = null)</code></td><td>Creates the manager (kept with <code>DontDestroyOnLoad</code>) and loads <code>UiConfig</code> from Addressables. Safe to call again</td></tr>
+        <tr><td><code>ShowState&lt;T&gt;(object context = null, bool additive = false, UiTransition transition = null)</code></td><td>Shows the state whose key equals <code>T</code>'s class name</td></tr>
+        <tr><td><code>ShowStateByKey(string stateKey, object context = null, bool additive = false, UiTransition transition = null)</code></td><td>Shows a state by key</td></tr>
+        <tr><td><code>HideUI(UiTransition transition = null)</code></td><td>Pops the top state, plays its hide animations and releases its scenes</td></tr>
+        <tr><td><code>ResetUIAsync()</code></td><td>Hides and unloads every state</td></tr>
+        <tr><td><code>GetCurrentState()</code></td><td>The state being loaded, otherwise the top of the stack, otherwise <code>null</code></td></tr>
+        <tr><td><code>IsLastSceneActive&lt;T&gt;()</code></td><td>Whether <code>T</code> is the top state</td></tr>
+        <tr><td><code>TryGetUiStateKeyName&lt;T&gt;(out string key)</code></td><td>The key registered for <code>T</code></td></tr>
+        <tr><td><code>IsInitialized</code></td><td>True once <code>InitializeAsync</code> created the manager</td></tr>
+    </table></div>
+
+    <h2 id="api-element">UiElement <span class="pill">UiFramework.Core</span></h2>
+    <div class="table-wrap"><table>
+        <tr><th>Member</th><th>Use</th></tr>
+        <tr><td><code>Populate(object context = null)</code></td><td>Override to read your data. Runs on every show of the scene, including when shared; keep it idempotent</td></tr>
+        <tr><td><code>PrepareForShow()</code> / <code>PrepareForShow(string presetKey)</code></td><td>Puts the element in its show start pose before its first frame. The string overload runs when a <code>UiTransition</code> overrides the preset</td></tr>
+        <tr><td><code>ShowAsync(string presetKey = null)</code></td><td>Plays the show animation. Override to add or replace motion</td></tr>
+        <tr><td><code>HideAsync(string presetKey = null)</code></td><td>Plays the hide animation</td></tr>
+        <tr><td>Serialized <code>showAnimationPreset</code>, <code>hideAnimationPreset</code></td><td>Set in the Elements tab</td></tr>
+    </table></div>
+
+    <h2 id="api-transition">UiTransition <span class="pill">UiFramework.Core</span></h2>
+    <div class="table-wrap"><table>
+        <tr><th>Member</th><th>Use</th></tr>
+        <tr><td><code>UiTransition.ShowWith(string showPreset)</code></td><td>Override only the show animation</td></tr>
+        <tr><td><code>UiTransition.HideWith(string hidePreset)</code></td><td>Override only the hide animation</td></tr>
+        <tr><td><code>new UiTransition(string showPreset, string hidePreset)</code></td><td>Override both; <code>null</code> keeps each element's own</td></tr>
+        <tr><td><code>UiTransition.Default</code></td><td>No override</td></tr>
+    </table></div>
+    <p>Preset names are matched ignoring case. An unknown name logs a warning and falls back to the elements' own animations, so a typo never breaks navigation.</p>
+
+    <h2 id="api-tween">TweenPresets and Tween <span class="pill">UiFramework.Tweening</span></h2>
+    <div class="table-wrap"><table>
+        <tr><th>Member</th><th>Use</th></tr>
+        <tr><td><code>NoneKey</code>, <code>FadeKey</code>, <code>ScaleKey</code>, <code>SlideLeftKey</code>, <code>SlideRightKey</code>, <code>SlideUpKey</code>, <code>SlideDownKey</code>, <code>ClickPopKey</code>, <code>SettlePopKey</code>, <code>ShakeKey</code></td><td>Preset names</td></tr>
+        <tr><td><code>PlayAsync(string presetKey, GameObject target, bool isShow)</code></td><td>Plays a preset on any object</td></tr>
+        <tr><td><code>PrepareShow(string presetKey, GameObject target)</code></td><td>Puts an object in a preset's start pose</td></tr>
+        <tr><td><code>ClickPop</code>, <code>SettlePop</code>, <code>ShakeLocal</code></td><td>Feedback effects, no fade</td></tr>
+        <tr><td><code>Describe(string presetKey, bool isShow)</code>, <code>GetPresetKeys()</code>, <code>TryGetPresetKey</code></td><td>For tools and menus</td></tr>
+        <tr><td><code>Tween.RunAsync(owner, duration, ease, unscaled, ct, keepRunning, apply)</code></td><td>The shared animation loop: frame-capped, stops when the owner is destroyed or <code>keepRunning</code> turns false</td></tr>
+        <tr><td><code>TweenCurves.EaseOut</code>, <code>EaseIn</code>, <code>EaseInOut</code>, <code>Linear</code></td><td>Curves</td></tr>
+    </table></div>
+
+    <h2 id="api-other">Other types</h2>
+    <div class="table-wrap"><table>
+        <tr><td><code>UiState</code></td><td>Base class for state type markers: <code>public class StoreUiState : UiState</code>, generated by the States tab</td></tr>
+        <tr><td><code>UiPopulationParams</code></td><td>Base for the data you pass as context</td></tr>
+        <tr><td><code>UiElementReference</code></td><td>Base for generated element reference helpers</td></tr>
+    </table></div>
+</section>
+
+<!-- ======================================================================================= -->
+<!-- FAQ                                                                                     -->
+<!-- ======================================================================================= -->
+<section class="panel" id="faq" data-panel="faq" role="tabpanel" hidden>
+    <div class="page-intro">
+        <span class="eyebrow">FAQ &amp; troubleshooting</span>
+        <h1>Answers before you ask</h1>
+    </div>
+
+    <h2>Troubleshooting</h2>
+    <details><summary>"No UI state key registered for MyUiState"</summary><p>The state class name must equal the state key exactly, and <em>Build Runtime UiConfig</em> must have run after you created the state.</p></details>
+    <details><summary>"Failed to locate UiConfig via Addressables"</summary><p>Run <em>Build Runtime UiConfig</em>, then make sure Addressables can find it: play mode script <em>Use Asset Database</em> in the editor, or build Addressables content for a player.</p></details>
+    <details><summary>Nothing appears on screen</summary><p>Check the element's status in the Elements tab (&#10003;), that your content is under <code>Root</code>, that there is an EventSystem and, for Screen Space &ndash; Camera canvases, that a camera is assigned at runtime. Look for <code>[UiManager]</code> errors in the Console.</p></details>
+    <details><summary>My list doubles every time I come back to the screen</summary><p><code>Populate</code> runs again when a state reuses the scene. Rebuild lists instead of appending, and guard one-time setup with a flag.</p></details>
+    <details><summary>Code in my UiState subclass never runs</summary><p>State classes are only type markers; the runtime builds states from the config. Put behaviour in elements.</p></details>
+    <details><summary>Two fast taps show the wrong screen</summary><p>Calls aren't queued for you. Await each call, or route navigation through one place that queues calls, like the showcase's <code>ShowcaseNavigator</code>.</p></details>
+
+    <h2>Questions</h2>
+    <details><summary>Does it work with TextMeshPro, my own components, my art?</summary><p>Yes. The framework only cares about the scene's shape; anything UGUI can draw works inside <code>Root</code>.</p></details>
+    <details><summary>Screen Space Overlay or Camera?</summary><p>Both. Pick the default in Global Canvas Settings and per element in the Canvas section. With Camera, assign your UI camera at runtime as scenes load (the showcase's <code>UiCanvasCamera</code> shows how).</p></details>
+    <details><summary>Can I load UI scenes from a remote content server?</summary><p>Element scenes are ordinary Addressables, so any Addressables setup works, including remote groups.</p></details>
+    <details><summary>Is it heavy on mobile?</summary><p>Only what is on screen is loaded. Animations use a small allocation-light loop on unscaled time, and shared elements are never reloaded.</p></details>
+    <details><summary>Can I add my own animation presets?</summary><p>Override <code>ShowAsync</code> / <code>HideAsync</code> / <code>PrepareForShow</code> in an element for one-off motion, or contribute a preset to <code>TweenPresets</code>.</p></details>
+    <details><summary>What does it cost?</summary><p>Nothing. It's open source under the MIT license.</p></details>
+
+    <div class="callout note" style="margin-top:28px"><span class="callout-title">Still stuck?</span><p>Open an <a href="https://github.com/dawaniyah-games/UiFramework/issues" target="_blank" rel="noopener">issue</a> or start a <a href="https://github.com/dawaniyah-games/UiFramework/discussions" target="_blank" rel="noopener">discussion</a>.</p></div>
+</section>
+
+</main>
+
+<footer class="footer">
+    UI Framework for Unity &middot; by Dawaniyah Games &middot; MIT license &middot;
+    <a href="https://github.com/dawaniyah-games/UiFramework" target="_blank" rel="noopener">GitHub</a>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-csharp.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+<script>
+(function () {
+    // ---------- Tabs with shareable links (#tutorial, or any id inside a tab, e.g. #t-state) ----------
+    var tabs = document.querySelectorAll(".tab");
+    var panels = document.querySelectorAll("[data-panel]");
+
+    function showPanel(name) {
+        var found = false;
+        panels.forEach(function (panel) {
+            var active = panel.getAttribute("data-panel") === name;
+            panel.hidden = !active;
+            found = found || active;
+        });
+        tabs.forEach(function (tab) {
+            tab.setAttribute("aria-selected", tab.getAttribute("data-tab") === name ? "true" : "false");
+        });
+        return found;
+    }
+
+    function route() {
+        var id = decodeURIComponent(location.hash.replace("#", ""));
+        var target = id ? document.getElementById(id) : null;
+        var panel = target ? target.closest("[data-panel]") : null;
+
+        if (!panel) {
+            showPanel("overview");
+            return;
+        }
+
+        showPanel(panel.getAttribute("data-panel"));
+
+        // Jump (not smooth-scroll) once the panel has laid out, leaving room for the sticky header.
+        requestAnimationFrame(function () {
+            var top = target === panel ? 0 : target.getBoundingClientRect().top + window.pageYOffset - 84;
+            window.scrollTo({ top: top, behavior: "instant" });
+        });
+    }
+
+    tabs.forEach(function (tab) {
+        tab.addEventListener("click", function () {
+            location.hash = tab.getAttribute("data-tab");
+        });
+    });
+
+    window.addEventListener("hashchange", route);
+    route();
+
+    // ---------- Screenshots: show a labelled placeholder (or an illustration) until the image exists ----------
+    document.querySelectorAll("[data-shot]").forEach(function (shot) {
+        var img = shot.querySelector("img");
+        if (!img) {
+            return;
+        }
+
+        function markMissing() {
+            shot.classList.add("missing");
+        }
+
+        img.addEventListener("error", markMissing);
+        if (img.complete && img.naturalWidth === 0) {
+            markMissing();
+        }
+    });
+
+    // ---------- Videos: paste a YouTube id into data-video-id and the player appears ----------
+    var playIcon = '<svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg>';
+
+    document.querySelectorAll(".video").forEach(function (slot) {
+        var id = slot.getAttribute("data-video-id");
+        var title = slot.getAttribute("data-title") || "Video";
+        var length = slot.getAttribute("data-length") || "";
+
+        if (id) {
+            var frame = document.createElement("iframe");
+            frame.src = "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(id) + "?rel=0";
+            frame.title = title;
+            frame.allow = "accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen";
+            frame.loading = "lazy";
+            slot.appendChild(frame);
+            return;
+        }
+
+        slot.innerHTML = '<div class="video-soon"><div><div class="play">' + playIcon + '</div><strong></strong><span></span></div></div>';
+        slot.querySelector("strong").textContent = title;
+        slot.querySelector("span").textContent = "Video coming soon" + (length ? " · " + length : "");
+    });
+
+    // The playlist is built from the step videos, so adding an id in one place updates both.
+    var playlist = document.getElementById("playlist");
+    if (playlist) {
+        document.querySelectorAll(".step").forEach(function (step, index) {
+            var slot = step.querySelector(".video");
+            if (!slot) {
+                return;
+            }
+
+            var item = document.createElement("li");
+            var live = !!slot.getAttribute("data-video-id");
+            item.innerHTML = '<span class="num"></span><span class="meta"><strong></strong><span></span></span><span class="state"></span>';
+            item.querySelector(".num").textContent = index + 1;
+            item.querySelector(".meta strong").textContent = step.querySelector("h3").textContent;
+            item.querySelector(".meta span").textContent = slot.getAttribute("data-length") || "";
+            item.querySelector(".state").textContent = live ? "Watch" : "Coming soon";
+            if (live) {
+                item.querySelector(".state").classList.add("live");
+            }
+            item.style.cursor = "pointer";
+            item.addEventListener("click", function () {
+                location.hash = step.id;
+            });
+            playlist.appendChild(item);
+        });
+    }
+
+    // ---------- Animation preset demos ----------
+    var presets = [
+        ["None", "a-none", "Appears instantly.", "Disappears instantly."],
+        ["Fade", "a-fade", "Fades in. 0.22 s.", "Fades out. 0.16 s."],
+        ["Scale", "a-scale", "Grows slightly to full size while fading in. 0.26 s.", "Shrinks slightly while fading out."],
+        ["SlideLeft", "a-slide-left", "Enters from the right edge, moving left. 0.32 s.", "Keeps moving left and leaves past the left edge."],
+        ["SlideRight", "a-slide-right", "Enters from the left edge, moving right.", "Keeps moving right and leaves past the right edge."],
+        ["SlideUp", "a-slide-up", "Enters from the bottom, moving up.", "Keeps moving up and leaves past the top."],
+        ["SlideDown", "a-slide-down", "Enters from the top, moving down.", "Keeps moving down and leaves past the bottom."],
+        ["ClickPop", "a-click", "A quick 1.08x pop while fading in.", "A quick pop, then fades out."],
+        ["SettlePop", "a-settle", "A gentle 1.04x pulse while fading in.", "A gentle pulse, then fades out."],
+        ["Shake", "a-shake", "A short side-to-side shake while fading in.", "A short shake, then fades out."]
+    ];
+
+    var grid = document.getElementById("preset-grid");
+    if (grid) {
+        presets.forEach(function (preset) {
+            var card = document.createElement("div");
+            card.className = "preset";
+            card.innerHTML = '<div class="stage"><div class="box ' + preset[1] + '"></div></div><h4></h4><p class="show"></p><p class="hide"></p>';
+            card.querySelector("h4").innerHTML = "<code></code>";
+            card.querySelector("h4 code").textContent = "TweenPresets." + preset[0] + "Key";
+            card.querySelector(".show").textContent = "Show: " + preset[2];
+            card.querySelector(".hide").textContent = "Hide: " + preset[3];
+            grid.appendChild(card);
+        });
+    }
+
+    // ---------- Light / dark ----------
+    var themeToggle = document.getElementById("theme-toggle");
+    var themeLabel = document.getElementById("theme-label");
+
+    function applyTheme(dark) {
+        if (dark) {
+            document.documentElement.setAttribute("data-theme", "dark");
+        } else {
+            document.documentElement.removeAttribute("data-theme");
+        }
+        themeLabel.textContent = dark ? "Light" : "Dark";
+    }
+
+    applyTheme(document.documentElement.getAttribute("data-theme") === "dark");
+    themeToggle.addEventListener("click", function () {
+        var dark = document.documentElement.getAttribute("data-theme") !== "dark";
+        applyTheme(dark);
+        try {
+            localStorage.setItem("uiframework-docs-theme", dark ? "dark" : "light");
+        } catch (error) {
+        }
+    });
+
+    // ---------- Copy buttons ----------
+    document.querySelectorAll(".copy").forEach(function (button) {
+        button.addEventListener("click", function () {
+            var code = button.closest(".code").querySelector("pre").innerText;
+            navigator.clipboard.writeText(code).then(function () {
+                button.textContent = "Copied";
+                setTimeout(function () {
+                    button.textContent = "Copy";
+                }, 1400);
+            });
+        });
+    });
+})();
+</script>
+</body>
+</html>
