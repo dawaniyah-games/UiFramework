@@ -10,7 +10,7 @@ namespace UiFramework.Editor.CodeGeneration
         private static string GetTemplatePath()
         {
             string[] guids = AssetDatabase.FindAssets("UiStateTemplate t:TextAsset");
-            
+
             if (guids.Length > 0)
             {
                 return AssetDatabase.GUIDToAssetPath(guids[0]);
@@ -21,12 +21,8 @@ namespace UiFramework.Editor.CodeGeneration
 
         public static void Generate(string name, string outputPath, string namespaceName)
         {
-            Debug.Log($"⚠️ Output directory does not exist, creating: {outputPath}");
-
-
             if (!Directory.Exists(outputPath))
             {
-                Debug.LogWarning($"⚠️ Output directory does not exist, creating: {outputPath}");
                 Directory.CreateDirectory(outputPath);
             }
 
@@ -35,14 +31,14 @@ namespace UiFramework.Editor.CodeGeneration
 
             if (File.Exists(filePath))
             {
-                Debug.LogWarning($"⚠️ File already exists: {filePath}");
+                Debug.LogWarning($"[UiFramework] {filePath} already exists, so it was not generated again. Rename or delete it first if you want a fresh copy.");
                 return;
             }
 
             string templatePath = GetTemplatePath();
             if (!File.Exists(templatePath))
             {
-                Debug.LogError($"❌ Template file not found: {templatePath}");
+                Debug.LogError($"[UiFramework] Template not found at {templatePath}. Restore Editor/Templates from the package.");
                 return;
             }
 
@@ -53,7 +49,7 @@ namespace UiFramework.Editor.CodeGeneration
 
             File.WriteAllText(filePath, template);
             AssetDatabase.ImportAsset(filePath);
-            Debug.Log($"✅ Generated UI State: {filePath}");
+            Debug.Log($"[UiFramework] Generated UI state {filePath}.");
         }
     }
 }

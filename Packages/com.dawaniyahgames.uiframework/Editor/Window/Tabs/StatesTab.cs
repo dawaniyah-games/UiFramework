@@ -461,7 +461,7 @@ namespace UiFramework.Editor.Window.Tabs
         // "Add element scene" search box: type part of a name, matching scenes are suggested below; click one to add it.
         private VisualElement CreateAddSceneSearch(UiStateDefinition definition, List<string> availableScenes)
         {
-            const int maxSuggestions = 8;
+            const int MaxSuggestions = 8;
 
             VisualElement container = new VisualElement();
             container.style.marginTop = 12;
@@ -506,7 +506,7 @@ namespace UiFramework.Editor.Window.Tabs
                     return;
                 }
 
-                for (int i = 0; i < matches.Count && i < maxSuggestions; i++)
+                for (int i = 0; i < matches.Count && i < MaxSuggestions; i++)
                 {
                     string sceneName = matches[i];
                     Button suggestion = new Button(() =>
@@ -521,9 +521,9 @@ namespace UiFramework.Editor.Window.Tabs
                     suggestions.Add(suggestion);
                 }
 
-                if (matches.Count > maxSuggestions)
+                if (matches.Count > MaxSuggestions)
                 {
-                    Label more = new Label("+" + (matches.Count - maxSuggestions) + " more, keep typing to narrow down");
+                    Label more = new Label("+" + (matches.Count - MaxSuggestions) + " more, keep typing to narrow down");
                     more.style.color = new Color(0.6f, 0.6f, 0.6f);
                     more.style.fontSize = 11;
                     suggestions.Add(more);

@@ -38,10 +38,10 @@ namespace UiFramework.Runtime.Manager
         private readonly Dictionary<string, int> sceneRefCountsByGuid = new Dictionary<string, int>(StringComparer.Ordinal);
         private readonly Dictionary<string, AsyncOperationHandle<SceneInstance>> loadingHandlesByGuid = new Dictionary<string, AsyncOperationHandle<SceneInstance>>(StringComparer.Ordinal);
 
-        private async Task InitializeInternal(UiState defaultState = null)
+        private async Task InitializeInternalAsync(UiState defaultState = null)
         {
             UiConfig loadedConfig = await LoadRuntimeUiConfigFromAddressablesAsync();
-            
+
             if (loadedConfig == null)
             {
                 Debug.LogError("[UiManager] UiConfig failed to load from Addressables (address 'UiConfig'). Run Build Runtime UiConfig in the UI Setup Manager.");
@@ -49,7 +49,7 @@ namespace UiFramework.Runtime.Manager
             }
 
             config = loadedConfig;
-            
+
             cachedStates.Clear();
             typeToKeyMap.Clear();
 
@@ -72,7 +72,7 @@ namespace UiFramework.Runtime.Manager
             DontDestroyOnLoad(gameObjectUiManager);
             SetInstance(created);
 
-            await created.InitializeInternal(defaultState);
+            await created.InitializeInternalAsync(defaultState);
             return created;
         }
 
@@ -132,10 +132,10 @@ namespace UiFramework.Runtime.Manager
                 return;
             }
 
-            await instance.LoadAndPushState(entry, context, additive, transition ?? UiTransition.Default);
+            await instance.LoadAndPushStateAsync(entry, context, additive, transition ?? UiTransition.Default);
         }
 
-        private async Task LoadAndPushState(UiStateEntry entry, object context, bool additive, UiTransition transition)
+        private async Task LoadAndPushStateAsync(UiStateEntry entry, object context, bool additive, UiTransition transition)
         {
             UiState newState = new UiState(entry.stateKey, entry.uiElementScenes);
 
@@ -161,7 +161,7 @@ namespace UiFramework.Runtime.Manager
                 }
                 finally
                 {
-                    await UnloadAllPreviousStates(false);
+                    await UnloadAllPreviousStatesAsync(false);
                     stateStack.Clear();
                     stateStack.Push(newState);
                     loadingState = null;
@@ -608,7 +608,7 @@ namespace UiFramework.Runtime.Manager
                 return;
             }
 
-            await instance.UnloadAllPreviousStates();
+            await instance.UnloadAllPreviousStatesAsync();
         }
 
         // Blocking on the unload with Task.Wait() could deadlock the main thread (Addressables completes on it), so
@@ -618,7 +618,7 @@ namespace UiFramework.Runtime.Manager
         {
             try
             {
-                await UnloadAllPreviousStates();
+                await UnloadAllPreviousStatesAsync();
             }
             catch (Exception exception)
             {
@@ -626,7 +626,7 @@ namespace UiFramework.Runtime.Manager
             }
         }
 
-        private async Task UnloadAllPreviousStates(bool playHideTransitions = true)
+        private async Task UnloadAllPreviousStatesAsync(bool playHideTransitions = true)
         {
             while (stateStack.Count > 0)
             {

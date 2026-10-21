@@ -6,13 +6,13 @@ namespace UiFramework.Editor.Data
     [CreateAssetMenu(fileName = "UiStateRegistry", menuName = "Scripts/UiFramework/State Registry")]
     public class UiStateRegistry : ScriptableObject
     {
-        public List<UiStateMetadata> States = new();
+        public List<UiStateMetadata> States = new List<UiStateMetadata>();
     }
 
     [System.Serializable]
     public class UiStateMetadata
     {
         public string StateName;
-        public List<string> ElementSceneNames = new();
+        public List<string> ElementSceneNames = new List<string>();
     }
 }

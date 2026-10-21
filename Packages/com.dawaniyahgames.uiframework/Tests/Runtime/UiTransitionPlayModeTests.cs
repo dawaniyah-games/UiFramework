@@ -15,9 +15,9 @@ namespace UiFramework.Tweening.Tests
     // A per-call UiTransition replaces an element's configured animation for that call only.
     public class UiTransitionPlayModeTests
     {
-        private const float canvasWidth = 1000f;
-        private const float tolerance = 0.5f;
-        private const int maxFrames = 3000;
+        private const float CanvasWidth = 1000f;
+        private const float Tolerance = 0.5f;
+        private const int MaxFrames = 3000;
 
         private readonly List<GameObject> created = new List<GameObject>();
 
@@ -77,13 +77,13 @@ namespace UiFramework.Tweening.Tests
             TestUiElement element = CreateElement(TweenPresets.FadeKey, TweenPresets.FadeKey, out root);
 
             element.PrepareForShow(TweenPresets.SlideLeftKey);
-            Assert.AreEqual(canvasWidth, root.anchoredPosition.x, tolerance, "SlideLeft starts past the right edge.");
+            Assert.AreEqual(CanvasWidth, root.anchoredPosition.x, Tolerance, "SlideLeft starts past the right edge.");
 
             List<float> samples = new List<float>();
             yield return Run(element.ShowAsync(TweenPresets.SlideLeftKey), () => -root.anchoredPosition.x, samples);
 
             AssertMonotonicIncreasing(samples, "override show (moving left)");
-            Assert.AreEqual(0f, root.anchoredPosition.x, tolerance);
+            Assert.AreEqual(0f, root.anchoredPosition.x, Tolerance);
         }
 
         [UnityTest]
@@ -94,7 +94,7 @@ namespace UiFramework.Tweening.Tests
 
             element.PrepareForShow(null);
             Assert.AreEqual(0f, root.GetComponent<CanvasGroup>().alpha, 0.0001f, "The configured Fade starts transparent.");
-            Assert.AreEqual(0f, root.anchoredPosition.x, tolerance, "No slide was configured.");
+            Assert.AreEqual(0f, root.anchoredPosition.x, Tolerance, "No slide was configured.");
 
             yield return Run(element.ShowAsync(), null, null);
             Assert.AreEqual(1f, root.GetComponent<CanvasGroup>().alpha, 0.0001f);
@@ -108,7 +108,7 @@ namespace UiFramework.Tweening.Tests
 
             yield return Run(element.HideAsync(TweenPresets.SlideRightKey), null, null);
 
-            Assert.AreEqual(canvasWidth, root.anchoredPosition.x, tolerance, "SlideRight hide leaves past the right edge.");
+            Assert.AreEqual(CanvasWidth, root.anchoredPosition.x, Tolerance, "SlideRight hide leaves past the right edge.");
         }
 
         // ---------- Helpers ----------
@@ -121,7 +121,7 @@ namespace UiFramework.Tweening.Tests
 
             GameObject canvasObject = new GameObject("Canvas", typeof(RectTransform), typeof(Canvas));
             canvasObject.GetComponent<Canvas>().renderMode = RenderMode.WorldSpace;
-            ((RectTransform)canvasObject.transform).sizeDelta = new Vector2(canvasWidth, 2000f);
+            ((RectTransform)canvasObject.transform).sizeDelta = new Vector2(CanvasWidth, 2000f);
             canvasObject.transform.SetParent(elementObject.transform, false);
 
             GameObject rootObject = new GameObject("Root", typeof(RectTransform));
@@ -158,7 +158,7 @@ namespace UiFramework.Tweening.Tests
                 }
 
                 frames++;
-                Assert.Less(frames, maxFrames, "The animation never finished.");
+                Assert.Less(frames, MaxFrames, "The animation never finished.");
                 yield return null;
             }
 

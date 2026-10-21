@@ -15,7 +15,7 @@ namespace UiFramework.Editor.CodeGeneration
                 string path = AssetDatabase.GUIDToAssetPath(guids[0]);
                 return Path.GetDirectoryName(path).Replace("\\", "/") + "/";
             }
-            
+
             return "Packages/com.dawaniyahgames.uiframework/Editor/Templates/";
         }
 
@@ -43,19 +43,24 @@ namespace UiFramework.Editor.CodeGeneration
 
         private static void WriteFromTemplate(string templateFile, string name, string ns, string outputPath, string className)
         {
-            string templatePath = Path.Combine(GetTemplateFolder(), templateFile);
-            Debug.Log($"🔍 Looking for template at: {templatePath}");
+            string outputFile = Path.Combine(outputPath, $"{className}.cs");
+            if (File.Exists(outputFile))
+            {
+                Debug.LogWarning($"[UiFramework] {outputFile} already exists, so it was not generated again. Rename or delete it first if you want a fresh copy.");
+                return;
+            }
 
+            string templatePath = Path.Combine(GetTemplateFolder(), templateFile);
             if (!File.Exists(templatePath))
             {
-                Debug.LogError($"❌ Template not found: {templatePath}");
+                Debug.LogError($"[UiFramework] Template not found at {templatePath}. Restore Editor/Templates from the package.");
                 return;
             }
 
             string template = File.ReadAllText(templatePath);
             if (string.IsNullOrWhiteSpace(template))
             {
-                Debug.LogWarning($"⚠️ Template '{templateFile}' is empty.");
+                Debug.LogWarning($"[UiFramework] Template '{templateFile}' is empty, so {className}.cs was not generated. Restore it from the package.");
                 return;
             }
 
@@ -67,17 +72,14 @@ namespace UiFramework.Editor.CodeGeneration
                 .Replace("[UiReferenceNamespace]", ns)
                 .Replace("[UiParamNamespace]", ns);
 
-            string outputFile = Path.Combine(outputPath, $"{className}.cs");
-            Debug.Log($"📄 Writing script to: {outputFile}");
-
             try
             {
                 File.WriteAllText(outputFile, code);
-                Debug.Log($"✅ Successfully generated: {outputFile}");
+                Debug.Log($"[UiFramework] Generated {outputFile}.");
             }
-            catch (IOException ex)
+            catch (IOException exception)
             {
-                Debug.LogError($"❌ Failed to write file: {ex.Message}");
+                Debug.LogError($"[UiFramework] Could not write {outputFile}: {exception.Message}");
             }
         }
     }

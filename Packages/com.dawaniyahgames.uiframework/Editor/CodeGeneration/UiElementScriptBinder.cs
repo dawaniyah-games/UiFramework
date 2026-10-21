@@ -1,45 +1,55 @@
+using System;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
-using UnityEngine;
 using UnityEditor.SceneManagement;
-using System.Linq;
-using System;
+using UnityEngine;
 
-public class UiElementScriptBinder : AssetPostprocessor
+namespace UiFramework.Editor.CodeGeneration
 {
-    [DidReloadScripts]
-    private static void OnScriptsReloaded()
+    // A freshly generated element script only becomes a type after compiling; this attaches it to <Name>Root then.
+    public class UiElementScriptBinder : AssetPostprocessor
     {
-        string name = EditorPrefs.GetString("UiElementAutoBind_Name", null);
-        string scriptPath = EditorPrefs.GetString("UiElementAutoBind_ScriptPath", null);
-
-        if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(scriptPath))
+        [DidReloadScripts]
+        private static void OnScriptsReloaded()
         {
-            return;
-        }
+            string name = EditorPrefs.GetString("UiElementAutoBind_Name", null);
+            string scriptPath = EditorPrefs.GetString("UiElementAutoBind_ScriptPath", null);
 
-        EditorPrefs.DeleteKey("UiElementAutoBind_Name");
-        EditorPrefs.DeleteKey("UiElementAutoBind_ScriptPath");
-
-        string scriptGuid = AssetDatabase.FindAssets($"{name} t:MonoScript", new[] { scriptPath }).FirstOrDefault();
-        
-        if (string.IsNullOrEmpty(scriptGuid))
-        {
-            return;
-        }
-
-        string scriptAssetPath = AssetDatabase.GUIDToAssetPath(scriptGuid);
-        MonoScript monoScript = AssetDatabase.LoadAssetAtPath<MonoScript>(scriptAssetPath);
-        Type type = monoScript?.GetClass();
-
-        if (type != null && typeof(MonoBehaviour).IsAssignableFrom(type))
-        {
-            GameObject rootGO = GameObject.Find(name + "Root");
-            if (rootGO != null && rootGO.GetComponent(type) == null)
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(scriptPath))
             {
-                Undo.AddComponent(rootGO, type);
+                return;
+            }
+
+            EditorPrefs.DeleteKey("UiElementAutoBind_Name");
+            EditorPrefs.DeleteKey("UiElementAutoBind_ScriptPath");
+
+            string scriptGuid = AssetDatabase.FindAssets($"{name} t:MonoScript", new string[] { scriptPath }).FirstOrDefault();
+
+            if (string.IsNullOrEmpty(scriptGuid))
+            {
+                return;
+            }
+
+            string scriptAssetPath = AssetDatabase.GUIDToAssetPath(scriptGuid);
+            MonoScript monoScript = AssetDatabase.LoadAssetAtPath<MonoScript>(scriptAssetPath);
+            if (monoScript == null)
+            {
+                return;
+            }
+
+            Type type = monoScript.GetClass();
+            if (type == null || !typeof(MonoBehaviour).IsAssignableFrom(type))
+            {
+                return;
+            }
+
+            GameObject elementRoot = GameObject.Find(name + "Root");
+            if (elementRoot != null && elementRoot.GetComponent(type) == null)
+            {
+                Undo.AddComponent(elementRoot, type);
                 EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-                Debug.Log($"✅ Auto-attached {type.Name} to {rootGO.name} after script reload.");
+                Debug.Log($"[UiFramework] Attached {type.Name} to {elementRoot.name} after script reload.");
             }
         }
     }

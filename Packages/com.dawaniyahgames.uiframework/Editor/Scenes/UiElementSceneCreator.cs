@@ -13,8 +13,8 @@ namespace UiFramework.Editor.Scenes
     // The UI decides how to ask before restructuring an existing scene; this class only calls the given callback.
     public static class UiElementSceneCreator
     {
-        private const string autoBindNameKey = "UiElementAutoBind_Name";
-        private const string autoBindScriptPathKey = "UiElementAutoBind_ScriptPath";
+        private const string AutoBindNameKey = "UiElementAutoBind_Name";
+        private const string AutoBindScriptPathKey = "UiElementAutoBind_ScriptPath";
 
         public sealed class Options
         {
@@ -47,8 +47,8 @@ namespace UiFramework.Editor.Scenes
             AssetDatabase.Refresh();
 
             // UiElementScriptBinder attaches the script to <Name>Root once it has compiled.
-            EditorPrefs.SetString(autoBindNameKey, elementName);
-            EditorPrefs.SetString(autoBindScriptPathKey, scriptPath);
+            EditorPrefs.SetString(AutoBindNameKey, elementName);
+            EditorPrefs.SetString(AutoBindScriptPathKey, scriptPath);
 
             Scene scene = options.ExistingScene != null
                 ? EditorSceneManager.OpenScene(AssetDatabase.GetAssetPath(options.ExistingScene), OpenSceneMode.Single)

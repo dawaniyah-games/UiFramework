@@ -15,7 +15,7 @@ namespace UiFramework.Editor.Tests
     // Rebuilds the consumer-project migration cases in memory and checks the reported issue codes and fixes.
     public class UiElementSceneContractTests
     {
-        private const string tempFolder = "Assets/UiFrameworkContractTestTemp";
+        private const string TempFolder = "Assets/UiFrameworkContractTestTemp";
 
         private Scene scene;
         private UiGlobalCanvasSettings settings;
@@ -36,9 +36,9 @@ namespace UiFramework.Editor.Tests
             Object.DestroyImmediate(settings);
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
-            if (AssetDatabase.IsValidFolder(tempFolder))
+            if (AssetDatabase.IsValidFolder(TempFolder))
             {
-                AssetDatabase.DeleteAsset(tempFolder);
+                AssetDatabase.DeleteAsset(TempFolder);
             }
         }
 
@@ -792,7 +792,7 @@ namespace UiFramework.Editor.Tests
         {
             EnsureTempFolder();
             GameObject source = new GameObject(name, typeof(RectTransform));
-            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(source, tempFolder + "/" + name + ".prefab");
+            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(source, TempFolder + "/" + name + ".prefab");
             Object.DestroyImmediate(source);
             return prefab;
         }
@@ -803,7 +803,7 @@ namespace UiFramework.Editor.Tests
             GameObject source = new GameObject("Canvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             CreateStretched("A", source.transform);
             CreateStretched("B", source.transform);
-            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(source, tempFolder + "/PrefabCanvas.prefab");
+            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(source, TempFolder + "/PrefabCanvas.prefab");
             Object.DestroyImmediate(source);
             return prefab;
         }
@@ -818,7 +818,7 @@ namespace UiFramework.Editor.Tests
         private string SaveActiveScene(string name)
         {
             EnsureTempFolder();
-            string path = tempFolder + "/" + name + ".unity";
+            string path = TempFolder + "/" + name + ".unity";
             Assert.IsTrue(EditorSceneManager.SaveScene(scene, path));
             return path;
         }
@@ -837,7 +837,7 @@ namespace UiFramework.Editor.Tests
 
         private static void EnsureTempFolder()
         {
-            if (!AssetDatabase.IsValidFolder(tempFolder))
+            if (!AssetDatabase.IsValidFolder(TempFolder))
             {
                 AssetDatabase.CreateFolder("Assets", "UiFrameworkContractTestTemp");
             }

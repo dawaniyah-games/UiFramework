@@ -17,7 +17,7 @@ namespace UiFramework.Editor.Scenes
     // Names are not checked, only structure.
     public static class UiElementStructureValidator
     {
-        private const int maxListedNames = 6;
+        private const int MaxListedNames = 6;
 
         public static bool ValidateStructure(Scene scene, out UiElementStructureReport report)
         {
@@ -455,15 +455,15 @@ namespace UiFramework.Editor.Scenes
             List<string> names = new List<string>();
             int count = parent.childCount;
 
-            for (int i = 0; i < count && i < maxListedNames; i++)
+            for (int i = 0; i < count && i < MaxListedNames; i++)
             {
                 names.Add(parent.GetChild(i).name);
             }
 
             string joined = string.Join(", ", names.ToArray());
-            if (count > maxListedNames)
+            if (count > MaxListedNames)
             {
-                joined += ", +" + (count - maxListedNames) + " more";
+                joined += ", +" + (count - MaxListedNames) + " more";
             }
 
             return joined;

@@ -29,32 +29,32 @@ namespace UiFramework.Tweening
         public const string SlideUpKey = "SlideUp";
         public const string SlideDownKey = "SlideDown";
 
-        private const float slideShowDuration = 0.32f;
-        private const float slideHideDuration = 0.24f;
-        private const float fadeShowDuration = 0.22f;
-        private const float fadeHideDuration = 0.16f;
-        private const float zoomShowDuration = 0.26f;
-        private const float zoomHideDuration = 0.18f;
-        private const float zoomShowStartScale = 0.94f;
-        private const float zoomHideEndScale = 0.96f;
+        private const float SlideShowDuration = 0.32f;
+        private const float SlideHideDuration = 0.24f;
+        private const float FadeShowDuration = 0.22f;
+        private const float FadeHideDuration = 0.16f;
+        private const float ZoomShowDuration = 0.26f;
+        private const float ZoomHideDuration = 0.18f;
+        private const float ZoomShowStartScale = 0.94f;
+        private const float ZoomHideEndScale = 0.96f;
 
-        private const float clickPeak = 1.08f;
-        private const float clickUp = 0.08f;
-        private const float clickDown = 0.14f;
+        private const float ClickPeak = 1.08f;
+        private const float ClickUp = 0.08f;
+        private const float ClickDown = 0.14f;
 
-        private const float settlePeak = 1.04f;
-        private const float settleUp = 0.10f;
-        private const float settleDown = 0.18f;
+        private const float SettlePeak = 1.04f;
+        private const float SettleUp = 0.10f;
+        private const float SettleDown = 0.18f;
 
-        private const float defaultShakeAmplitude = 8f;
-        private const float defaultShakeDuration = 0.32f;
-        private const float shakeCycles = 3f;
+        private const float DefaultShakeAmplitude = 8f;
+        private const float DefaultShakeDuration = 0.32f;
+        private const float ShakeCycles = 3f;
 
         // Share of a slide / pop / shake that fades: the first part of a show, the last part of a hide.
-        private const float edgeFadePortion = 0.4f;
+        private const float EdgeFadePortion = 0.4f;
 
         // Slide distance for objects without a RectTransform (local units).
-        private const float nonUiSlideDistance = 10f;
+        private const float NonUiSlideDistance = 10f;
 
         private static readonly List<string> presetKeys = new List<string>
         {
@@ -140,19 +140,19 @@ namespace UiFramework.Tweening
                 case ScaleKey:
                     return PlayZoomAsync(target, isShow);
                 case ClickPopKey:
-                    return WithEdgeFade(target, isShow, clickUp + clickDown, ClickPop(target.transform));
+                    return WithEdgeFadeAsync(target, isShow, ClickUp + ClickDown, ClickPop(target.transform));
                 case SettlePopKey:
-                    return WithEdgeFade(target, isShow, settleUp + settleDown, SettlePop(target.transform));
+                    return WithEdgeFadeAsync(target, isShow, SettleUp + SettleDown, SettlePop(target.transform));
                 case ShakeKey:
-                    return WithEdgeFade(target, isShow, defaultShakeDuration, ShakeLocal(target.transform));
+                    return WithEdgeFadeAsync(target, isShow, DefaultShakeDuration, ShakeLocal(target.transform));
                 case SlideLeftKey:
-                    return WithEdgeFade(target, isShow, GetSlideDuration(isShow), PlaySlideAsync(target, isShow, Vector2.left));
+                    return WithEdgeFadeAsync(target, isShow, GetSlideDuration(isShow), PlaySlideAsync(target, isShow, Vector2.left));
                 case SlideRightKey:
-                    return WithEdgeFade(target, isShow, GetSlideDuration(isShow), PlaySlideAsync(target, isShow, Vector2.right));
+                    return WithEdgeFadeAsync(target, isShow, GetSlideDuration(isShow), PlaySlideAsync(target, isShow, Vector2.right));
                 case SlideUpKey:
-                    return WithEdgeFade(target, isShow, GetSlideDuration(isShow), PlaySlideAsync(target, isShow, Vector2.up));
+                    return WithEdgeFadeAsync(target, isShow, GetSlideDuration(isShow), PlaySlideAsync(target, isShow, Vector2.up));
                 case SlideDownKey:
-                    return WithEdgeFade(target, isShow, GetSlideDuration(isShow), PlaySlideAsync(target, isShow, Vector2.down));
+                    return WithEdgeFadeAsync(target, isShow, GetSlideDuration(isShow), PlaySlideAsync(target, isShow, Vector2.down));
                 default:
                     return Task.CompletedTask;
             }
@@ -160,16 +160,16 @@ namespace UiFramework.Tweening
 
         private static float GetSlideDuration(bool isShow)
         {
-            return isShow ? slideShowDuration : slideHideDuration;
+            return isShow ? SlideShowDuration : SlideHideDuration;
         }
 
-        private static Task WithEdgeFade(GameObject target, bool isShow, float duration, Task motion)
+        private static Task WithEdgeFadeAsync(GameObject target, bool isShow, float duration, Task motion)
         {
             return Task.WhenAll(motion, PlayEdgeFadeAsync(target, isShow, duration));
         }
 
-        // Show: alpha 0 -> base during the first edgeFadePortion of the motion. Hide: alpha -> 0 during the last
-        // edgeFadePortion, so the element is fully visible while it moves and never pops in or out.
+        // Show: alpha 0 -> base during the first EdgeFadePortion of the motion. Hide: alpha -> 0 during the last
+        // EdgeFadePortion, so the element is fully visible while it moves and never pops in or out.
         private static Task PlayEdgeFadeAsync(GameObject target, bool isShow, float duration)
         {
             UiTweenState state = GetOrCreateTweenState(target);
@@ -187,12 +187,12 @@ namespace UiFramework.Tweening
                 {
                     if (isShow)
                     {
-                        float fadeIn = Mathf.Clamp01(p / edgeFadePortion);
+                        float fadeIn = Mathf.Clamp01(p / EdgeFadePortion);
                         group.alpha = visibleAlpha * TweenCurves.EaseOut.Evaluate(fadeIn);
                     }
                     else
                     {
-                        float fadeOut = Mathf.Clamp01((p - (1f - edgeFadePortion)) / edgeFadePortion);
+                        float fadeOut = Mathf.Clamp01((p - (1f - EdgeFadePortion)) / EdgeFadePortion);
                         group.alpha = visibleAlpha * (1f - TweenCurves.EaseIn.Evaluate(fadeOut));
                     }
                 });
@@ -226,7 +226,7 @@ namespace UiFramework.Tweening
                     GetOrAddCanvasGroup(target).alpha = 0f;
                     break;
                 case ScaleKey:
-                    target.transform.localScale = state.BaseLocalScale * zoomShowStartScale;
+                    target.transform.localScale = state.BaseLocalScale * ZoomShowStartScale;
                     GetOrAddCanvasGroup(target).alpha = 0f;
                     break;
                 case SlideLeftKey:
@@ -252,17 +252,17 @@ namespace UiFramework.Tweening
 
         public static async Task ClickPop(Transform t, CancellationToken ct = default)
         {
-            await PopAsync(t, clickPeak, clickUp, clickDown, ct);
+            await PopAsync(t, ClickPeak, ClickUp, ClickDown, ct);
         }
 
         public static async Task SettlePop(Transform t, CancellationToken ct = default)
         {
-            await PopAsync(t, settlePeak, settleUp, settleDown, ct);
+            await PopAsync(t, SettlePeak, SettleUp, SettleDown, ct);
         }
 
         // Smooth, fading side-to-side shake around where the object rests. Re-triggering mid-shake keeps the same
         // resting point, so the object never drifts.
-        public static async Task ShakeLocal(Transform t, float amplitude = defaultShakeAmplitude, float duration = defaultShakeDuration, CancellationToken ct = default)
+        public static async Task ShakeLocal(Transform t, float amplitude = DefaultShakeAmplitude, float duration = DefaultShakeDuration, CancellationToken ct = default)
         {
             if (t == null)
             {
@@ -276,7 +276,7 @@ namespace UiFramework.Tweening
             await Tween.RunAsync(t, duration, TweenCurves.Linear, true, ct, () => state != null && state.IsCurrent(run, UiTweenChannels.Position), p =>
             {
                 float fade = (1f - p) * (1f - p);
-                float offset = Mathf.Sin(p * shakeCycles * 2f * Mathf.PI) * amplitude * fade;
+                float offset = Mathf.Sin(p * ShakeCycles * 2f * Mathf.PI) * amplitude * fade;
                 t.localPosition = origin + new Vector3(offset, 0f, 0f);
             });
 
@@ -323,7 +323,7 @@ namespace UiFramework.Tweening
             UiTweenState state = GetOrCreateTweenState(target);
             int run = state.BeginAnimation(UiTweenChannels.Position);
             Func<bool> isCurrent = () => state != null && state.IsCurrent(run, UiTweenChannels.Position);
-            float duration = isShow ? slideShowDuration : slideHideDuration;
+            float duration = isShow ? SlideShowDuration : SlideHideDuration;
             AnimationCurve ease = isShow ? TweenCurves.EaseOut : TweenCurves.EaseIn;
 
             RectTransform rectTransform = target.transform as RectTransform;
@@ -344,7 +344,7 @@ namespace UiFramework.Tweening
             }
 
             Transform t = target.transform;
-            Vector3 localOffset = new Vector3(direction.x, direction.y, 0f) * nonUiSlideDistance;
+            Vector3 localOffset = new Vector3(direction.x, direction.y, 0f) * NonUiSlideDistance;
             Vector3 localFrom = isShow ? state.BaseLocalPosition - localOffset : t.localPosition;
             Vector3 localTo = isShow ? state.BaseLocalPosition : state.BaseLocalPosition + localOffset;
             t.localPosition = localFrom;
@@ -365,7 +365,7 @@ namespace UiFramework.Tweening
             float to = isShow ? state.BaseAlpha : 0f;
             group.alpha = from;
 
-            return Tween.RunAsync(target, isShow ? fadeShowDuration : fadeHideDuration, isShow ? TweenCurves.EaseOut : TweenCurves.EaseIn, true, default,
+            return Tween.RunAsync(target, isShow ? FadeShowDuration : FadeHideDuration, isShow ? TweenCurves.EaseOut : TweenCurves.EaseIn, true, default,
                 () => state != null && state.IsCurrent(run, UiTweenChannels.Alpha), e =>
                 {
                     group.alpha = Mathf.LerpUnclamped(from, to, e);
@@ -381,15 +381,15 @@ namespace UiFramework.Tweening
             Transform t = target.transform;
 
             Vector3 baseScale = state.BaseLocalScale;
-            Vector3 fromScale = isShow ? baseScale * zoomShowStartScale : t.localScale;
-            Vector3 toScale = isShow ? baseScale : baseScale * zoomHideEndScale;
+            Vector3 fromScale = isShow ? baseScale * ZoomShowStartScale : t.localScale;
+            Vector3 toScale = isShow ? baseScale : baseScale * ZoomHideEndScale;
             float fromAlpha = isShow ? 0f : group.alpha;
             float toAlpha = isShow ? state.BaseAlpha : 0f;
 
             t.localScale = fromScale;
             group.alpha = fromAlpha;
 
-            return Tween.RunAsync(target, isShow ? zoomShowDuration : zoomHideDuration, isShow ? TweenCurves.EaseOut : TweenCurves.EaseIn, true, default,
+            return Tween.RunAsync(target, isShow ? ZoomShowDuration : ZoomHideDuration, isShow ? TweenCurves.EaseOut : TweenCurves.EaseIn, true, default,
                 () => state != null && state.IsCurrent(run, UiTweenChannels.Scale | UiTweenChannels.Alpha), e =>
                 {
                     t.localScale = Vector3.LerpUnclamped(fromScale, toScale, e);
@@ -406,7 +406,7 @@ namespace UiFramework.Tweening
                 return;
             }
 
-            target.transform.localPosition = state.BaseLocalPosition - new Vector3(direction.x, direction.y, 0f) * nonUiSlideDistance;
+            target.transform.localPosition = state.BaseLocalPosition - new Vector3(direction.x, direction.y, 0f) * NonUiSlideDistance;
         }
 
         private static void RestoreBasePose(GameObject target, UiTweenState state)
