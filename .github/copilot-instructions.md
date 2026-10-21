@@ -11,15 +11,18 @@ Don't restate or override those documents here. If they and this file disagree, 
 
 ## Non-negotiable rules (the most commonly broken)
 
+`bash tools/check-standards.sh` checks most of these; CI runs it on every PR.
+
 1. **No `var`, no target-typed `new()`, no expression-bodied members (`=>`)**, and braces on every block, Allman style.
 2. `using` directives go **outside** a block-scoped `namespace`.
-3. Private fields, including `const`, are `camelCase`, with no `_` or `m_`. Inspector fields are `[SerializeField] private`.
+3. Private fields are `camelCase`, with no `_` or `m_`. Constants are `PascalCase` at every access level. Inspector fields are `[SerializeField] private`.
 4. Never use `?.` / `??` on `UnityEngine.Object` types. Use `== null`.
-5. Never `.Wait()` / `.Result` a Task. `async void` only for Unity messages and event handlers, with try/catch.
-6. Logs start with `[ClassName]` (runtime) or `[UiFramework]` (editor tooling) and contain no emoji.
-9. UI element scenes follow the contract `<Name>Root → Canvas → one stretched Root` (DESIGN.md §7.1). Editor tools edit open scenes in place (Undo, no save), never delete objects, and never touch Canvas sorting.
-7. Assembly direction is `Tweening ← Core ← Runtime ← Editor`. Never reference upward, and never use `UnityEditor` in runtime code.
-8. Never rename a serialized field without `[FormerlySerializedAs]`. Never change `IUiElement.Populate(object context)`.
+5. Never `.Wait()` / `.Result` a Task. `async void` only for Unity messages and event handlers, with try/catch. No try/catch for validation: guard up front.
+6. Logs read `"[ClassName] What happened. What to do about it."` (`[UiFramework]` in editor tooling), with no emoji and no duplicates.
+7. Assembly direction is `Tweening ← Core ← Runtime ← Editor`. Never reference upward, never use `UnityEditor` in runtime code, and never reference game code (ServiceLocator, Signals, Photon, TaskRunner, TMP, localisation).
+8. The public API and the package's serialized fields are frozen; changing them is a breaking change that needs approval and a consumer impact note. Never change `IUiElement.Populate(object context)`.
+9. UI element scenes follow the contract `<Name>Root → Canvas → one stretched Root` (DESIGN.md §7.1). Editor tools edit open scenes in place (Undo, no save), never delete objects, and never touch Canvas sorting. Generators never overwrite an existing file.
+10. Commit subjects: imperative, sentence case, no prefix, about 72 characters. Don't push unless asked.
 
 ## Mental model (details in DESIGN.md)
 
@@ -36,4 +39,4 @@ Don't restate or override those documents here. If they and this file disagree, 
 - New or changed generated code: edit `Editor/Templates/*.txt`. The output must satisfy CODING_STANDARDS.
 - Behaviour, API or editor workflow change: update DESIGN.md (and README.md if user-facing) and add a `CHANGELOG.md` `[Unreleased]` entry in the same change.
 - Version bumps: `package.json` `version`, SemVer. Release steps are in CONTRIBUTING.md.
-- Run the EditMode and PlayMode tests in `Packages/com.dawaniyahgames.uiframework/Tests/`, and verify runtime changes in Play Mode with the sample project (CODING_STANDARDS §11).
+- Run `bash tools/check-standards.sh` and the EditMode and PlayMode tests in `Packages/com.dawaniyahgames.uiframework/Tests/`, and verify runtime changes in Play Mode with the sample project (CODING_STANDARDS §11).
