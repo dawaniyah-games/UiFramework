@@ -13,9 +13,28 @@ MonoBehaviour:
   m_Name: RuntimeUiConfig
   m_EditorClassIdentifier: 
   entries:
-  - stateKey: MainMenuUiState
+  - stateKey: ConfirmPurchaseUiState
     uiElementScenes:
-    - m_AssetGUID: 02261e40e6aade846b94e65c25b841e3
+    - m_AssetGUID: 87efa324c3d64484bad7d59572e720af
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+  - stateKey: IntroUiState
+    uiElementScenes:
+    - m_AssetGUID: c0bb38e1cc19b204c89e6df8cd6bb69f
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+  - stateKey: LeaderboardUiState
+    uiElementScenes:
+    - m_AssetGUID: a00272eac25606a4b9c032469f4c614b
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+    - m_AssetGUID: 76186191b8c0048428c6d90cc46194c5
       m_SubObjectName: 
       m_SubObjectType: 
       m_SubObjectGUID: 
@@ -25,9 +44,62 @@ MonoBehaviour:
       m_SubObjectType: 
       m_SubObjectGUID: 
       m_EditorAssetChanged: 0
+  - stateKey: MainMenuUiState
+    uiElementScenes:
+    - m_AssetGUID: 02261e40e6aade846b94e65c25b841e3
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+    - m_AssetGUID: 76186191b8c0048428c6d90cc46194c5
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+    - m_AssetGUID: c1b4c279b933b9c429efe3256e20c845
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+  - stateKey: ProfileUiState
+    uiElementScenes:
+    - m_AssetGUID: 7421ffa0b6b3f7d45b62db4b99de2d6d
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+    - m_AssetGUID: 76186191b8c0048428c6d90cc46194c5
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+    - m_AssetGUID: c1b4c279b933b9c429efe3256e20c845
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+  - stateKey: RewardUiState
+    uiElementScenes:
+    - m_AssetGUID: e52455d12a7bae04680df981d96fe1f9
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+  - stateKey: SettingsUiState
+    uiElementScenes:
+    - m_AssetGUID: 06664ab64fa7ccc449a2a9d88217c31a
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
   - stateKey: StoreUiState
     uiElementScenes:
     - m_AssetGUID: e48bc7f8f24c1414faafe2cfe38e899c
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+    - m_AssetGUID: 76186191b8c0048428c6d90cc46194c5
       m_SubObjectName: 
       m_SubObjectType: 
       m_SubObjectGUID: 

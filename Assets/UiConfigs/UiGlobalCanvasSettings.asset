@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e79d54530761c2e4bbeeb60184866028, type: 3}
   m_Name: UiGlobalCanvasSettings
   m_EditorClassIdentifier: UiFramework.Editor::UiFramework.Editor.Config.UiGlobalCanvasSettings
-  renderMode: 0
+  renderMode: 1
   pixelPerfect: 0
   uiScaleMode: 1
   referenceResolution: {x: 1080, y: 1920}

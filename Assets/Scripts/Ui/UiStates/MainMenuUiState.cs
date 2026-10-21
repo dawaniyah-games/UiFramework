@@ -1,21 +1,21 @@
-namespace UiFramework.Editor.States
-{
-    using UiFramework.Core;
-    using System.Collections.Generic;
-    using UnityEngine.AddressableAssets;
+using System.Collections.Generic;
+using UiFramework.Core;
+using UnityEngine.AddressableAssets;
 
+namespace UiShowcase.States
+{
     // Auto-generated: UI State
+    // Type marker for UiManager.ShowState<MainMenuUiState>(). The class name must match the state key.
+    // The runtime builds a base UiState from UiConfig, so code in this class is never executed.
     public class MainMenuUiState : UiState
     {
-        // Your UiState base expects (string name, List<AssetReference> uiElementScenes)
         public MainMenuUiState() : base("MainMenuUiState", new List<AssetReference>())
         {
-            // Add addressable UI prefabs/scenes to the list if needed
         }
 
         public override string ToString()
         {
-           return nameof(MainMenuUiState);
+            return nameof(MainMenuUiState);
         }
     }
 }

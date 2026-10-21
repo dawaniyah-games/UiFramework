@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Sample project: a showcase app in the host project (`Assets/`). It has an intro, four tabs under a shared TopBar and NavBar, and Settings, Reward and Confirm-purchase popups. It demonstrates serialized navigation, per-call `UiTransition`s by tab order, context params, shared re-population and custom element animation (see DESIGN.md §14)
+- `tools/check-standards.sh` checks the scriptable rules of CODING_STANDARDS.md (no `var`, no target-typed `new()`, no expression bodies, braces / Allman, usings, field prefixes, PascalCase constants, `Ui` casing, tagged ASCII logs, no blocking waits, `Async` suffix on `Task` methods). The new **Coding standards** workflow runs it on every pull request and on pushes to `dev` / `main`. Legacy exceptions live in `tools/standards-baseline.txt`
+- Docs site (`docs/index.html`, ready for GitHub Pages): overview, getting started, a ten-step UI Setup Manager tutorial with a video slot per step, concepts, animated preset demos, the showcase, the API reference and an FAQ. Screenshot and video slots fill in from `docs/images/` and YouTube ids (`docs/README.md`)
+
+### Fixed
+- Creating an element no longer overwrites an existing script with the same name: the generator keeps the file and logs a warning
+- The state generator no longer logs "Output directory does not exist" on every run
+
+### Changed
+- CODING_STANDARDS.md now includes the DenDon team rules: how we work and the hand-off report (§0), PascalCase for every constant, `*UiDisplay` for sub-widgets, try/catch only at async / IO boundaries, the log format, the game-agnostic and scene contract rules, the frozen consumer API and the consumer impact note (§8). Commit subjects are imperative sentence case with no prefix (CONTRIBUTING.md)
+- Editor tool log messages are tagged `[UiFramework]`, contain no emoji and say what to do next; the generators no longer log every step
+- Internal clean-up with no API change: private constants are PascalCase, private methods returning a `Task` end in `Async` (e.g. `UiManager.LoadAndPushStateAsync`), `UiElementScriptBinder` moved into `UiFramework.Editor.CodeGeneration`, and the remaining target-typed `new()`, single-line blocks and trailing whitespace are gone
+- Sample project: `MainMenuUiElement`, `StoreUiElement`, `NavBarUiElement` and `NavBarButton` are rewritten for the showcase and moved to the `UiShowcase.*` namespaces. The sample `UiEditorConfig` generates new elements and states into `UiShowcase.Elements` / `UiShowcase.States`. The bootstrap camera clears to the app background colour. `BootStrapper` now guarantees one camera and one EventSystem under a `DontDestroyOnLoad` `PersistentRoot`: it creates any that are missing and drops duplicates when the bootstrap scene loads again. The sample's element canvases are Screen Space – Camera (Scale With Screen Size 1080x1920, Expand), and `UiCanvasCamera` assigns them the bootstrap camera as their scenes load
+
 ## [1.2.0] - 2026-10-17
 
 ### Added

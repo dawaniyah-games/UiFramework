@@ -21,6 +21,42 @@ MonoBehaviour:
     m_SerializedLabels:
     - UiElements
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 06664ab64fa7ccc449a2a9d88217c31a
+    m_Address: SettingsPopupUiElement
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UiElements
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7421ffa0b6b3f7d45b62db4b99de2d6d
+    m_Address: ProfileUiElement
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UiElements
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 76186191b8c0048428c6d90cc46194c5
+    m_Address: TopBarUiElement
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UiElements
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 87efa324c3d64484bad7d59572e720af
+    m_Address: ConfirmPurchaseUiElement
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UiElements
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a00272eac25606a4b9c032469f4c614b
+    m_Address: LeaderboardUiElement
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UiElements
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c0bb38e1cc19b204c89e6df8cd6bb69f
+    m_Address: IntroUiElement
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UiElements
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c1b4c279b933b9c429efe3256e20c845
     m_Address: NavBarUiElement
     m_ReadOnly: 0
@@ -33,9 +69,13 @@ MonoBehaviour:
     m_SerializedLabels:
     - UiElements
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e52455d12a7bae04680df981d96fe1f9
+    m_Address: RewardPopupUiElement
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - UiElements
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 0d0ac1461efb513459318a0b87c14492, type: 2}
   m_SchemaSet:
-    m_Schemas:
-    - {fileID: 11400000, guid: b5ba73776edb55b47868854a78936bb8, type: 2}
-    - {fileID: 11400000, guid: bd3fa49d4a403d346a321e8a108f9b1f, type: 2}
+    m_Schemas: []
