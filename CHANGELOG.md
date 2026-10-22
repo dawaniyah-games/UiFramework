@@ -7,13 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-- Creating a state in the States tab now creates its `UiStateDefinition` too, so its scenes can be added straight away instead of first pressing a separate *Create Config* button
-- A new element's scene is saved after its script is attached on the next compile, instead of being left with unsaved changes
-- The UI Setup Manager keeps the open tab when scripts recompile instead of jumping back to General
-- The UI Setup Manager opens on the current project's `UiEditorConfig` when the saved choice (an editor preference shared by all projects) points at another project's config, instead of showing no config
-- The editor stylesheets (`UiSetupTabs.uss`, `EditorWindow.uss`) no longer log "Unknown property" warnings on import: unsupported `font-weight`, `outline`, `border`, `gap` and `unity-font-style` are replaced with their UI Toolkit equivalents
-
 ## [1.3.0] - 2026-10-22
 
 ### Added
@@ -25,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Creating an element no longer overwrites an existing script with the same name: the generator keeps the file and logs a warning
 - The state generator no longer logs "Output directory does not exist" on every run
 - The States tab's "Add element scene" list now shows every matching unassigned scene in a scrolling list with a match count, instead of stopping at 8 with "+N more"
+- Creating a state in the States tab now creates its `UiStateDefinition` too, so its scenes can be added straight away instead of first pressing a separate *Create Config* button
+- A new element's scene is saved after its script is attached on the next compile, instead of being left with unsaved changes
+- The UI Setup Manager keeps the open tab when scripts recompile instead of jumping back to General
+- The UI Setup Manager opens on the current project's `UiEditorConfig` when the saved choice (an editor preference shared by all projects) points at another project's config, instead of showing no config
+- The editor stylesheets (`UiSetupTabs.uss`, `EditorWindow.uss`) no longer log "Unknown property" warnings on import: unsupported `font-weight`, `outline`, `border`, `gap` and `unity-font-style` are replaced with their UI Toolkit equivalents
 
 ### Changed
 - CODING_STANDARDS.md now includes the DenDon team rules: how we work and the hand-off report (§0), PascalCase for every constant, `*UiDisplay` for sub-widgets, try/catch only at async / IO boundaries, the log format, the game-agnostic and scene contract rules, the frozen consumer API and the consumer impact note (§8). Commit subjects are imperative sentence case with no prefix (CONTRIBUTING.md)
