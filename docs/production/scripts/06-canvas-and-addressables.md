@@ -28,7 +28,7 @@
 - SAY: "Render mode and scaling are here too, per element. They start from the global defaults, and Use Default Settings puts them back."
 
 **5. Addressables** (1:30)
-- SCREEN: Scroll to the **Addressables** section of `NavBarUiElement`. The element list on the left shows all four elements with ✓, NavBar selected.
+- SCREEN: Scroll to the **Addressables** section of `NavBarUiElement`. The element list on the left shows all three elements (`MainMenuUiElement`, `NavBarUiElement`, `TopBarUiElement`) with ✓, NavBar selected.
 - 📸 Take `setup-elements.png` here: the Elements tab with the list, the search box, and the selected element's Structure, Animations, Canvas and Addressables sections.
 - SAY: "The Addressables section shows whether this scene is Addressable, and its group. You don't have to set it by hand: when we build the config, every scene a state uses is made Addressable for you."
 

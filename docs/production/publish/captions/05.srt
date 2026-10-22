@@ -1,0 +1,106 @@
+1
+00:00:00,500 --> 00:00:05,355
+In a real project, scenes get edited by
+lots of people, and sooner or later
+
+2
+00:00:05,355 --> 00:00:07,751
+something ends up in the wrong place.
+
+3
+00:00:07,751 --> 00:00:11,700
+Let's break our menu on purpose and watch
+the tools catch it.
+
+4
+00:00:12,500 --> 00:00:17,099
+I'll drag the title out of Root, so it
+sits next to it.
+
+5
+00:00:17,099 --> 00:00:20,528
+Remember the rule: everything under Root.
+
+6
+00:00:20,528 --> 00:00:22,786
+Save, and refresh the list.
+
+7
+00:00:30,500 --> 00:00:33,885
+The menu now shows a warning sign:
+fixable.
+
+8
+00:00:33,885 --> 00:00:38,608
+Validate All writes one clear line per
+scene to the Console.
+
+9
+00:00:38,608 --> 00:00:45,063
+And this toggle shows only the scenes that
+need attention, which is handy when you
+
+10
+00:00:45,063 --> 00:00:45,929
+have fifty.
+
+11
+00:00:55,500 --> 00:00:57,007
+Press Fix Structure.
+
+12
+00:00:57,007 --> 00:01:01,980
+Before it touches anything, it shows you
+exactly what will change.
+
+13
+00:01:01,980 --> 00:01:08,009
+Two objects sit under the Canvas, so it
+will put both inside one new full-screen
+
+14
+00:01:08,009 --> 00:01:11,475
+object called Content Root, in the same
+order.
+
+15
+00:01:11,475 --> 00:01:16,071
+Nothing moves on screen; it all just
+animates together again.
+
+16
+00:01:20,500 --> 00:01:23,602
+Confirm, and the scene is valid again.
+
+17
+00:01:23,602 --> 00:01:30,214
+Fixes only create and move objects, never
+delete anything, and they undo like any
+
+18
+00:01:30,214 --> 00:01:31,276
+other change.
+
+19
+00:01:31,276 --> 00:01:38,133
+Here I'd rather put the title back where
+it belongs, so I undo and drag it into
+Root
+
+20
+00:01:38,133 --> 00:01:38,704
+myself.
+
+21
+00:01:38,704 --> 00:01:44,500
+Anything the tool can't fix safely is
+listed under What to fix by hand.
+
+22
+00:01:50,500 --> 00:01:54,837
+Fix All Structure does the same for every
+scene at once.
+
+23
+00:01:54,837 --> 00:01:56,929
+Next, canvases and sorting.

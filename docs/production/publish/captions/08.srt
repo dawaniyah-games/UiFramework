@@ -1,0 +1,52 @@
+1
+00:00:00,500 --> 00:00:04,357
+Back in the General tab, press Build
+Runtime UiConfig.
+
+2
+00:00:10,500 --> 00:00:14,802
+It wrote the runtime config: every state
+and its scenes.
+
+3
+00:00:14,802 --> 00:00:21,256
+It made every one of those scenes
+Addressable, in a group called UI
+Elements, so the
+
+4
+00:00:21,256 --> 00:00:26,633
+game can load them when it needs them and
+unload them when it doesn't.
+
+5
+00:00:26,633 --> 00:00:32,856
+And it registered the config itself, in
+its own Global Configs group, so the game
+
+6
+00:00:32,856 --> 00:00:34,700
+can find it at start-up.
+
+7
+00:00:35,500 --> 00:00:42,121
+One rule to remember: after any change to
+your states or scenes, press this button
+
+8
+00:00:42,121 --> 00:00:42,606
+again.
+
+9
+00:00:42,606 --> 00:00:46,643
+The config is generated, so never edit it
+by hand.
+
+10
+00:00:50,500 --> 00:00:52,214
+Everything is ready.
+
+11
+00:00:52,214 --> 00:00:56,071
+Next, a few lines of code, and we press
+Play.

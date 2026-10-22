@@ -853,7 +853,6 @@ details[open] summary::before { content: "\2212"; }
 .fig:has([data-figure="settle"]) { --fig-c: var(--gold); }
 .fig:has([data-figure="elevator"]) { --fig-c: var(--green); }
 .fig:has([data-figure="format"]) { --fig-c: var(--pink); }
-.fig:has([data-figure="branches"]) { --fig-c: var(--orange); }
 
 /* The plate colour must match what the figure sits on, so the box stays a flat --stage. */
 .fig-plate {
@@ -1128,6 +1127,49 @@ html, body { overflow-x: clip; }
     .ls-svg .layer-sub { font-size: 19px; }
     .ls-svg .tile-text { font-size: 18px; }
     .ls-svg .wire-text, .ls-svg .dot-text { font-size: 17px; }
+}
+
+/* ---------- Made for teams: two branches merging, through a shared registry and without one ---------- */
+
+.mg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 30px 0 8px; }
+.mg-panel { padding: 0 30px; min-width: 0; }
+.mg-panel:first-child { padding-left: 0; }
+.mg-panel:last-child { padding-right: 0; }
+.mg-panel + .mg-panel { border-left: 1px solid var(--border); }
+.mg-kicker { font-size: 0.78rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--c); }
+.mg-panel h3 { margin: 6px 0 4px; font-size: 1.3rem; }
+.mg-scroll { overflow-x: auto; }
+.mg-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.mg-verdict { display: flex; gap: 12px; align-items: center; font-weight: 650; color: var(--heading); margin: 4px 0 0; }
+.mg-verdict::before { content: attr(data-mark); flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: #fff; background: var(--c); box-shadow: 0 0 14px color-mix(in srgb, var(--c) 45%, transparent); }
+
+.mg-svg .line { fill: none; stroke: var(--c); stroke-width: 3.4; stroke-linecap: round; }
+.mg-svg .dev { fill: var(--text-dim); font: 700 12px var(--mono); }
+.mg-svg .dot { fill: var(--bg); stroke: var(--c); stroke-width: 3; }
+.mg-svg .avatar { fill: var(--c); }
+.mg-svg .avatar-text { fill: #fff; font: 800 14px var(--font); text-anchor: middle; }
+.mg-svg .who { fill: var(--heading); font: 700 13px var(--font); }
+.mg-svg .chip rect { fill: color-mix(in srgb, var(--c) 14%, var(--bg)); stroke: var(--c); stroke-width: 1.5; }
+.mg-svg .chip text { fill: var(--heading); font: 600 11px var(--mono); text-anchor: middle; }
+.mg-svg .badge circle { fill: var(--c); }
+.mg-svg .badge text { fill: #fff; font: 800 15px var(--font); text-anchor: middle; }
+.mg-svg .ring { fill: none; stroke: var(--ls-red); stroke-width: 2.5; }
+
+.mg-points { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px; margin-top: 34px; }
+.mg-point i { display: block; width: 38px; height: 4px; border-radius: 2px; background: var(--c); box-shadow: 0 0 12px color-mix(in srgb, var(--c) 50%, transparent); }
+.mg-point b { display: block; font-size: 1.02rem; color: var(--heading); margin: 12px 0 4px; }
+.mg-point span { color: var(--text-muted); font-size: 0.95rem; }
+
+@media (max-width: 900px) {
+    .mg { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+    .mg-panel, .mg-panel:first-child, .mg-panel:last-child { padding: 0; }
+    .mg-panel + .mg-panel { border-left: 0; border-top: 1px solid var(--border); padding-top: 24px; }
+    .mg-points { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 620px) {
+    .mg-svg { min-width: 520px; }
+    .mg-points { grid-template-columns: minmax(0, 1fr); }
 }
 
 .problem { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 32px; align-items: start; }
@@ -1492,19 +1534,30 @@ html, body { overflow-x: clip; }
     </div>
 
     <h2 id="teams">Made for teams: no config to lock</h2>
-    <p class="lead">Many UI tools keep every screen in one shared config. Adding a screen means locking that file and pushing it to dev before anyone else can add theirs. UI Framework has no such file to fight over, so the whole team adds screens and states at the same time.</p>
-    <div class="problem">
-        <ul class="check-list">
-            <li><strong>One asset per state.</strong> A new state is a new <code>UiStateDefinition</code> file in <code>UiConfigs/UiStateDefinitions</code>. Two branches that add two states never touch the same file.</li>
-            <li><strong>One scene and one script per element.</strong> A new screen is new files too, so designers and developers work side by side without merge fights.</li>
-            <li><strong>The shared files are generated.</strong> <code>RuntimeUiConfig</code> and the Addressables group are rebuilt from the state definitions by <em>Build Runtime UiConfig</em>, in a stable order. If both branches changed them, keep either side and build again; nobody merges them by hand.</li>
-            <li><strong>Settings you set once.</strong> <code>UiEditorConfig</code> only holds paths and namespaces, so it almost never changes.</li>
-        </ul>
-        <figure class="fig">
-            <div class="fig-plate" data-figure="branches" aria-label="A commit graph with a branch forking off main and merging back"></div>
-            <div class="fig-bar"><span class="fig-live"></span><span class="fig-hint">Point along the history</span><output class="fig-readout">&ndash;</output></div>
-            <figcaption class="fig-body"><p>Branch off, add your screens and states, merge back. No waiting for someone else to push the config first.</p></figcaption>
-        </figure>
+    <p class="lead">Many UI tools keep every screen in one shared registry. Adding a screen means locking that file and pushing it to dev before anyone else can add theirs. UI Framework has no such file to fight over, so the whole team adds screens and states at the same time.</p>
+    <div class="mg" id="merge-story">
+        <div class="mg-panel" style="--c: var(--ls-red)">
+            <span class="mg-kicker">Other tools</span>
+            <h3>One shared registry</h3>
+            <div class="mg-scroll">
+                <svg class="mg-svg" data-mode="shared" viewBox="0 0 620 330" role="img" aria-label="Lina and Omar branch off dev at the same time. Both edit the same ScreenRegistry file: Lina merges, then Omar's merge hits a conflict."></svg>
+            </div>
+            <p class="mg-verdict" data-mark="&#10005;">Two people, one shared file: someone waits, or someone resolves a conflict.</p>
+        </div>
+        <div class="mg-panel" style="--c: var(--ok)">
+            <span class="mg-kicker">UI Framework</span>
+            <h3>One file per state, one scene per element</h3>
+            <div class="mg-scroll">
+                <svg class="mg-svg" data-mode="separate" viewBox="0 0 620 330" role="img" aria-label="Lina and Omar branch off dev at the same time. Each adds only their own scene and state file, both merge cleanly, and the shared config is rebuilt."></svg>
+            </div>
+            <p class="mg-verdict" data-mark="&#10003;">Two people, separate files: both merge, nothing to resolve.</p>
+        </div>
+    </div>
+    <div class="mg-points">
+        <div class="mg-point" style="--c: var(--ls-ui)"><i></i><b>One file per state</b><span>A new state is a new <code>UiStateDefinition</code> asset. Two branches never edit the same one.</span></div>
+        <div class="mg-point" style="--c: var(--ls-store)"><i></i><b>One scene per element</b><span>A new screen is new files: its scene and its script.</span></div>
+        <div class="mg-point" style="--c: var(--ls-framework)"><i></i><b>Shared files are generated</b><span><code>RuntimeUiConfig</code> and the Addressables group are rebuilt by <em>Build Runtime UiConfig</em>, never merged by hand.</span></div>
+        <div class="mg-point" style="--c: var(--ls-systems)"><i></i><b>Set once</b><span><code>UiEditorConfig</code> only holds paths and namespaces.</span></div>
     </div>
 
     <h2 id="ideas">Four ideas, live</h2>
@@ -1679,7 +1732,7 @@ await UiManager.HideUI();</code></pre></div>
     <div class="code"><div class="code-head"><span>Packages/manifest.json</span><button class="copy">Copy</button></div>
 <pre><code class="language-json">{
   "dependencies": {
-    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.2.0"
+    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.0"
   }
 }</code></pre></div>
 
@@ -1996,7 +2049,7 @@ await UiManager.ShowState&lt;MainMenuUiState&gt;(data);</code></pre></div>
             <h3>Build the runtime config</h3>
             <div class="step-grid">
                 <div>
-                    <p>Back in <strong>General</strong>, press <strong>Build Runtime UiConfig</strong>. It turns your state definitions into the runtime <code>UiConfig</code>, makes every element scene Addressable (group <code>UiElements</code>) and registers the config under the address <code>UiConfig</code>.</p>
+                    <p>Back in <strong>General</strong>, press <strong>Build Runtime UiConfig</strong>. It turns your state definitions into the runtime <code>UiConfig</code>, makes every element scene Addressable (group <code>UiElements</code>) and registers the config under the address <code>UiConfig</code> (group <code>GlobalConfigs</code>).</p>
                     <div class="callout warn"><span class="callout-title">Run it after every change</span><p>New state, renamed scene, added element: build again. The config is generated, so never edit it by hand. For player builds, also build Addressables content.</p></div>
                 </div>
                 <div class="video compact" data-video-id="" data-title="Step 8: Build the runtime config" data-length="1 min"></div>
@@ -2582,6 +2635,11 @@ await TweenPresets.ShakeLocal(buyButton.transform);  // "no": not enough coins</
     var layerStory = document.getElementById("layers");
     if (layerStory) {
         buildLayerStory(layerStory);
+    }
+
+    var mergeStory = document.getElementById("merge-story");
+    if (mergeStory) {
+        buildMergeStory(mergeStory);
     }
 
     function buildExplainer(svg) {
@@ -3619,6 +3677,184 @@ await TweenPresets.ShakeLocal(buyButton.transform);  // "no": not enough coins</
 
         story = storyPosition();
         render(performance.now());
+    }
+
+    // ---------- Made for teams: two branches merging, through a shared registry and without one ----------
+    function buildMergeStory(container) {
+        var calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var panels = Array.prototype.map.call(container.querySelectorAll(".mg-svg"), function (svg) {
+            return drawMergePanel(svg, svg.getAttribute("data-mode") === "shared");
+        });
+        var start = 0;
+        var visible = false;
+        var running = false;
+        panels.forEach(function (panel) {
+            panel.render(calm ? 8 : 0);
+        });
+
+        // Both panels share one clock, so the two stories happen side by side. It replays each time it scrolls into view.
+        function frame(now) {
+            if (!start) {
+                start = now;
+            }
+            var t = calm ? 8 : (now - start) / 1000 % 10;
+            panels.forEach(function (panel) {
+                panel.render(t);
+            });
+            if (visible && !calm) {
+                requestAnimationFrame(frame);
+            } else {
+                running = false;
+            }
+        }
+
+        new IntersectionObserver(function (entries) {
+            visible = entries[0].isIntersecting;
+            if (visible && !running) {
+                running = true;
+                start = 0;
+                requestAnimationFrame(frame);
+            }
+        }, { threshold: 0.35 }).observe(container);
+    }
+
+    function drawMergePanel(svg, shared) {
+        var ns = "http://www.w3.org/2000/svg";
+        var red = "var(--ls-red)";
+        var ok = "var(--ok)";
+
+        function make(name, attributes, parent) {
+            var node = document.createElementNS(ns, name);
+            Object.keys(attributes).forEach(function (key) {
+                node.setAttribute(key, attributes[key]);
+            });
+            parent.appendChild(node);
+            return node;
+        }
+
+        function clamp(value) {
+            return Math.max(0, Math.min(1, value));
+        }
+
+        // A little overshoot as things appear, like the SettlePop preset.
+        function pop(t) {
+            var x = clamp(t / 0.35);
+            return x <= 0 ? 0 : 1 + 2.70158 * Math.pow(x - 1, 3) + 1.70158 * Math.pow(x - 1, 2);
+        }
+
+        var root = make("g", {}, svg);
+        make("text", { "class": "dev", x: 24, y: 156 }, root).textContent = "dev";
+
+        function line(d, colour) {
+            var path = make("path", { "class": "line", d: d, style: "--c:" + colour }, root);
+            path.length = path.getTotalLength();
+            path.style.strokeDasharray = path.length;
+            return path;
+        }
+
+        function draw(path, p) {
+            path.style.strokeDashoffset = (path.length * (1 - clamp(p))).toFixed(1);
+        }
+
+        var main = line("M24 170H596", "var(--text-dim)");
+        var branchA = line("M70 170C95 170 95 78 120 78H390", "var(--ls-store)");
+        var branchB = line("M96 170C121 170 121 262 146 262H460", "var(--ls-reward)");
+        var mergeA = line("M390 78C415 78 415 170 440 170", "var(--ls-store)");
+        var mergeB = line("M460 262C485 262 485 170 510 170", shared ? red : "var(--ls-reward)");
+
+        // Everything that pops in: a group scaled around its own anchor point.
+        var pops = [];
+        function popper(x, y, at, colour) {
+            var group = make("g", { style: "--c:" + colour }, root);
+            pops.push({ group: group, x: x, y: y, at: at });
+            return group;
+        }
+
+        function chip(parent, x, y, text) {
+            var rect = make("rect", { y: y - 12, height: 24, rx: 12 }, parent);
+            var label = make("text", { x: x, y: y + 4 }, parent);
+            label.textContent = text;
+            rect.place = function () {
+                var width = (label.getComputedTextLength() || text.length * 6.9) + 22;
+                rect.setAttribute("x", (x - width / 2).toFixed(1));
+                rect.setAttribute("width", width.toFixed(1));
+            };
+            rect.place();
+            chips.push(rect);
+            make("g", { "class": "chip" }, parent).appendChild(rect);
+            rect.parentNode.appendChild(label);
+        }
+
+        var chips = [];
+        [["L", 150, 78, 50, "Lina \u00b7 Store screen", "var(--ls-store)", 1.1], ["O", 176, 262, 300, "Omar \u00b7 Reward popup", "var(--ls-reward)", 1.4]].forEach(function (person) {
+            var group = popper(person[1], person[2], person[6], person[5]);
+            make("circle", { "class": "avatar", cx: person[1], cy: person[2], r: 15 }, group);
+            make("text", { "class": "avatar-text", x: person[1], y: person[2] + 5 }, group).textContent = person[0];
+            make("text", { "class": "who", x: person[1] - 15, y: person[3] }, group).textContent = person[4];
+        });
+
+        var commits = shared
+            ? [[195, 78, 1.8, "StoreUiElement", "var(--ls-store)", 1], [235, 262, 2.3, "RewardUiElement", "var(--ls-reward)", -1],
+                [325, 78, 2.8, "ScreenRegistry", red, 1], [385, 262, 3.3, "ScreenRegistry", red, -1]]
+            : [[195, 78, 1.8, "StoreUiElement", "var(--ls-store)", 1], [235, 262, 2.3, "RewardUiElement", "var(--ls-reward)", -1],
+                [325, 78, 2.8, "StoreUiState", "var(--ls-store)", 1], [385, 262, 3.3, "RewardUiState", "var(--ls-reward)", -1]];
+        commits.forEach(function (commit) {
+            var group = popper(commit[0], commit[1], commit[2], commit[4]);
+            make("circle", { "class": "dot", cx: commit[0], cy: commit[1], r: 7 }, group);
+            chip(group, commit[0], commit[1] + commit[5] * 30, commit[3]);
+        });
+
+        function badge(x, at, colour, mark) {
+            var group = popper(x, 170, at, colour);
+            group.setAttribute("class", "badge");
+            make("circle", { cx: x, cy: 170, r: 14 }, group);
+            make("text", { x: x, y: 175 }, group).textContent = mark;
+        }
+
+        badge(440, 4.4, ok, "\u2713");
+        var ring = null;
+        if (shared) {
+            ring = make("circle", { "class": "ring", cx: 510, cy: 170, r: 14 }, root);
+            badge(510, 5.3, red, "\u2715");
+            chip(popper(510, 206, 5.5, red), 510, 206, "Conflict \u00b7 ScreenRegistry");
+        } else {
+            badge(510, 5.3, ok, "\u2713");
+            chip(popper(536, 124, 5.9, "var(--ls-framework)"), 536, 124, "\u21bb Config rebuilt");
+        }
+
+        var measured = false;
+
+        function render(t) {
+            if (!measured && svg.getBoundingClientRect().width > 0) {
+                chips.forEach(function (rect) {
+                    rect.place();
+                });
+                measured = svg.querySelector(".chip text").getComputedTextLength() > 0;
+            }
+
+            draw(main, t / 0.6);
+            draw(branchA, (t - 0.5) / 0.8);
+            draw(branchB, (t - 0.8) / 0.8);
+            draw(mergeA, (t - 3.9) / 0.5);
+            draw(mergeB, (t - 4.8) / 0.5);
+
+            pops.forEach(function (item) {
+                var scale = pop(t - item.at);
+                item.group.setAttribute("opacity", clamp((t - item.at) / 0.15).toFixed(2));
+                item.group.setAttribute("transform", "translate(" + item.x + " " + item.y + ") scale(" + scale.toFixed(3) + ") translate(" + (-item.x) + " " + (-item.y) + ")");
+            });
+
+            // The conflict keeps pulsing until the loop restarts.
+            if (ring) {
+                var beat = t < 5.3 ? 0 : (t - 5.3) % 1.2 / 1.2;
+                ring.setAttribute("r", (14 + beat * 18).toFixed(1));
+                ring.setAttribute("opacity", t < 5.3 ? "0" : (1 - beat).toFixed(2));
+            }
+
+            root.setAttribute("opacity", (1 - clamp((t - 9.3) / 0.5)).toFixed(2));
+        }
+
+        return { render: render };
     }
 
     // ---------- Light / dark ----------

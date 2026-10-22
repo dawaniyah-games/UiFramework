@@ -103,6 +103,9 @@ namespace UiFramework.Editor.Window.Tabs
                 }
 
                 UiStateGenerator.Generate(name, editorConfig.StatesPath, editorConfig.StateNamespace);
+
+                // Create the state's definition straight away, so its scenes can be added without a separate step.
+                UiStateDefinitionUtility.CreateNew(editorConfig.StateDefinitionsPath, name);
                 AssetDatabase.Refresh();
 
                 // The new script won't become a type until the next compile; still refresh the list.

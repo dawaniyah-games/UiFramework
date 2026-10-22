@@ -111,7 +111,7 @@ THE EPISODES (each starts exactly where the previous ended)
 2. Create your first element: Elements → ➕ New Element → MainMenuUiElement, tick Include Parameters Class → ➕ Create UI Element; it makes the script, MainMenuUiElementParams and a scene shaped MainMenuUiElementRoot → Canvas → Root.
 3. Build a screen under Root: open the scene; everything goes under Root; add a full-screen Background image, a "Coin Shop" title (TextMeshPro), a Play and a Store button.
 4. Choose animations: select the element → Animations: Show = Scale, Hide = Fade.
-5. Validate and fix scenes: drag the title out of Root (next to it), Refresh → warning; Validate All; Fix Structure… shows Now/After (it wraps both objects in a new Root); apply, then undo and drag the title back by hand.
+5. Validate and fix scenes: drag the title out of Root (next to it), Refresh → warning; Validate All; Fix Structure… shows Now/After (it wraps both objects in a new ContentRoot); apply, then undo and drag the title back by hand.
 6. Canvas and Addressables settings: create TopBarUiElement (top strip, coin text) and NavBarUiElement (bottom strip, Home and Store buttons); set both Canvas Sorting Order to 10 (screens 0, popups 100); show the Addressables section.
 7. States and shared elements: create StoreUiElement (three item cards, show/hide Slide Left); States tab: MainMenuUiState = MainMenu + TopBar + NavBar; StoreUiState = Store + TopBar + NavBar.
 8. Build the runtime config: General → ⚙️ Build Runtime UiConfig; show RuntimeUiConfig and the UiElements Addressables group.

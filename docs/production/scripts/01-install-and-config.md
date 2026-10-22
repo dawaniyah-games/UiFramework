@@ -26,7 +26,7 @@
 - ON SCREEN: the URL, large, for two seconds.
 
 **3. Turn on Addressables** (0:40)
-- SCREEN: Window → Asset Management → Addressables → **Groups** → **Create Addressables Settings**. Then in the same window: **Play Mode Script → Use Asset Database**.
+- SCREEN: Window → Asset Management → Addressables → **Groups** → **Create Addressables Settings**. If a **Legacy Bundles Detected** dialog asks to convert bundles, press **Ignore** (the Universal 2D template has one URP shader bundle name; converting it would add an extra group). Then in the same window: **Play Mode Script → Use Asset Database**.
 - SAY: "Every screen will be an Addressable scene, so open Addressables Groups once and create its settings. Set the play mode script to Use Asset Database, so screens load straight from your project when you press Play."
 
 **4. Open the UI Setup Manager and create the config** (1:00)
@@ -35,7 +35,7 @@
 
 **5. Check the canvas defaults** (1:25)
 - SCREEN: Back in the **General** tab, scroll to **Global Canvas Settings**. Show Render Mode **Screen Space - Overlay**, UI Scale Mode **Scale With Screen Size**, Reference Resolution **1080 × 1920**, Screen Match Mode **Expand**. Hover over them slowly.
-- 📸 Take `setup-general.png` here: the whole UI Setup Manager on the General tab, paths, namespaces and Global Canvas Settings visible.
+- 📸 Take `setup-general.png` here: the whole UI Setup Manager on the General tab, config paths and Global Canvas Settings visible. (The namespaces live on the `UiEditorConfig` in the Inspector, not in this tab.)
 - SAY: "Below are the Global Canvas Settings. Every new screen starts with these: a portrait phone at ten-eighty by nineteen-twenty, scaling with the screen. Change them here once, and every new screen follows. Existing screens are never changed behind your back."
 
 **6. Wrap up** (1:50)

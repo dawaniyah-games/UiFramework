@@ -48,8 +48,16 @@ namespace UiFramework.Editor.CodeGeneration
             if (elementRoot != null && elementRoot.GetComponent(type) == null)
             {
                 Undo.AddComponent(elementRoot, type);
-                EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-                Debug.Log($"[UiFramework] Attached {type.Name} to {elementRoot.name} after script reload.");
+
+                // The scene was created and saved by the element creator; save it again so the new element isn't left with unsaved changes.
+                UnityEngine.SceneManagement.Scene scene = elementRoot.scene;
+                EditorSceneManager.MarkSceneDirty(scene);
+                if (!string.IsNullOrEmpty(scene.path))
+                {
+                    EditorSceneManager.SaveScene(scene);
+                }
+
+                Debug.Log($"[UiFramework] Attached {type.Name} to {elementRoot.name} after script reload and saved the scene.");
             }
         }
     }

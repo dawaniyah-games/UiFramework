@@ -1,0 +1,83 @@
+1
+00:00:00,500 --> 00:00:07,213
+Every piece of UI in this framework is an
+element: a screen, a bar or a popup.
+
+2
+00:00:07,213 --> 00:00:12,032
+Each element is its own small scene with
+its own script.
+
+3
+00:00:12,032 --> 00:00:14,700
+Our first one is the main menu.
+
+4
+00:00:15,500 --> 00:00:18,500
+In the Elements tab, press New Element.
+
+5
+00:00:25,500 --> 00:00:27,857
+Name it Main Menu UI Element.
+
+6
+00:00:27,857 --> 00:00:33,303
+Names end in UI Element, so you always
+know what you're looking at.
+
+7
+00:00:33,303 --> 00:00:39,968
+Tick Include Parameters Class: that gives
+us a small class for the data we'll pass
+
+8
+00:00:39,968 --> 00:00:41,675
+to this screen later.
+
+9
+00:00:41,675 --> 00:00:47,852
+You could also turn a scene you already
+have into an element here, but we're
+
+10
+00:00:47,852 --> 00:00:49,071
+starting fresh.
+
+11
+00:00:55,500 --> 00:01:00,214
+Press Create UI Element, and give Unity a
+moment to compile.
+
+12
+00:01:10,500 --> 00:01:12,126
+You get three things.
+
+13
+00:01:12,126 --> 00:01:12,977
+The script.
+
+14
+00:01:12,977 --> 00:01:14,603
+The parameters class.
+
+15
+00:01:14,603 --> 00:01:21,027
+And a scene for this screen, already set
+up the way the framework expects, with the
+
+16
+00:01:21,027 --> 00:01:22,885
+script attached for you.
+
+17
+00:01:22,885 --> 00:01:28,071
+If a script with this name already exists,
+it is never overwritten.
+
+18
+00:01:45,500 --> 00:01:48,788
+The green tick means the scene is ready.
+
+19
+00:01:48,788 --> 00:01:51,500
+Next, we build the screen itself.

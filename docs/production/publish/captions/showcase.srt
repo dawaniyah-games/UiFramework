@@ -1,0 +1,47 @@
+1
+00:00:00,500 --> 00:00:05,438
+This is the showcase app that comes with
+the framework: a complete mobile game UI,
+
+2
+00:00:05,438 --> 00:00:08,388
+built only from what you've seen in the
+tutorial.
+
+3
+00:00:08,388 --> 00:00:11,700
+Every screen is its own scene, loaded when
+it's needed.
+
+4
+00:00:12,500 --> 00:00:16,357
+Four tabs under a shared top bar and nav
+bar.
+
+5
+00:00:16,357 --> 00:00:22,357
+The tabs slide in the direction you're
+going, and the bars never move.
+
+6
+00:00:30,500 --> 00:00:37,100
+Popups sit on top of whatever is open: a
+reward with confetti, coins flying into
+the
+
+7
+00:00:37,100 --> 00:00:39,929
+top bar, a purchase sheet, settings.
+
+8
+00:00:48,500 --> 00:00:52,735
+And every bit of it is set up in the same
+window.
+
+9
+00:00:52,735 --> 00:00:56,020
+Change an animation, press Play, done.
+
+10
+00:00:56,020 --> 00:00:58,786
+Clone the repository and try it.
