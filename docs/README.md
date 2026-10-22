@@ -97,6 +97,10 @@ To fill the screen, the section runs edge to edge (the drawing takes about 60% o
 
 The pieces, layers, tangle and wires live in `buildLayerStory` in `index.html`; colours are the `--ls-*` tokens (light and dark). The layers are a recommended structure, not something the framework enforces: it provides the one entry point and the params.
 
+## Made for teams (merge story)
+
+"Made for teams" (`#teams`) draws two git graphs side by side, in `buildMergeStory` / `drawMergePanel`. In both, Lina (Store screen) and Omar (Reward popup) branch off `dev` at the same time. **Other tools**: both commit to a shared `ScreenRegistry`; Lina merges, Omar's merge ends in a pulsing conflict. **UI Framework**: each commits only their own `…UiElement` scene and `…UiState` asset; both merge, then the generated config is rebuilt. It plays when scrolled into view and loops; under reduced motion it shows the finished state.
+
 ## Interactive figures
 
 The Overview uses [Hairline](https://hairline.lucasmarkes.com/figures) (MIT, by Lucas Marques): line drawings that answer the pointer and play on their own until it arrives. The page loads it from jsDelivr, pinned to `@lucasmarkes/hairline@0.5.1`. Offline, the figure boxes hide and the text around them still reads.
@@ -115,7 +119,6 @@ A figure is an element with `data-figure` set to the figure's function name, ins
 | --- | --- | --- |
 | `exploded` | Hero | A screen built from layered element scenes |
 | `settle` | The problem | A tangled UI settling into a state tree |
-| `branches` | Made for teams | Parallel branches adding states and screens, merging cleanly |
 | `stack` | Four ideas | The state stack |
 | `hub` | Four ideas | Shared, reference-counted scenes |
 | `elevator` | Four ideas | Moving between states with `ShowState` |

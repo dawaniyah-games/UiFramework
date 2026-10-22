@@ -1,0 +1,94 @@
+1
+00:00:00,500 --> 00:00:04,018
+Double-click the element to open its
+scene.
+
+2
+00:00:04,018 --> 00:00:09,500
+Every element scene has the same simple
+shape, so let's look at it.
+
+3
+00:00:15,500 --> 00:00:19,919
+At the top, the element's root, with our
+script on it.
+
+4
+00:00:19,919 --> 00:00:21,638
+Under it, one Canvas.
+
+5
+00:00:21,638 --> 00:00:25,321
+And under the Canvas, one object called
+Root.
+
+6
+00:00:25,321 --> 00:00:31,786
+Root is the important one: it's what moves
+when the screen animates in and out.
+
+7
+00:00:40,500 --> 00:00:45,047
+So there's one rule: everything you build
+goes under Root.
+
+8
+00:00:45,047 --> 00:00:46,929
+Nothing sits next to it.
+
+9
+00:00:55,500 --> 00:00:59,672
+Right-click Root and add an image for the
+background.
+
+10
+00:00:59,672 --> 00:01:02,034
+Stretch it to fill the screen.
+
+11
+00:01:02,034 --> 00:01:03,057
+Then a title.
+
+12
+00:01:03,057 --> 00:01:09,197
+Use normal anchors, exactly like any Unity
+UI: the canvas scaler takes care of
+
+13
+00:01:09,197 --> 00:01:10,929
+different phone sizes.
+
+14
+00:01:45,500 --> 00:01:49,713
+Now a Play button, and a Store button
+under it.
+
+15
+00:01:49,713 --> 00:01:54,464
+We'll make the Store button work later in
+the series.
+
+16
+00:01:54,464 --> 00:01:59,214
+Here it is in the Game view, on a phone-
+sized screen.
+
+17
+00:02:30,500 --> 00:02:32,357
+Everything lives under Root.
+
+18
+00:02:32,357 --> 00:02:35,077
+That's what keeps the animations working.
+
+19
+00:02:35,077 --> 00:02:36,071
+Save the scene.
+
+20
+00:02:50,500 --> 00:02:52,689
+Our first screen is built.
+
+21
+00:02:52,689 --> 00:02:55,214
+Next, we give it an animation.

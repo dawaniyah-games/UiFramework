@@ -1,0 +1,109 @@
+1
+00:00:00,500 --> 00:00:04,283
+The game needs one scene that starts
+everything.
+
+2
+00:00:04,283 --> 00:00:10,746
+A new scene called Bootstrap, with a
+camera and an event system for button
+clicks,
+
+3
+00:00:10,746 --> 00:00:14,214
+and an empty object for our start-up
+script.
+
+4
+00:00:20,500 --> 00:00:22,386
+Two lines start the UI.
+
+5
+00:00:22,386 --> 00:00:25,421
+Initialize loads the config we built.
+
+6
+00:00:25,421 --> 00:00:27,963
+Show State shows the main menu.
+
+7
+00:00:27,963 --> 00:00:33,786
+That's it: you never put a UI manager in
+your scene, it creates itself.
+
+8
+00:00:55,500 --> 00:00:56,364
+Press Play.
+
+9
+00:00:56,364 --> 00:00:59,900
+There's our menu, scaling in, with both
+bars.
+
+10
+00:00:59,900 --> 00:01:04,929
+Look at the Hierarchy: each element was
+loaded as its own scene.
+
+11
+00:01:20,500 --> 00:01:22,231
+Now the Store button.
+
+12
+00:01:22,231 --> 00:01:25,775
+When it's clicked, we show the store
+state.
+
+13
+00:01:25,775 --> 00:01:27,011
+One line again.
+
+14
+00:01:27,011 --> 00:01:31,214
+Drag the button into the field, and save
+the scene.
+
+15
+00:01:55,500 --> 00:02:02,313
+The nav bar does the same with two
+buttons: Home shows the menu state, Store
+shows
+
+16
+00:02:02,313 --> 00:02:03,643
+the store state.
+
+17
+00:02:15,500 --> 00:02:17,509
+Press Play and tap Store.
+
+18
+00:02:17,509 --> 00:02:24,018
+The store slides in, and the bars stay
+exactly where they are: they're shared, so
+
+19
+00:02:24,018 --> 00:02:25,464
+they never reload.
+
+20
+00:02:25,464 --> 00:02:26,589
+Home and back.
+
+21
+00:02:26,589 --> 00:02:32,214
+Scenes load when a state needs them and
+unload when nothing uses them.
+
+22
+00:02:45,500 --> 00:02:52,149
+In a bigger game, send these calls through
+one navigator class, as the showcase app
+
+23
+00:02:52,149 --> 00:02:52,549
+does.
+
+24
+00:02:52,549 --> 00:02:54,071
+Last step: a popup.

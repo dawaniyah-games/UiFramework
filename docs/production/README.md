@@ -26,18 +26,18 @@ Status: `todo` → `recorded` → `voiced` → `edited` → `live` (screenshots:
 | `editor-overview.png` | Overview hero | done (2026-10-21) | done |
 | `showcase-intro.png` | Showcase gallery | done | done |
 | `showcase-leaderboard.png` | Showcase gallery | done | done |
-| `showcase-home.png` | Showcase gallery | Phase 1 | todo |
-| `showcase-store.png` | Showcase gallery | Phase 1 | todo |
-| `showcase-profile.png` | Showcase gallery | Phase 1 | todo |
-| `showcase-reward.png` | Showcase gallery | Phase 1 | todo |
-| `showcase-purchase.png` | Showcase gallery | Phase 1 | todo |
-| `showcase-settings.png` | Showcase gallery | Phase 1 | todo |
-| `setup-general.png` | Tutorial step 1 | Episode 1, beat 5 | todo |
-| `setup-new-element.png` | Tutorial step 2 | Episode 2, beat 3 | todo |
-| `scene-hierarchy.png` | Tutorial step 3 | Episode 3, beat 6 | todo |
-| `setup-fix-dialog.png` | Tutorial step 5 | Episode 5, beat 4 | todo |
-| `setup-elements.png` | Tutorial step 4 (Elements tab) | Episode 6, beat 5 | todo |
-| `setup-states.png` | Tutorial step 7 | Episode 7, beat 5 | todo |
+| `showcase-home.png` | Showcase gallery | Phase 1 | done (2026-10-22) |
+| `showcase-store.png` | Showcase gallery | Phase 1 | done (2026-10-22) |
+| `showcase-profile.png` | Showcase gallery | Phase 1 | done (2026-10-22) |
+| `showcase-reward.png` | Showcase gallery | Phase 1 | done (2026-10-22) |
+| `showcase-purchase.png` | Showcase gallery | Phase 1 | done (2026-10-22) |
+| `showcase-settings.png` | Showcase gallery | Phase 1 | done (2026-10-22) |
+| `setup-general.png` | Tutorial step 1 | Episode 1, beat 5 | done (2026-10-22) |
+| `setup-new-element.png` | Tutorial step 2 | Episode 2, beat 3 | done (2026-10-22) |
+| `scene-hierarchy.png` | Tutorial step 3 | Episode 3, beat 6 | done (2026-10-22) |
+| `setup-fix-dialog.png` | Tutorial step 5 | Episode 5, beat 4 | done (2026-10-22) |
+| `setup-elements.png` | Tutorial step 4 (Elements tab) | Episode 6, beat 5 | done (2026-10-22) |
+| `setup-states.png` | Tutorial step 7 | Episode 7, beat 5 | done (2026-10-22) |
 
 ### Videos (YouTube ids go into the `data-video-id` slots)
 
@@ -53,7 +53,7 @@ Status: `todo` → `recorded` → `voiced` → `edited` → `live` (screenshots:
 | Episode 8 | [08-build-runtime-config.md](scripts/08-build-runtime-config.md) | Step 8: Build the runtime config | 1 min | todo |
 | Episode 9 | [09-show-from-code.md](scripts/09-show-from-code.md) | Step 9: Show states from code | 3 min | todo |
 | Episode 10 | [10-popup.md](scripts/10-popup.md) | Step 10: Popups and overlays | 3 min | todo |
-| Full walkthrough | [00-full-walkthrough.md](scripts/00-full-walkthrough.md) | The whole tutorial in one video | about 12 min | todo |
+| Full walkthrough | [00-full-walkthrough.md](scripts/00-full-walkthrough.md) | The whole tutorial in one video | about 12 min (estimate 13:40) | todo |
 | Showcase | [showcase.md](scripts/showcase.md) | The showcase app in the Unity editor | about 1 min | todo |
 
 When a video's real length differs from the slot, update `data-length` too.
@@ -120,7 +120,7 @@ Record Episodes 1 to 10 in order, in one or two sessions. Each script lists its 
 ## Phase 4: Voiceover
 
 - [ ] Quiet room, the same mic and distance every session, a test take checked on headphones first.
-- [ ] Record each script's **SAY** lines beat by beat, with a pause between beats so they are easy to cut.
+- [ ] Record each script's **SAY** lines beat by beat, with a pause between beats so they are easy to cut. Read from [publish/voiceover.md](publish/voiceover.md): it lists every beat with its read time and flags beats that run longer than their screen time.
 - [ ] Episodes 1–10, the full walkthrough intro and outro, and the showcase.
 
 ## Phase 5: Edit
@@ -128,11 +128,14 @@ Record Episodes 1 to 10 in order, in one or two sessions. Each script lists its 
 - [ ] For each episode: lay the voiceover over the screen recording, cut dead time, zoom on small controls, add the ON SCREEN captions, add the end card ("Next: …").
 - [ ] Assemble the **full walkthrough** from the ten episodes as described in [00-full-walkthrough.md](scripts/00-full-walkthrough.md).
 - [ ] Export 1920 × 1080 MP4 (H.264, 60 fps, high bitrate).
-- [ ] One thumbnail template for the whole series: dark navy background, episode number in gold, a 3–4 word title.
+- [x] Thumbnails for all 12 videos are in [publish/thumbnails/](publish/thumbnails/) (1280 × 720).
+- [ ] Captions: start from [publish/captions/](publish/captions/) (`.srt`, timed from the script beats); re-time them to the final edit before uploading.
 
 ## Phase 6: Publish and wire up
 
-- [ ] Upload each video (the `/youtube-publish` skill does it; upload as unlisted first, check it, then make it public).
+- [ ] Upload each video (the `/youtube-publish` skill does it; upload as unlisted first, check it, then make it public). Titles, descriptions, chapters, tags, playlist order, end screens and pinned comments are ready in [publish/youtube.md](publish/youtube.md); fix the chapter times to the final cut.
 - [ ] Paste each YouTube id into its slot's `data-video-id` in `docs/index.html`, and fix `data-length` if needed.
 - [ ] Open the page: the Tutorial tab's "Video series" list should say **Watch** for every episode, and every screenshot slot should show the image, not a placeholder.
 - [ ] Add a `CHANGELOG.md` `[Unreleased]` line when the videos and screenshots go in.
+
+Everything in `publish/` is generated by `python3 docs/production/publish/build_kit.py` (run from the repository root) from the scripts and screenshots; rerun it after editing a script.

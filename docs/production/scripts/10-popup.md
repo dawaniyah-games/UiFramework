@@ -43,8 +43,10 @@ namespace CoinShop.Ui.Elements
         [SerializeField] private Button buyButton;
         [SerializeField] private Button cancelButton;
 
-        private void Awake()
+        // UiElement.Awake finds the object to animate: override it and call base.Awake() first.
+        protected override void Awake()
         {
+            base.Awake();
             buyButton.onClick.AddListener(Close);
             cancelButton.onClick.AddListener(Close);
         }

@@ -23,12 +23,12 @@
 - SAY: "The menu now shows a warning sign: fixable. Validate All writes one clear line per scene to the Console. And this toggle shows only the scenes that need attention, which is handy when you have fifty."
 
 **4. Preview the fix** (0:55)
-- SCREEN: Select the element → **Fix Structure…**. The dialog shows **What will change** with the **Now** and **After** hierarchy side by side: now, `Root` and `Title` both sit under `Canvas`; after, both sit inside a new full-screen `Root`, in the same order. Hover both.
+- SCREEN: Select the element → **Fix Structure…**. The dialog shows **What will change** with the **Now** and **After** hierarchy side by side: now, `Root` and `Title` both sit under `Canvas`; after, both sit inside a new full-screen `ContentRoot`, in the same order. Hover both.
 - 📸 Take `setup-fix-dialog.png` here: the dialog with the Now / After preview.
-- SAY: "Press Fix Structure. Before it touches anything, it shows you exactly what will change. Two objects sit under the Canvas, so it will put both inside one new full-screen Root, in the same order. Nothing moves on screen; it all just animates together again."
+- SAY: "Press Fix Structure. Before it touches anything, it shows you exactly what will change. Two objects sit under the Canvas, so it will put both inside one new full-screen object called Content Root, in the same order. Nothing moves on screen; it all just animates together again."
 
 **5. Apply it, then undo** (1:20)
-- SCREEN: Confirm. The row is ✓ again. Show the scene: `Canvas → Root (new) → Root, Title`. Press Ctrl + Z: the old hierarchy is back. Then drag `Title` into the original `Root` by hand, save, **Refresh**: ✓.
+- SCREEN: Confirm. The row is ✓ again. Show the scene: `Canvas → ContentRoot (new) → Root, Title`. Press Ctrl + Z: the old hierarchy is back. Then drag `Title` into the original `Root` by hand, save, **Refresh**: ✓.
 - SAY: "Confirm, and the scene is valid again. Fixes only create and move objects, never delete anything, and they undo like any other change. Here I'd rather put the title back where it belongs, so I undo and drag it into Root myself. Anything the tool can't fix safely is listed under What to fix by hand."
 
 **6. Wrap up** (1:50)

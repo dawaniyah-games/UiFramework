@@ -15,8 +15,8 @@
 - SAY: "Back in the General tab, press Build Runtime UiConfig."
 
 **2. What it did** (0:10)
-- SCREEN: Project window: click `Assets/UiConfigs/RuntimeUiConfig.asset`, show its state entries in the Inspector. Then Window → Asset Management → Addressables → **Groups**: open the `UiElements` group and show the four element scenes in it; then find the config entry with the address `UiConfig`.
-- SAY: "It wrote the runtime config: every state and its scenes. It made every one of those scenes Addressable, in a group called UI Elements, so the game can load them when it needs them and unload them when it doesn't. And it registered the config itself, so the game can find it at start-up."
+- SCREEN: Project window: click `Assets/UiConfigs/RuntimeUiConfig.asset`, show its state entries in the Inspector. Then Window → Asset Management → Addressables → **Groups**: open the `UiElements` group and show the four element scenes in it; then open the `GlobalConfigs` group and find the config entry with the address `UiConfig`.
+- SAY: "It wrote the runtime config: every state and its scenes. It made every one of those scenes Addressable, in a group called UI Elements, so the game can load them when it needs them and unload them when it doesn't. And it registered the config itself, in its own Global Configs group, so the game can find it at start-up."
 
 **3. The rule** (0:35)
 - SCREEN: Back on the General tab, the build button highlighted.
