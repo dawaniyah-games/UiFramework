@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The UI Setup Manager keeps the open tab when scripts recompile instead of jumping back to General
 - The UI Setup Manager opens on the current project's `UiEditorConfig` when the saved choice (an editor preference shared by all projects) points at another project's config, instead of showing no config
 - The editor stylesheets (`UiSetupTabs.uss`, `EditorWindow.uss`) no longer log "Unknown property" warnings on import: unsupported `font-weight`, `outline`, `border`, `gap` and `unity-font-style` are replaced with their UI Toolkit equivalents
+- Entering Play Mode with the Elements tab open no longer logs a "Cannot open scene ... while in Play Mode" warning for every element; scenes that aren't loaded show as unavailable until the tab is refreshed after Play
 
 ### Changed
 - CODING_STANDARDS.md now includes the DenDon team rules: how we work and the hand-off report (§0), PascalCase for every constant, `*UiDisplay` for sub-widgets, try/catch only at async / IO boundaries, the log format, the game-agnostic and scene contract rules, the frozen consumer API and the consumer impact note (§8). Commit subjects are imperative sentence case with no prefix (CONTRIBUTING.md)
