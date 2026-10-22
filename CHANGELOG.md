@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Creating a state in the States tab now creates its `UiStateDefinition` too, so its scenes can be added straight away instead of first pressing a separate *Create Config* button
+- A new element's scene is saved after its script is attached on the next compile, instead of being left with unsaved changes
+- The UI Setup Manager keeps the open tab when scripts recompile instead of jumping back to General
+- The UI Setup Manager opens on the current project's `UiEditorConfig` when the saved choice (an editor preference shared by all projects) points at another project's config, instead of showing no config
+- The editor stylesheets (`UiSetupTabs.uss`, `EditorWindow.uss`) no longer log "Unknown property" warnings on import: unsupported `font-weight`, `outline`, `border`, `gap` and `unity-font-style` are replaced with their UI Toolkit equivalents
+
 ## [1.3.0] - 2026-10-22
 
 ### Added
