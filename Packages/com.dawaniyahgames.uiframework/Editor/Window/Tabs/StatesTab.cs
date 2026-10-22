@@ -458,10 +458,10 @@ namespace UiFramework.Editor.Window.Tabs
             }
         }
 
-        // "Add element scene" search box: type part of a name, matching scenes are suggested below; click one to add it.
+        // "Add element scene" search box: every matching unassigned scene is listed below in a scrolling list; click one to add it.
         private VisualElement CreateAddSceneSearch(UiStateDefinition definition, List<string> availableScenes)
         {
-            const int MaxSuggestions = 8;
+            const float SuggestionListMaxHeight = 240f;
 
             VisualElement container = new VisualElement();
             container.style.marginTop = 12;
@@ -477,8 +477,15 @@ namespace UiFramework.Editor.Window.Tabs
             sceneSearch.style.marginLeft = 0;
             container.Add(sceneSearch);
 
-            VisualElement suggestions = new VisualElement();
+            Label matchCount = new Label();
+            matchCount.style.color = new Color(0.6f, 0.6f, 0.6f);
+            matchCount.style.fontSize = 11;
+            matchCount.style.marginTop = 2;
+            container.Add(matchCount);
+
+            ScrollView suggestions = new ScrollView(ScrollViewMode.Vertical);
             suggestions.style.marginTop = 2;
+            suggestions.style.maxHeight = SuggestionListMaxHeight;
             container.Add(suggestions);
 
             Action<string> addScene = sceneName =>
@@ -498,15 +505,19 @@ namespace UiFramework.Editor.Window.Tabs
                 suggestions.Clear();
                 List<string> matches = UiSearchFilter.Filter(availableScenes, name => name, query);
 
+                suggestions.scrollOffset = Vector2.zero;
+
                 if (matches.Count == 0)
                 {
-                    Label none = new Label("No unassigned scene matches '" + query.Trim() + "'.");
-                    none.style.color = new Color(0.6f, 0.6f, 0.6f);
-                    suggestions.Add(none);
+                    matchCount.text = "No unassigned scene matches '" + query.Trim() + "'.";
                     return;
                 }
 
-                for (int i = 0; i < matches.Count && i < MaxSuggestions; i++)
+                matchCount.text = string.IsNullOrWhiteSpace(query)
+                    ? availableScenes.Count + " unassigned scenes"
+                    : matches.Count + " of " + availableScenes.Count + " unassigned scenes match";
+
+                for (int i = 0; i < matches.Count; i++)
                 {
                     string sceneName = matches[i];
                     Button suggestion = new Button(() =>
@@ -519,14 +530,6 @@ namespace UiFramework.Editor.Window.Tabs
                     };
                     suggestion.style.unityTextAlign = TextAnchor.MiddleLeft;
                     suggestions.Add(suggestion);
-                }
-
-                if (matches.Count > MaxSuggestions)
-                {
-                    Label more = new Label("+" + (matches.Count - MaxSuggestions) + " more, keep typing to narrow down");
-                    more.style.color = new Color(0.6f, 0.6f, 0.6f);
-                    more.style.fontSize = 11;
-                    suggestions.Add(more);
                 }
             };
 

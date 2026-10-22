@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Creating an element no longer overwrites an existing script with the same name: the generator keeps the file and logs a warning
 - The state generator no longer logs "Output directory does not exist" on every run
+- The States tab's "Add element scene" list now shows every matching unassigned scene in a scrolling list with a match count, instead of stopping at 8 with "+N more"
 
 ### Changed
 - CODING_STANDARDS.md now includes the DenDon team rules: how we work and the hand-off report (§0), PascalCase for every constant, `*UiDisplay` for sub-widgets, try/catch only at async / IO boundaries, the log format, the game-agnostic and scene contract rules, the frozen consumer API and the consumer impact note (§8). Commit subjects are imperative sentence case with no prefix (CONTRIBUTING.md)
