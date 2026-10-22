@@ -1,6 +1,6 @@
 # UI Framework: System Design
 
-> Package `com.dawaniyahgames.uiframework` · describes **v1.2.0** · last reviewed 2026-10-17
+> Package `com.dawaniyahgames.uiframework` · describes **v1.2.0** · last reviewed 2026-10-21
 >
 > This document describes how the framework works *today*. If you change behaviour, update the matching section in the same PR ([CODING_STANDARDS.md §10](CODING_STANDARDS.md#10-comments--documentation)).
 
@@ -95,7 +95,7 @@ The `defaultState` parameter of `InitializeAsync` is currently unused. There is 
 
 ### 5.2 Showing a state
 
-`ShowState<T>(context, additive, transition)` resolves `T` to its key and delegates to `ShowStateByKey(key, context, additive, transition)`, which calls `LoadAndPushState`:
+`ShowState<T>(context, additive, transition)` resolves `T` to its key and delegates to `ShowStateByKey(key, context, additive, transition)`, which calls `LoadAndPushStateAsync`:
 
 ```
 ShowStateByKey(key, ctx, additive, transition)
@@ -254,8 +254,8 @@ Menu: **UiFramework → UI Setup Manager** (`UiSetupEditorWindow`). The selected
 | Tab | What it does |
 | --- | --- |
 | **General** | Project configuration. Shows the configured paths. *Create Config* finds or creates `UiEditorConfig`. ***Build Runtime UiConfig*** generates the runtime config (below). **Global Canvas Settings** section: pick and edit the `UiGlobalCanvasSettings` asset inline. |
-| **Elements** | Same layout as States. **Top bar**: search (part of the name, any case; names that start with the text first; Enter selects the first result) and *➕ New Element*. **Toolbar**: *Refresh*, *Validate All* (logs one line per scene with its issue codes), *Fix All Structure…* (confirms the planned changes, fixes every scene with fixable issues, logs what still needs manual work), and an *Only show elements with issues* filter. A **summary** shows OK / fixable / manual counts. **Left**: scrolling list of elements with a status icon (✓ / ⚠ / ✖), "(open)" when loaded; click to select, double-click to open the scene. **Right**, the selected element's settings: *Open Scene* / *Select Asset*; **Structure** (issue summaries, *Fix Structure…*, *What to fix by hand…*); **Animations** (show / hide presets, written straight into the scene's `UiElement`); **Canvas** (this scene's Render Mode, Sorting Order, UI Scale Mode, Reference Resolution, Screen Match Mode / Match, Reference PPU, edited in place via `UiElementCanvasUtility.EditCanvas`, plus *Use Default Settings…*); **Addressables** (toggle, group, labels). Each scene is opened once per refresh (`UiElementSceneAccess.InspectScene`); actions on one element re-read only that scene. **➕ New Element** shows the create form in the right panel: *Create* generates `<Name>.cs` from `UiElementTemplate.txt` (optionally `<Name>Params` / `<Name>Reference`). A **new** scene gets `<Name>Root → Canvas → Root` built per the contract. An **existing** scene has its roots reparented under `<Name>Root`, then the user is offered a structure fix. The script is attached after recompilation (`UiElementScriptBinder`, via `EditorPrefs` keys `UiElementAutoBind_*`). |
-| **States** | Creates and edits `UiStateDefinition` assets (key + element scene names) and generates `<Key>.cs` from `UiStateTemplate.txt` into `StatesPath`. Search box in the top bar filters the state list (same matching as Elements, via `UiSearchFilter`). *Add element scene* is a search box that suggests matching unassigned scenes (up to 8; Enter adds the first). |
+| **Elements** | Same layout as States. **Top bar**: search (part of the name, any case; names that start with the text first; Enter selects the first result) and *➕ New Element*. **Toolbar**: *Refresh*, *Validate All* (logs one line per scene with its issue codes), *Fix All Structure…* (confirms the planned changes, fixes every scene with fixable issues, logs what still needs manual work), and an *Only show elements with issues* filter. A **summary** shows OK / fixable / manual counts. **Left**: scrolling list of elements with a status icon (✓ / ⚠ / ✖), "(open)" when loaded; click to select, double-click to open the scene. **Right**, the selected element's settings: *Open Scene* / *Select Asset*; **Structure** (issue summaries, *Fix Structure…*, *What to fix by hand…*); **Animations** (show / hide presets, written straight into the scene's `UiElement`); **Canvas** (this scene's Render Mode, Sorting Order, UI Scale Mode, Reference Resolution, Screen Match Mode / Match, Reference PPU, edited in place via `UiElementCanvasUtility.EditCanvas`, plus *Use Default Settings…*); **Addressables** (toggle, group, labels). Each scene is opened once per refresh (`UiElementSceneAccess.InspectScene`); actions on one element re-read only that scene. **➕ New Element** shows the create form in the right panel: *Create* generates `<Name>.cs` from `UiElementTemplate.txt` (optionally `<Name>Params` / `<Name>Reference`). A script that already exists is kept and never overwritten; a warning says so. A **new** scene gets `<Name>Root → Canvas → Root` built per the contract. An **existing** scene has its roots reparented under `<Name>Root`, then the user is offered a structure fix. The script is attached after recompilation (`UiElementScriptBinder`, via `EditorPrefs` keys `UiElementAutoBind_*`). |
+| **States** | Creates and edits `UiStateDefinition` assets (key + element scene names) and generates `<Key>.cs` from `UiStateTemplate.txt` into `StatesPath`. Search box in the top bar filters the state list (same matching as Elements, via `UiSearchFilter`). *Add element scene* is a search box above a scrolling list of every matching unassigned scene, with a match count (Enter adds the first). |
 
 Confirmations (`UiElementChangeDialog`): every structure fix and *Use Default Settings* asks first in one popup with a one-line question and a short reason. It then shows **What will change** (short bullets, or a *Setting · Now → After* table for canvas values), a **Now / After** hierarchy preview for a single-scene structure fix (new objects highlighted; built by `UiElementFixPreview`, which simulates `FixStructure`), and a collapsed **Needs manual work** list. A footer line says whether the scene is saved or left open for undo. Bulk actions list one collapsible entry per scene. Each issue has a short `Summary` for this UI and tooltips. The full `Message` goes to the Console.
 
@@ -293,12 +293,12 @@ These hold today. A change that breaks one is a design change and needs this doc
 
 | Area | Limitation |
 | --- | --- |
-| Concurrency | Overlapping `ShowState*` / `HideUI` calls are not serialized. Callers should await one before starting the next, as `NavBarUiElement` does by deferring to end of frame and checking `IsLastSceneActive`. |
+| Concurrency | Overlapping `ShowState*` / `HideUI` calls are not serialized. Callers should await one before starting the next, as the sample's `ShowcaseNavigator` does by queueing every call (§14). |
 | `HideUI` | Does not skip elements shared with the state underneath, so a shared element (e.g. NavBar) plays its hide animation even though its scene stays loaded. |
 | Init | `IsInitialized` is `true` before the config finishes loading, and stays `true` if loading fails. |
 | Type resolution | Reflection over all assemblies at init, matched by simple class name (§5.3). |
 | Non-`UiElement` `IUiElement`s | Receive `Populate` but never animate. |
-| Samples | `package.json` declares `Samples~/BasicSetup`, but that folder is empty. The working sample is the host project under `Assets/`. |
+| Samples | `package.json` declares `Samples~/BasicSetup`, but that folder is empty. The working sample is the showcase app in the host project under `Assets/` (§14). |
 
 ## 12. Authoring a new screen (quick guide)
 
@@ -353,3 +353,25 @@ If nothing appears, check the following: the key matches the class name; *Build 
 | `Tests/Runtime/*` | PlayMode tests: animation presets frame by frame (slide directions, base pose, interruptions, curves) |
 | `Editor/CodeGeneration/*` | Script generation and auto-binding |
 | `Editor/Templates/*.txt` | Code templates (must follow [CODING_STANDARDS.md](CODING_STANDARDS.md)) |
+
+## 14. Sample app (host project)
+
+The host project under `Assets/` is a small mobile-game shell built only from framework features. It is the Play Mode check for runtime changes (CODING_STANDARDS §11) and a reference for app code on top of the framework. It is not part of the package.
+
+**Run it:** play `Assets/Scenes/Bootstrapper.unity`. The element scenes below live in `ElementsScenePath` and follow the scene contract; their art (sprites, icons, `ShowcaseIconLibrary`) is in `Assets/Art/Showcase/`. Edit them like any other element scene, and run *Build Runtime UiConfig* after changing states or scenes. `BootStrapper` keeps one camera and one EventSystem under a `DontDestroyOnLoad` `PersistentRoot`; element scenes never carry their own. The element canvases are **Screen Space – Camera** (the sample's `UiGlobalCanvasSettings` defaults to it), saved without a camera because they can't reference one in another scene. `UiComponents/UiCanvasCamera` binds them: the bootstrap registers its camera, and every scene that loads afterwards has its camera-less Screen Space – Camera canvases assigned that camera on `SceneManager.sceneLoaded`, before its first frame. All canvases share the camera and the plane distance (100), so sorting order still stacks them (screens 0, TopBar / NavBar 10, popups 100+), and world positions match across canvases (the coin fly-in relies on this).
+
+| State | Element scenes | How it is shown |
+| --- | --- | --- |
+| `IntroUiState` | `IntroUiElement` | First, by `BootStrapper`. Its fake loading ends by entering Home |
+| `MainMenuUiState` (Home) / `StoreUiState` / `LeaderboardUiState` / `ProfileUiState` | screen + `TopBarUiElement` + `NavBarUiElement` | Non-additive. The TopBar and NavBar are shared: they stay loaded and never re-animate between tabs |
+| `SettingsUiState` / `RewardUiState` / `ConfirmPurchaseUiState` | one popup scene each | Additive over the current tab, closed with `HideUI` |
+
+Patterns it demonstrates (`Assets/Scripts/Ui/`):
+
+- **Serialized navigation** (`App/ShowcaseNavigator`): the only caller of `ShowState*` / `HideUI`. Calls are queued so they never overlap (§11), tab requests coalesce (only the last tap wins), and one popup is open at a time.
+- **Per-call transitions** (§7.3): tab switches pass `new UiTransition(SlideLeft, SlideLeft)` (or `SlideRight`) by tab order, whatever the screens' own presets are. Leaving the intro passes none, so every element plays its configured preset.
+- **Context to every element** (§2): tab states get `TabUiParams` (the NavBar reads the tab from it); the Store also accepts `StoreUiParams`; popups take `RewardPopupUiParams` / `ConfirmPurchaseUiParams`.
+- **Shared re-population** (§6): the TopBar wires itself up once and refreshes on every `Populate`. When the TopBar "+" re-shows the Store while it is on screen, the Store scene is shared and only re-populated, so `StoreUiElement` switches its page in place instead.
+- **Custom element animation** (§7.4): `ShowcaseUiElement` overrides `PrepareForShow` (both overloads) and `ShowAsync` to run every *show effect* component in the scene next to the element's preset. Designers add them in the Inspector: `RevealOnShow` (one object), `StaggeredReveal` (children in turn), `FillBar`, `CountUpText`. Idle motion (`LoopMotion`), press feedback (`PressFeedback`, using `ClickPop`), and effects (`ShimmerSweep`, `ConfettiBurst`, `CoinFlyLayer`, `SegmentedControl`, `ToggleSwitch`) are separate components built on `Tween.RunAsync`. Reusable sub-widgets (cards, rows, the toast) are `*UiDisplay` components in `UiDisplays/`, spawned from inactive templates in the scene.
+- **Popups** fade their root (the dimmed backdrop) with the Fade preset and move only the panel, with a `RevealOnShow` on it, so the backdrop never slides.
+- **Data** lives in `App/ShowcaseSession` (balances, owned items, settings). Elements read it in `Populate` and listen to its events to update what is already visible. The framework itself does no data binding (§1).

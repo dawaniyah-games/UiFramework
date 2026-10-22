@@ -67,7 +67,7 @@ namespace UiFramework.Editor.Window.Popups
     // a Now / After hierarchy preview or a settings table, and anything left for manual work.
     public sealed class UiElementChangeDialog : EditorWindow
     {
-        private const int maxPreviewDepth = 3;
+        private const int MaxPreviewDepth = 3;
 
         private static readonly Color newColor = new Color(0.45f, 0.85f, 0.45f);
         private static readonly Color mutedColor = new Color(0.6f, 0.6f, 0.6f);
@@ -354,7 +354,7 @@ namespace UiFramework.Editor.Window.Popups
 
             column.Add(row);
 
-            if (depth >= maxPreviewDepth)
+            if (depth >= MaxPreviewDepth)
             {
                 return;
             }
@@ -429,7 +429,7 @@ namespace UiFramework.Editor.Window.Popups
             }
 
             int rows = 1;
-            if (depth < maxPreviewDepth)
+            if (depth < MaxPreviewDepth)
             {
                 for (int i = 0; i < node.Children.Count; i++)
                 {

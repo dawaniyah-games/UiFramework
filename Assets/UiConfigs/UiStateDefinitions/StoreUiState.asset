@@ -15,4 +15,5 @@ MonoBehaviour:
   stateKey: StoreUiState
   elementSceneNames:
   - StoreUiElement
+  - TopBarUiElement
   - NavBarUiElement

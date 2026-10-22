@@ -11,10 +11,10 @@ namespace UiFramework.Tweening.Tests
     // Runs the real show / hide presets frame by frame on a 1000 x 2000 canvas.
     public class TweenPresetsPlayModeTests
     {
-        private const float canvasWidth = 1000f;
-        private const float canvasHeight = 2000f;
-        private const float tolerance = 0.5f;
-        private const int maxFrames = 3000;
+        private const float CanvasWidth = 1000f;
+        private const float CanvasHeight = 2000f;
+        private const float Tolerance = 0.5f;
+        private const int MaxFrames = 3000;
 
         private readonly List<GameObject> created = new List<GameObject>();
 
@@ -61,21 +61,21 @@ namespace UiFramework.Tweening.Tests
         private IEnumerator AssertSlide(string preset, Vector2 direction)
         {
             RectTransform root = CreateContentRoot();
-            float distance = direction.x != 0f ? canvasWidth : canvasHeight;
+            float distance = direction.x != 0f ? CanvasWidth : CanvasHeight;
             Func<float> along = () => Vector2.Dot(root.anchoredPosition, direction);
 
             TweenPresets.PrepareShow(preset, root.gameObject);
-            Assert.AreEqual(-distance, along(), tolerance, "Show must start just past the opposite edge.");
+            Assert.AreEqual(-distance, along(), Tolerance, "Show must start just past the opposite edge.");
 
             List<float> showSamples = new List<float>();
             yield return Run(TweenPresets.PlayAsync(preset, root.gameObject, true), along, showSamples);
             AssertMonotonicIncreasing(showSamples, preset + " show");
-            Assert.AreEqual(0f, along(), tolerance, "Show must end at the authored position.");
+            Assert.AreEqual(0f, along(), Tolerance, "Show must end at the authored position.");
 
             List<float> hideSamples = new List<float>();
             yield return Run(TweenPresets.PlayAsync(preset, root.gameObject, false), along, hideSamples);
             AssertMonotonicIncreasing(hideSamples, preset + " hide");
-            Assert.AreEqual(distance, along(), tolerance, "Hide must keep moving the same way and end just past the named edge.");
+            Assert.AreEqual(distance, along(), Tolerance, "Hide must keep moving the same way and end just past the named edge.");
         }
 
         // ---------- Edge fade: every show fades in, every hide fades out ----------
@@ -193,7 +193,7 @@ namespace UiFramework.Tweening.Tests
 
             yield return Run(Task.WhenAll(hide, show), null, null);
 
-            Assert.AreEqual(0f, root.anchoredPosition.x, tolerance, "The interrupted slide must not keep moving the element.");
+            Assert.AreEqual(0f, root.anchoredPosition.x, Tolerance, "The interrupted slide must not keep moving the element.");
             Assert.AreEqual(1f, root.GetComponent<CanvasGroup>().alpha, 0.0001f);
         }
 
@@ -261,7 +261,7 @@ namespace UiFramework.Tweening.Tests
         {
             GameObject canvasObject = new GameObject("Canvas", typeof(RectTransform), typeof(Canvas));
             canvasObject.GetComponent<Canvas>().renderMode = RenderMode.WorldSpace;
-            ((RectTransform)canvasObject.transform).sizeDelta = new Vector2(canvasWidth, canvasHeight);
+            ((RectTransform)canvasObject.transform).sizeDelta = new Vector2(CanvasWidth, CanvasHeight);
             created.Add(canvasObject);
 
             GameObject rootObject = new GameObject("Root", typeof(RectTransform));
@@ -287,7 +287,7 @@ namespace UiFramework.Tweening.Tests
                 }
 
                 frames++;
-                Assert.Less(frames, maxFrames, "The animation never finished.");
+                Assert.Less(frames, MaxFrames, "The animation never finished.");
                 yield return null;
             }
 

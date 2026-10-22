@@ -17,16 +17,24 @@ public class UiNavigationSmokeTest : MonoBehaviour
 
     private bool isInitialized;
 
+    // async void is acceptable for Unity lifecycle methods, as long as exceptions are caught and logged.
     private async void Start()
     {
-        await UiManager.InitializeAsync();
-        isInitialized = true;
+        try
+        {
+            await UiManager.InitializeAsync();
+            isInitialized = true;
 
-        Debug.Log("[UiNavigationSmokeTest] Initialized. Press 1/2 to show states, ` to hide.");
-        LogLoadedScenes("After Initialize");
+            Debug.Log("[UiNavigationSmokeTest] Initialized. Press 1/2 to show states, ` to hide.");
+            LogLoadedScenes("After Initialize");
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError("[UiNavigationSmokeTest] Initialization failed: " + exception);
+        }
     }
 
-    private async void Update()
+    private void Update()
     {
         if (!isInitialized)
         {
@@ -35,22 +43,40 @@ public class UiNavigationSmokeTest : MonoBehaviour
 
         if (Input.GetKeyDown(showFirstKey))
         {
-            await Show(firstStateKey);
+            Run(ShowAsync(firstStateKey));
         }
 
         if (Input.GetKeyDown(showSecondKey))
         {
-            await Show(secondStateKey);
+            Run(ShowAsync(secondStateKey));
         }
 
         if (Input.GetKeyDown(hideKey))
         {
-            await UiManager.HideUI();
-            LogLoadedScenes("After HideUI");
+            Run(HideAsync());
         }
     }
 
-    private async Task Show(string stateKey)
+    // Fire-and-forget entry point for key presses, so a failed transition is logged instead of lost.
+    private async void Run(Task task)
+    {
+        try
+        {
+            await task;
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError("[UiNavigationSmokeTest] Navigation failed: " + exception);
+        }
+    }
+
+    private async Task HideAsync()
+    {
+        await UiManager.HideUI();
+        LogLoadedScenes("After HideUI");
+    }
+
+    private async Task ShowAsync(string stateKey)
     {
         if (string.IsNullOrEmpty(stateKey))
         {

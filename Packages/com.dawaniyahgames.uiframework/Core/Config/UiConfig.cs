@@ -8,7 +8,7 @@ namespace UiFramework.Runtime
     [CreateAssetMenu(fileName = "UiConfig", menuName = "UiFramework/UiConfig")]
     public class UiConfig : ScriptableObject
     {
-        public List<UiStateEntry> entries = new();
+        public List<UiStateEntry> entries = new List<UiStateEntry>();
 
         public UiStateEntry GetStateEntry(string stateKey)
         {
@@ -37,6 +37,6 @@ namespace UiFramework.Runtime
     public class UiStateEntry
     {
         public string stateKey;
-        public List<AssetReference> uiElementScenes = new();
+        public List<AssetReference> uiElementScenes = new List<AssetReference>();
     }
 }

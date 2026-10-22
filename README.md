@@ -90,6 +90,15 @@ public class MainMenuUiElement : UiElement
 }
 ```
 
+## Sample app
+
+This repository's host project (`Assets/`) is a small mobile-game shell built only from framework features. It has an intro, four tabs (Home, Store, Leaderboard, Profile) under a shared TopBar and NavBar, and Settings, Reward and Confirm-purchase popups, with animation on every screen.
+
+1. Clone the repository and open it in Unity 6.
+2. Open `Assets/Scenes/Bootstrapper.unity` and press Play (Addressables play mode *Use Asset Database*, or build Addressables content first). Use a portrait Game view (1080 x 1920).
+
+Then open **UiFramework → UI Setup Manager → Elements** and change a screen's show / hide animation to see the difference. To choreograph a screen without code, add `RevealOnShow`, `StaggeredReveal`, `FillBar`, `CountUpText` or `LoopMotion` to its objects in the Inspector. [DESIGN.md §14](DESIGN.md#14-sample-app-host-project) lists the patterns the sample demonstrates.
+
 ## API at a glance
 
 | Call | Effect |
@@ -117,6 +126,7 @@ public class MainMenuUiElement : UiElement
 
 | Doc | For |
 | --- | --- |
+| [Docs site](docs/index.html) | Overview, getting started, a step-by-step UI Setup Manager tutorial, animations, the showcase and the API ([how to add screenshots and videos](docs/README.md)) |
 | [DESIGN.md](DESIGN.md) | How the framework works: lifecycle, scene ref counting, animation, editor pipeline, limitations |
 | [CODING_STANDARDS.md](CODING_STANDARDS.md) | Code style and project rules (required for all contributions) |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Branching, PRs, releases |
