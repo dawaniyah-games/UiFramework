@@ -64,27 +64,27 @@ namespace UiFramework.Editor.Addressables
             AddressableAssetSettings settings;
             if (!TryGetSettings(out settings))
             {
-                Debug.LogWarning("⚠️ Addressables settings not found. Please enable Addressables in your project.");
+                Debug.LogWarning("[UiFramework] Addressables settings not found, so nothing was changed. Create them in Window > Asset Management > Addressables > Groups.");
                 return;
             }
 
             if (string.IsNullOrEmpty(assetPath))
             {
-                Debug.LogError("❌ Asset path is empty.");
+                Debug.LogError("[UiFramework] Cannot make an asset Addressable: its path is empty.");
                 return;
             }
 
             string guid = AssetDatabase.AssetPathToGUID(assetPath);
             if (string.IsNullOrEmpty(guid))
             {
-                Debug.LogError("❌ Could not resolve GUID for asset at " + assetPath);
+                Debug.LogError("[UiFramework] No asset found at " + assetPath + ", so it was not made Addressable. Check that the path exists and has been imported.");
                 return;
             }
 
             AddressableAssetGroup group = GetOrCreateGroup(settings, groupName);
             if (group == null)
             {
-                Debug.LogError("❌ Failed to create/find Addressables group '" + groupName + "'.");
+                Debug.LogError("[UiFramework] Could not find or create the Addressables group '" + groupName + "'. Check the Addressables Groups window.");
                 return;
             }
 
@@ -105,7 +105,7 @@ namespace UiFramework.Editor.Addressables
             AddressableAssetSettings settings;
             if (!TryGetSettings(out settings))
             {
-                Debug.LogWarning("⚠️ Addressables settings not found. Please enable Addressables in your project.");
+                Debug.LogWarning("[UiFramework] Addressables settings not found, so nothing was changed. Create them in Window > Asset Management > Addressables > Groups.");
                 return;
             }
 
@@ -178,7 +178,7 @@ namespace UiFramework.Editor.Addressables
             }
 
             group = settings.CreateGroup(groupName, false, false, true, null);
-            Debug.Log("🆕 Created Addressables group '" + groupName + "'.");
+            Debug.Log("[UiFramework] Created Addressables group '" + groupName + "'.");
             return group;
         }
 

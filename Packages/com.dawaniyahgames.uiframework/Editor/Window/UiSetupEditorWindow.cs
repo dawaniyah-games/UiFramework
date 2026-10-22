@@ -18,17 +18,21 @@ namespace UiFramework.Editor.Window
 {
     public class UiSetupEditorWindow : EditorWindow
     {
-        private const string globalConfigsGroupName = "GlobalConfigs";
-        private const string legacyGlobalConfigsGroupName = "Global Configs";
+        private const string GlobalConfigsGroupName = "GlobalConfigs";
+        private const string LegacyGlobalConfigsGroupName = "Global Configs";
 
-        private const string configKey = UiEditorConfigUtility.ConfigAssetGuidPrefKey;
-        private const string uiElementsGroupName = "UiElements";
+        private const string ConfigKey = UiEditorConfigUtility.ConfigAssetGuidPrefKey;
+
+        // Remembers the open tab for this editor session, so a script recompile doesn't jump back to General.
+        private const string SelectedTabKey = "UiFramework.UiSetupEditorWindow.SelectedTab";
+        private const string UiElementsGroupName = "UiElements";
         private static readonly string[] uiElementsLabels = new string[] { "UiElements" };
 
         private UiEditorConfig configAsset;
         private ObjectField configField;
         private VisualElement tabContent;
         private Dictionary<IVisualElementTab, Button> tabButtonMap;
+        private int tabToRestore;
 
         private readonly List<IVisualElementTab> tabs = new List<IVisualElementTab>
         {
@@ -46,6 +50,8 @@ namespace UiFramework.Editor.Window
 
         private void OnEnable()
         {
+            tabToRestore = SessionState.GetInt(SelectedTabKey, 0);
+
             VisualElement root = rootVisualElement;
             root.Clear();
             root.style.flexDirection = FlexDirection.Column;
@@ -108,7 +114,10 @@ namespace UiFramework.Editor.Window
                 if (tab is GeneralTab generalTab)
                 {
                     generalTab.SetLoadOrCreateCallback(() => LoadOrCreateConfig());
-                    generalTab.SetRuntimeUiBuildCallback(() => { BuildRuntimeUiConfig(); });
+                    generalTab.SetRuntimeUiBuildCallback(() =>
+                    {
+                        BuildRuntimeUiConfig();
+                    });
                 }
 
                 Button btn = new Button(() => SwitchTab(tab, tabButtonMap))
@@ -134,14 +143,30 @@ namespace UiFramework.Editor.Window
             // Ensure a tab is visible even if no saved config exists
             if (configAsset == null)
             {
-                SwitchTab(tabs[0], tabButtonMap);
+                SwitchTab(GetTabToRestore(), tabButtonMap);
             }
+        }
+
+        private IVisualElementTab GetTabToRestore()
+        {
+            if (tabToRestore < 0 || tabToRestore >= tabs.Count)
+            {
+                return tabs[0];
+            }
+
+            return tabs[tabToRestore];
         }
 
         private void SwitchTab(IVisualElementTab tab, Dictionary<IVisualElementTab, Button> tabButtonMap = null)
         {
             tabContent.Clear();
             tab.OnCreateGUI(tabContent, configAsset);
+
+            int tabIndex = tabs.IndexOf(tab);
+            if (tabIndex >= 0)
+            {
+                SessionState.SetInt(SelectedTabKey, tabIndex);
+            }
 
             if (tabButtonMap == null)
             {
@@ -165,28 +190,25 @@ namespace UiFramework.Editor.Window
         {
             string path = AssetDatabase.GetAssetPath(config);
             string guid = AssetDatabase.AssetPathToGUID(path);
-            EditorPrefs.SetString(configKey, guid);
+            EditorPrefs.SetString(ConfigKey, guid);
         }
 
         private void LoadSavedConfig(Dictionary<IVisualElementTab, Button> tabButtonMap)
         {
-            string guid = EditorPrefs.GetString(configKey, null);
-            if (!string.IsNullOrEmpty(guid))
+            // The saved choice is an editor preference shared by every project, so fall back to this project's own
+            // UiEditorConfig when the saved one belongs to another project.
+            UiEditorConfig config = UiEditorConfigUtility.FindActiveConfig();
+            if (config != null)
             {
-                string path = AssetDatabase.GUIDToAssetPath(guid);
-                UiEditorConfig config = AssetDatabase.LoadAssetAtPath<UiEditorConfig>(path);
-                if (config != null)
+                configAsset = config;
+
+                if (configField != null)
                 {
-                    configAsset = config;
-
-                    if (configField != null)
-                    {
-                        configField.value = configAsset;
-                    }
-
-                    ReloadUiStateRegistry();
-                    SwitchTab(tabs[0], tabButtonMap);
+                    configField.value = configAsset;
                 }
+
+                ReloadUiStateRegistry();
+                SwitchTab(GetTabToRestore(), tabButtonMap);
             }
         }
 
@@ -194,7 +216,7 @@ namespace UiFramework.Editor.Window
         {
             string path = "Assets/UiConfigs/UiEditorConfig.asset";
             UiEditorConfig config = AssetDatabase.LoadAssetAtPath<UiEditorConfig>(path);
-            
+
             if (config == null)
             {
                 string[] guids = AssetDatabase.FindAssets("UiEditorConfig t:ScriptableObject");
@@ -297,7 +319,7 @@ namespace UiFramework.Editor.Window
                         {
                             if (hasAddressables)
                             {
-                                AddressablesAssetUtility.EnsureAssetIsAddressable(scenePath, uiElementsGroupName, sceneName, uiElementsLabels);
+                                AddressablesAssetUtility.EnsureAssetIsAddressable(scenePath, UiElementsGroupName, sceneName, uiElementsLabels);
                             }
 
                             AssetReference assetRef = new AssetReference(AssetDatabase.AssetPathToGUID(scenePath));
@@ -316,7 +338,7 @@ namespace UiFramework.Editor.Window
                 AssetDatabase.SaveAssets();
                 Debug.Log("[UiFramework] Built runtime UiConfig from UiStateDefinition assets.");
 
-                EnsureConfigIsAddressable(configOutputPath, new string[] { "UiConfig", "RuntimeUiConfig" }, globalConfigsGroupName);
+                EnsureConfigIsAddressable(configOutputPath, new string[] { "UiConfig", "RuntimeUiConfig" }, GlobalConfigsGroupName);
                 return;
             }
 
@@ -351,7 +373,7 @@ namespace UiFramework.Editor.Window
                     {
                         if (hasAddressables)
                         {
-                            AddressablesAssetUtility.EnsureAssetIsAddressable(scenePath, uiElementsGroupName, sceneName, uiElementsLabels);
+                            AddressablesAssetUtility.EnsureAssetIsAddressable(scenePath, UiElementsGroupName, sceneName, uiElementsLabels);
                         }
 
                         AssetReference assetRef = new AssetReference(AssetDatabase.AssetPathToGUID(scenePath));
@@ -371,7 +393,7 @@ namespace UiFramework.Editor.Window
             Debug.Log("[UiFramework] Built runtime UiConfig from UiStateRegistry.");
 
             // Ensure Addressables setup: add to GlobalConfigs group and assign labels
-            EnsureConfigIsAddressable(configOutputPath, new string[] { "UiConfig", "RuntimeUiConfig" }, globalConfigsGroupName);
+            EnsureConfigIsAddressable(configOutputPath, new string[] { "UiConfig", "RuntimeUiConfig" }, GlobalConfigsGroupName);
         }
 
         private static void EnsureUnityFolderExists(string folderPath)
@@ -419,16 +441,16 @@ namespace UiFramework.Editor.Window
             AddressableAssetGroup group = settings.FindGroup(groupName);
             if (group == null)
             {
-                if (string.Equals(groupName, globalConfigsGroupName, System.StringComparison.Ordinal))
+                if (string.Equals(groupName, GlobalConfigsGroupName, System.StringComparison.Ordinal))
                 {
-                    AddressableAssetGroup legacyGroup = settings.FindGroup(legacyGlobalConfigsGroupName);
+                    AddressableAssetGroup legacyGroup = settings.FindGroup(LegacyGlobalConfigsGroupName);
                     if (legacyGroup != null)
                     {
-                        legacyGroup.Name = globalConfigsGroupName;
+                        legacyGroup.Name = GlobalConfigsGroupName;
                         group = legacyGroup;
                         EditorUtility.SetDirty(settings);
                         AssetDatabase.SaveAssets();
-                        Debug.Log("[UiFramework] Renamed Addressables group '" + legacyGlobalConfigsGroupName + "' to '" + globalConfigsGroupName + "'.");
+                        Debug.Log("[UiFramework] Renamed Addressables group '" + LegacyGlobalConfigsGroupName + "' to '" + GlobalConfigsGroupName + "'.");
                     }
                 }
 

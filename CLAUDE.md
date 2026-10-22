@@ -14,3 +14,4 @@ Working notes:
 - Unity is not driven from the CLI here. Say which Play Mode checks (CODING_STANDARDS §11) the user should run, rather than claiming a change is verified.
 - The generated runtime `UiConfig` asset and `.meta` GUIDs are not edited by hand.
 - A behaviour or API change also updates DESIGN.md and adds a `CHANGELOG.md` `[Unreleased]` entry.
+- Before handing work back, run `bash tools/check-standards.sh` (CI runs it on every PR) and fix what it reports. Then give the hand-off report from CODING_STANDARDS §0: what changed, files, what was and wasn't verified, consumer impact for DenDon, and the package version.

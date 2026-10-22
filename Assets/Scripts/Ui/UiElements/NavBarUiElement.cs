@@ -1,26 +1,27 @@
-namespace UiFramework.Editor.Elements
+using System.Collections.Generic;
+using System.Threading;
+using UiFramework.Tweening;
+using UiShowcase.App;
+using UiShowcase.Components;
+using UnityEngine;
+
+namespace UiShowcase.Elements
 {
-    using System.Collections;
-    using System.Collections.Generic;
-    using UiFramework.Core;
-    using UiFramework.Runtime.Manager;
-    using UnityEngine;
-    using UiFramework.Editor.States;
-    
-    // Auto-generated: UI Element
-    public class NavBarUiElement : UiElement
+    // Shared by every tab state. The selection follows the TabUiParams each tab state is shown with, so it is right
+    // however the tab was reached (a NavBar tap, the TopBar avatar, the coins "+" button).
+    public class NavBarUiElement : ShowcaseUiElement
     {
-        [SerializeField] private List<NavBarButton> navButtons;
+        [SerializeField] private List<NavBarButton> buttons = new List<NavBarButton>();
+        [SerializeField] private RectTransform indicator;
+        [SerializeField] private float indicatorDuration = 0.36f;
+        [Tooltip("Extra width at the middle of the move, so the pill stretches like a drop of liquid.")]
+        [SerializeField] private float indicatorStretch = 0.35f;
 
-        private OnNavBarButtonClickedSignal onNavBarButtonClickedSignal;
-
-        [SerializeField] private NavBarState defaultState = NavBarState.MainMenu;
-
-        private NavBarState currentState;
-
-        private bool applyQueued;
-        private NavBarState pendingState;
         private bool initialized;
+        private bool hasSelection;
+        private ShowcaseTab selectedTab;
+        private float indicatorWidth;
+        private int indicatorRun;
 
         public override void Populate(object context = null)
         {
@@ -30,133 +31,86 @@ namespace UiFramework.Editor.Elements
             {
                 Initialize();
             }
+
+            TabUiParams tabContext = context as TabUiParams;
+            if (tabContext != null)
+            {
+                // Animate only when the bar is already on screen; the first time it slides in already showing the tab.
+                Select(tabContext.Tab, hasSelection);
+            }
         }
 
-        public void Initialize(List<NavBarButton> navButtonsOverride = null)
+        private void Initialize()
         {
-            currentState = defaultState;
-            pendingState = defaultState;
-
-            if (navButtonsOverride != null && (navButtons == null || navButtons.Count == 0))
-            {
-                navButtons = navButtonsOverride;
-            }
-
-            if (navButtons == null || navButtons.Count == 0)
-            {
-                navButtons = new List<NavBarButton>(GetComponentsInChildren<NavBarButton>(true));
-            }
-
-            onNavBarButtonClickedSignal = new OnNavBarButtonClickedSignal(OnNavBarButtonClicked);
-
-            for (int i = 0; i < navButtons.Count; i++)
-            {
-                NavBarButton btn = navButtons[i];
-                if (btn == null)
-                {
-                    continue;
-                }
-
-                btn.Init(currentState, onNavBarButtonClickedSignal);
-            }
-
             initialized = true;
+            indicatorWidth = indicator.sizeDelta.x;
+
+            for (int i = 0; i < buttons.Count; i++)
+            {
+                buttons[i].Clicked += OnButtonClicked;
+                buttons[i].SetSelected(false, false);
+            }
         }
 
-        private void OnNavBarButtonClicked(OnNavBarButtonClickedSignal signal)
+        private void OnButtonClicked(ShowcaseTab tab)
         {
-            pendingState = signal.Parameter.NewState;
-
-            if (applyQueued)
+            if (hasSelection && tab == selectedTab)
             {
                 return;
             }
 
-            applyQueued = true;
-            StartCoroutine(ApplyPendingSelectionEndOfFrame());
+            // Move the pill at once so the tap feels instant; the screen follows when its scene is ready.
+            Select(tab, true);
+            ShowcaseTween.Forget(ShowcaseNavigator.ShowTabAsync(tab));
         }
 
-        private IEnumerator ApplyPendingSelectionEndOfFrame()
+        private void Select(ShowcaseTab tab, bool animate)
         {
-            yield return null;
-
-            NavBarState previousState = currentState;
-            currentState = pendingState;
-
-            for (int i = 0; i < navButtons.Count; i++)
-            {
-                NavBarButton btn = navButtons[i];
-                if (btn == null)
-                {
-                    continue;
-                }
-
-                if (btn.GetButtonState() == currentState)
-                {
-                    btn.Select();
-                }
-                else
-                {
-                    btn.DeSelect();
-                }
-            }
-
-            if (previousState != currentState)
-            {
-                NavigateToState(currentState);
-            }
-
-            applyQueued = false;
-        }
-
-        private async void NavigateToState(NavBarState state)
-        {
-            if (!UiManager.IsInitialized)
-            {
-                Debug.LogWarning("[NavBarUiElement] UiManager not initialized. Navigation skipped.");
-                return;
-            }
-
-            if (state == NavBarState.MainMenu)
-            {
-                if (!UiManager.IsLastSceneActive<MainMenuUiState>())
-                {
-                    await UiManager.ShowState<MainMenuUiState>(null, false);
-                }
-                return;
-            }
-
-            if (state == NavBarState.Store)
-            {
-                if (!UiManager.IsLastSceneActive<StoreUiState>())
-                {
-                    await UiManager.ShowState<StoreUiState>(null, false);
-                }
-                return;
-            }
-        }
-
-        public void RequestState(NavBarState state)
-        {
-            pendingState = state;
-
-            if (applyQueued)
+            if (hasSelection && tab == selectedTab)
             {
                 return;
             }
 
-            applyQueued = true;
-            StartCoroutine(ApplyPendingSelectionEndOfFrame());
+            selectedTab = tab;
+            hasSelection = true;
+
+            RectTransform target = null;
+            for (int i = 0; i < buttons.Count; i++)
+            {
+                bool isSelected = buttons[i].Tab == tab;
+                buttons[i].SetSelected(isSelected, animate);
+                if (isSelected)
+                {
+                    target = (RectTransform)buttons[i].transform;
+                }
+            }
+
+            if (target != null)
+            {
+                MoveIndicator(target.anchoredPosition.x, animate);
+            }
         }
 
-        public void OnStoreButtonClicked()
+        private void MoveIndicator(float toX, bool animate)
         {
-            RequestState(NavBarState.Store);
-        }
+            int currentRun = ++indicatorRun;
+            float fromX = indicator.anchoredPosition.x;
+            float y = indicator.anchoredPosition.y;
 
-        public void OnPlayButtonClicked()
-        {
-            RequestState(NavBarState.MainMenu);
+            if (!animate)
+            {
+                indicator.anchoredPosition = new Vector2(toX, y);
+                return;
+            }
+
+            ShowcaseTween.Forget(Tween.RunAsync(indicator, indicatorDuration, TweenCurves.Linear, true, CancellationToken.None,
+                () => indicatorRun == currentRun,
+                progress =>
+                {
+                    float widthFactor = 1f + indicatorStretch * Mathf.Sin(progress * Mathf.PI);
+                    indicator.anchoredPosition = new Vector2(Mathf.LerpUnclamped(fromX, toX, TweenCurves.EaseOut.Evaluate(progress)), y);
+                    indicator.sizeDelta = new Vector2(indicatorWidth * widthFactor, indicator.sizeDelta.y);
+                }));
         }
     }
 }

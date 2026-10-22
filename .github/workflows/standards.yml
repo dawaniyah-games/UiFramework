@@ -1,0 +1,24 @@
+name: Coding standards
+
+# Fails a pull request (or push) that breaks the scriptable rules in CODING_STANDARDS.md.
+# Run the same check locally with: bash tools/check-standards.sh
+
+on:
+  pull_request:
+  push:
+    branches:
+      - dev
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check C# files and code templates
+        run: bash tools/check-standards.sh

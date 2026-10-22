@@ -8,14 +8,14 @@ namespace UiFramework.Editor.Window
     // "MainMenuUiState"), then any other match, keeping the original order within each group.
     public static class UiSearchFilter
     {
-        private const int rankStartsWith = 0;
-        private const int rankWordStart = 1;
-        private const int rankContains = 2;
-        private const int rankNoMatch = int.MaxValue;
+        private const int RankStartsWith = 0;
+        private const int RankWordStart = 1;
+        private const int RankContains = 2;
+        private const int RankNoMatch = int.MaxValue;
 
         public static bool Matches(string name, string query)
         {
-            return Rank(name, query) != rankNoMatch;
+            return Rank(name, query) != RankNoMatch;
         }
 
         public static List<T> Filter<T>(IList<T> items, Func<T, string> getName, string query)
@@ -36,7 +36,7 @@ namespace UiFramework.Editor.Window
             for (int i = 0; i < items.Count; i++)
             {
                 int rank = Rank(getName(items[i]), query);
-                if (rank != rankNoMatch)
+                if (rank != RankNoMatch)
                 {
                     ranked.Add(new KeyValuePair<int, int>(rank, i));
                 }
@@ -57,33 +57,33 @@ namespace UiFramework.Editor.Window
         {
             if (string.IsNullOrWhiteSpace(query))
             {
-                return rankContains;
+                return RankContains;
             }
 
             if (string.IsNullOrEmpty(name))
             {
-                return rankNoMatch;
+                return RankNoMatch;
             }
 
             string[] terms = query.Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-            int worst = rankStartsWith;
+            int worst = RankStartsWith;
 
             for (int t = 0; t < terms.Length; t++)
             {
                 int index = name.IndexOf(terms[t], StringComparison.OrdinalIgnoreCase);
                 if (index < 0)
                 {
-                    return rankNoMatch;
+                    return RankNoMatch;
                 }
 
-                int termRank = rankContains;
+                int termRank = RankContains;
                 if (index == 0)
                 {
-                    termRank = rankStartsWith;
+                    termRank = RankStartsWith;
                 }
                 else if (StartsWordAt(name, terms[t]))
                 {
-                    termRank = rankWordStart;
+                    termRank = RankWordStart;
                 }
 
                 if (termRank > worst)

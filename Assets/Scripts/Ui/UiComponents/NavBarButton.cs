@@ -1,61 +1,43 @@
-namespace UiFramework.Editor.Elements
+using System;
+using System.Threading;
+using UiFramework.Tweening;
+using UiShowcase.App;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace UiShowcase.Components
 {
-    using System;
-    using UnityEngine;
-    using UnityEngine.UI;
-
-    public enum NavBarState
-    {
-        MainMenu = 0,
-        Store = 1
-    }
-
-    public class NavBarButtonClickedSignalParam
-    {
-        public NavBarState NewState { get; }
-
-        public NavBarButtonClickedSignalParam(NavBarState newState)
-        {
-            NewState = newState;
-        }
-    }
-
-    public class OnNavBarButtonClickedSignal
-    {
-        public NavBarButtonClickedSignalParam Parameter { get; private set; }
-
-        private readonly Action<OnNavBarButtonClickedSignal> callback;
-
-        public OnNavBarButtonClickedSignal(Action<OnNavBarButtonClickedSignal> callback)
-        {
-            this.callback = callback;
-        }
-
-        public void Dispatch(NavBarButtonClickedSignalParam param)
-        {
-            Parameter = param;
-
-            if (callback != null)
-            {
-                callback(this);
-            }
-        }
-    }
-
+    // One NavBar tab: the selected icon lifts, grows and lights up; the others dim.
     public class NavBarButton : MonoBehaviour
     {
-        [SerializeField] private NavBarState buttonState;
+        [SerializeField] private ShowcaseTab tab;
         [SerializeField] private Button button;
-        [SerializeField] private Animator animator;
+        [SerializeField] private RectTransform icon;
+        [SerializeField] private Image iconImage;
+        [SerializeField] private Text label;
+        [SerializeField] private Color selectedColor = Color.white;
+        [SerializeField] private Color normalColor = new Color(1f, 1f, 1f, 0.5f);
+        [SerializeField] private float selectedLift = 10f;
+        [SerializeField] private float selectedScale = 1.15f;
+        [SerializeField] private float duration = 0.3f;
 
-        private OnNavBarButtonClickedSignal onNavBarButtonClickedSignal;
+        private Vector2 iconBasePosition;
+        private bool hasBasePose;
+        private float shown;
+        private int run;
 
-        private bool isSelected;
+        public event Action<ShowcaseTab> Clicked;
 
-        public void Init(NavBarState currentState, OnNavBarButtonClickedSignal onNavBarButtonClickedSignal)
+        public ShowcaseTab Tab
         {
-            this.onNavBarButtonClickedSignal = onNavBarButtonClickedSignal;
+            get
+            {
+                return tab;
+            }
+        }
 
+        private void Awake()
+        {
             if (button == null)
             {
                 button = GetComponent<Button>();
@@ -63,68 +45,74 @@ namespace UiFramework.Editor.Elements
 
             if (button != null)
             {
-                button.onClick.RemoveListener(OnButtonClicked);
                 button.onClick.AddListener(OnButtonClicked);
             }
 
-            if (currentState == buttonState)
-            {
-                Select();
-            }
-            else
-            {
-                DeSelect();
-            }
+            CaptureBasePose();
         }
 
-        public NavBarState GetButtonState()
+        public void SetSelected(bool selected, bool animate)
         {
-            return buttonState;
+            CaptureBasePose();
+            int currentRun = ++run;
+            float target = selected ? 1f : 0f;
+
+            if (!animate)
+            {
+                Apply(target);
+                return;
+            }
+
+            float from = shown;
+            ShowcaseTween.Forget(Tween.RunAsync(this, duration, TweenCurves.Linear, true, CancellationToken.None,
+                () => run == currentRun,
+                progress =>
+                {
+                    // Selecting overshoots a touch, deselecting just settles.
+                    AnimationCurve curve = selected ? ShowcaseCurves.BackOut : TweenCurves.EaseOut;
+                    Apply(Mathf.LerpUnclamped(from, target, curve.Evaluate(progress)));
+                }));
         }
 
-        public void Select()
+        private void CaptureBasePose()
         {
-            if (isSelected)
+            if (hasBasePose || icon == null)
             {
                 return;
             }
 
-            isSelected = true;
-            if (animator != null)
-            {
-                animator.ResetTrigger("DeSelected");
-                animator.SetTrigger("Selected");
-            }
+            iconBasePosition = icon.anchoredPosition;
+            hasBasePose = true;
         }
 
-        public void DeSelect()
+        private void Apply(float amount)
         {
-            if (!isSelected)
+            shown = amount;
+            Color color = Color.LerpUnclamped(normalColor, selectedColor, Mathf.Clamp01(amount));
+
+            if (icon != null)
             {
-                return;
+                icon.anchoredPosition = iconBasePosition + new Vector2(0f, selectedLift * amount);
+                icon.localScale = Vector3.one * Mathf.LerpUnclamped(1f, selectedScale, amount);
             }
 
-            isSelected = false;
-            if (animator != null)
+            if (iconImage != null)
             {
-                animator.ResetTrigger("Selected");
-                animator.SetTrigger("DeSelected");
+                iconImage.color = color;
             }
-        }
 
-        public bool IsSelected()
-        {
-            return isSelected;
+            if (label != null)
+            {
+                label.color = color;
+            }
         }
 
         private void OnButtonClicked()
         {
-            if (onNavBarButtonClickedSignal == null)
+            if (Clicked != null)
             {
-                return;
+                Clicked(tab);
             }
-
-            onNavBarButtonClickedSignal.Dispatch(new NavBarButtonClickedSignalParam(buttonState));
         }
     }
 }

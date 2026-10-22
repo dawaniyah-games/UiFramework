@@ -1,0 +1,55 @@
+1
+00:00:00,500 --> 00:00:04,042
+Every element animates in and out on its
+own.
+
+2
+00:00:04,042 --> 00:00:08,214
+Select the main menu and find its
+Animations section.
+
+3
+00:00:12,500 --> 00:00:14,255
+Pick how it appears.
+
+4
+00:00:14,255 --> 00:00:18,905
+Each choice tells you in one line what it
+looks like.
+
+5
+00:00:18,905 --> 00:00:23,643
+I'll take Scale: it grows in gently while
+it fades in.
+
+6
+00:00:30,500 --> 00:00:31,996
+And how it leaves.
+
+7
+00:00:31,996 --> 00:00:32,411
+Fade.
+
+8
+00:00:32,411 --> 00:00:36,067
+The choice is saved straight into the
+scene.
+
+9
+00:00:36,067 --> 00:00:38,643
+There's nothing else to set up.
+
+10
+00:00:42,500 --> 00:00:48,671
+You can watch all ten presets moving on
+the Animations page of the docs.
+
+11
+00:00:48,671 --> 00:00:54,500
+And from code, you can still pick a
+different one for a single call.
+
+12
+00:00:55,500 --> 00:01:00,214
+Next, we'll see how the tools keep every
+scene in shape.

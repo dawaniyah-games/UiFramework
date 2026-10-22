@@ -1,0 +1,110 @@
+1
+00:00:00,500 --> 00:00:05,919
+In this series we build the UI for a small
+game called Coin Shop, from an empty
+
+2
+00:00:05,919 --> 00:00:06,468
+project.
+
+3
+00:00:06,468 --> 00:00:12,162
+A main menu, a store, a top bar and a nav
+bar shared by both, and a purchase popup.
+
+4
+00:00:12,162 --> 00:00:13,877
+One short step per video.
+
+5
+00:00:13,877 --> 00:00:14,700
+Let's start.
+
+6
+00:00:15,500 --> 00:00:20,932
+Open the Package Manager, press plus, and
+choose Add package from git URL.
+
+7
+00:00:20,932 --> 00:00:24,308
+Paste the address from the docs and press
+Add.
+
+8
+00:00:24,308 --> 00:00:28,786
+Unity installs the framework, and
+Addressables comes with it.
+
+9
+00:00:40,500 --> 00:00:46,332
+Every screen will be an Addressable scene,
+so open Addressables Groups once and
+
+10
+00:00:46,332 --> 00:00:47,808
+create its settings.
+
+11
+00:00:47,808 --> 00:00:53,862
+Set the play mode script to Use Asset
+Database, so screens load straight from
+your
+
+12
+00:00:53,862 --> 00:00:55,929
+project when you press Play.
+
+13
+00:01:00,500 --> 00:01:04,459
+This window is where you'll build all of
+your UI.
+
+14
+00:01:04,459 --> 00:01:07,691
+In the General tab, press Create Config.
+
+15
+00:01:07,691 --> 00:01:12,054
+The config remembers where your scripts
+and scenes go.
+
+16
+00:01:12,054 --> 00:01:18,760
+Set the two namespaces to your game's:
+Coin Shop dot UI dot Elements, and Coin
+Shop
+
+17
+00:01:18,760 --> 00:01:20,214
+dot UI dot States.
+
+18
+00:01:25,500 --> 00:01:28,153
+Below are the Global Canvas Settings.
+
+19
+00:01:28,153 --> 00:01:33,102
+Every new screen starts with these: a
+portrait phone at ten-eighty by
+
+20
+00:01:33,102 --> 00:01:36,042
+nineteen-twenty, scaling with the screen.
+
+21
+00:01:36,042 --> 00:01:39,771
+Change them here once, and every new
+screen follows.
+
+22
+00:01:39,771 --> 00:01:43,500
+Existing screens are never changed behind
+your back.
+
+23
+00:01:50,500 --> 00:01:54,100
+That's the setup, and you only do it once.
+
+24
+00:01:54,100 --> 00:01:56,929
+Next, we create our first screen.

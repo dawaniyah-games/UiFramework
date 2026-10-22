@@ -1,0 +1,80 @@
+1
+00:00:00,500 --> 00:00:07,912
+Our game needs two bars that sit on top of
+every screen: a top bar with the player's
+
+2
+00:00:07,912 --> 00:00:11,000
+coins, and a nav bar at the bottom.
+
+3
+00:00:11,000 --> 00:00:15,500
+Two more elements, made exactly like the
+main menu.
+
+4
+00:00:20,500 --> 00:00:23,730
+A strip at the top with the coin count.
+
+5
+00:00:23,730 --> 00:00:28,119
+A strip at the bottom with a Home and a
+Store button.
+
+6
+00:00:28,119 --> 00:00:30,852
+Everything under Root, as always.
+
+7
+00:00:30,852 --> 00:00:37,643
+The rest of each bar's screen stays empty,
+so the screen underneath shows through.
+
+8
+00:00:55,500 --> 00:01:01,687
+Each element has its own canvas, and the
+Canvas section edits it right here.
+
+9
+00:01:01,687 --> 00:01:04,617
+Sorting order decides what's on top.
+
+10
+00:01:04,617 --> 00:01:07,629
+Screens stay at zero, bars go to ten.
+
+11
+00:01:07,629 --> 00:01:10,071
+Later, popups go to a hundred.
+
+12
+00:01:15,500 --> 00:01:19,212
+Render mode and scaling are here too, per
+element.
+
+13
+00:01:19,212 --> 00:01:24,929
+They start from the global defaults, and
+Use Default Settings puts them back.
+
+14
+00:01:30,500 --> 00:01:36,750
+The Addressables section shows whether
+this scene is Addressable, and its group.
+
+15
+00:01:36,750 --> 00:01:43,312
+You don't have to set it by hand: when we
+build the config, every scene a state uses
+
+16
+00:01:43,312 --> 00:01:45,500
+is made Addressable for you.
+
+17
+00:01:50,500 --> 00:01:52,136
+Our pieces are ready.
+
+18
+00:01:52,136 --> 00:01:54,786
+Next, we combine them into states.

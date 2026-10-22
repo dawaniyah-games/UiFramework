@@ -116,6 +116,14 @@ namespace UiFramework.Editor.Scenes
         {
             UiElementSceneInfo info = new UiElementSceneInfo(scenePath);
 
+            // Reading the list in Play Mode is expected (the window rebuilds when Play starts), so a scene that
+            // is not loaded is just reported as unavailable instead of logging a warning for every element.
+            if (EditorApplication.isPlayingOrWillChangePlaymode && !IsSceneOpen(scenePath))
+            {
+                info.IsAvailable = false;
+                return info;
+            }
+
             bool opened = WithScene(scenePath, false, scene =>
             {
                 string showPreset;

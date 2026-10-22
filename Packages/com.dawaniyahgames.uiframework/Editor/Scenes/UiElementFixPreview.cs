@@ -50,8 +50,8 @@ namespace UiFramework.Editor.Scenes
     // Builds the "Now" hierarchy from an open scene and simulates what FixStructure will do to it.
     public sealed class UiElementFixPreview
     {
-        private const int maxDepth = 3;
-        private const int maxChildrenShown = 6;
+        private const int MaxDepth = 3;
+        private const int MaxChildrenShown = 6;
 
         public UiElementPreviewNode Before { get; private set; }
         public UiElementPreviewNode After { get; private set; }
@@ -83,20 +83,20 @@ namespace UiFramework.Editor.Scenes
                 CannotBeContentRoot = rectTransform == null || transform.GetComponent<Canvas>() != null || PrefabUtility.IsAnyPrefabInstanceRoot(transform.gameObject)
             };
 
-            if (depth >= maxDepth)
+            if (depth >= MaxDepth)
             {
                 return node;
             }
 
             int childCount = transform.childCount;
-            for (int i = 0; i < childCount && i < maxChildrenShown; i++)
+            for (int i = 0; i < childCount && i < MaxChildrenShown; i++)
             {
                 node.Children.Add(Capture(transform.GetChild(i), depth + 1));
             }
 
-            if (childCount > maxChildrenShown)
+            if (childCount > MaxChildrenShown)
             {
-                node.Children.Add(new UiElementPreviewNode { Name = "… " + (childCount - maxChildrenShown) + " more", FillsParent = true });
+                node.Children.Add(new UiElementPreviewNode { Name = "… " + (childCount - MaxChildrenShown) + " more", FillsParent = true });
             }
 
             return node;

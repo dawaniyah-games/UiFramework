@@ -8,7 +8,6 @@
 
 .tab-button {
     font-size: 13px;
-    font-weight: bold;
     min-width: 120px;
     height: 36px;
     margin-right: 4px;
@@ -32,8 +31,7 @@
 }
 
 .tab-button:focus {
-    outline: none;
-    border: none;
+    border-width: 0px;
     -unity-font-style: bold;
     background-color: transparent;
 }

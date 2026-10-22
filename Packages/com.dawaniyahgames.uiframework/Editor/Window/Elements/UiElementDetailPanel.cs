@@ -35,8 +35,8 @@ namespace UiFramework.Editor.Window.Elements
     // Builds UI from cached UiElementSceneInfo; edits are written to the scene and reported back via the actions.
     public sealed class UiElementDetailPanel
     {
-        private const string defaultUiElementsGroupName = "UiElements";
-        private const string defaultUiElementsLabel = "UiElements";
+        private const string DefaultUiElementsGroupName = "UiElements";
+        private const string DefaultUiElementsLabel = "UiElements";
 
         private readonly IUiElementDetailActions actions;
 
@@ -267,7 +267,10 @@ namespace UiFramework.Editor.Window.Elements
             renderMode.RegisterValueChangedCallback(evt =>
             {
                 RenderMode value = (RenderMode)evt.newValue;
-                EditCanvas(path, (c, s) => { c.renderMode = value; });
+                EditCanvas(path, (c, s) =>
+                {
+                    c.renderMode = value;
+                });
             });
             section.Add(renderMode);
 
@@ -277,7 +280,10 @@ namespace UiFramework.Editor.Window.Elements
             sortingOrder.RegisterValueChangedCallback(evt =>
             {
                 int value = evt.newValue;
-                EditCanvas(path, (c, s) => { c.sortingOrder = value; });
+                EditCanvas(path, (c, s) =>
+                {
+                    c.sortingOrder = value;
+                });
             });
             section.Add(sortingOrder);
 
@@ -292,7 +298,10 @@ namespace UiFramework.Editor.Window.Elements
                 scaleMode.RegisterValueChangedCallback(evt =>
                 {
                     UnityEngine.UI.CanvasScaler.ScaleMode value = (UnityEngine.UI.CanvasScaler.ScaleMode)evt.newValue;
-                    EditCanvas(path, (c, s) => { s.uiScaleMode = value; });
+                    EditCanvas(path, (c, s) =>
+                    {
+                        s.uiScaleMode = value;
+                    });
                 });
                 section.Add(scaleMode);
 
@@ -305,7 +314,10 @@ namespace UiFramework.Editor.Window.Elements
                     matchMode.RegisterValueChangedCallback(evt =>
                     {
                         UnityEngine.UI.CanvasScaler.ScreenMatchMode value = (UnityEngine.UI.CanvasScaler.ScreenMatchMode)evt.newValue;
-                        EditCanvas(path, (c, s) => { s.screenMatchMode = value; });
+                        EditCanvas(path, (c, s) =>
+                        {
+                            s.screenMatchMode = value;
+                        });
                     });
                     section.Add(matchMode);
 
@@ -316,7 +328,10 @@ namespace UiFramework.Editor.Window.Elements
                         match.RegisterValueChangedCallback(evt =>
                         {
                             float value = Mathf.Clamp01(evt.newValue);
-                            EditCanvas(path, (c, s) => { s.matchWidthOrHeight = value; });
+                            EditCanvas(path, (c, s) =>
+                            {
+                                s.matchWidthOrHeight = value;
+                            });
                         });
                         section.Add(match);
                     }
@@ -327,7 +342,10 @@ namespace UiFramework.Editor.Window.Elements
                 pixelsPerUnit.RegisterValueChangedCallback(evt =>
                 {
                     float value = Mathf.Max(0.01f, evt.newValue);
-                    EditCanvas(path, (c, s) => { s.referencePixelsPerUnit = value; });
+                    EditCanvas(path, (c, s) =>
+                    {
+                        s.referencePixelsPerUnit = value;
+                    });
                 });
                 section.Add(pixelsPerUnit);
             }
@@ -382,13 +400,19 @@ namespace UiFramework.Editor.Window.Elements
             width.RegisterValueChangedCallback(evt =>
             {
                 Vector2 value = new Vector2(Mathf.Max(1, evt.newValue), height.value);
-                EditCanvas(path, (c, s) => { s.referenceResolution = value; });
+                EditCanvas(path, (c, s) =>
+                {
+                    s.referenceResolution = value;
+                });
             });
 
             height.RegisterValueChangedCallback(evt =>
             {
                 Vector2 value = new Vector2(width.value, Mathf.Max(1, evt.newValue));
-                EditCanvas(path, (c, s) => { s.referenceResolution = value; });
+                EditCanvas(path, (c, s) =>
+                {
+                    s.referenceResolution = value;
+                });
             });
 
             return row;
@@ -424,11 +448,11 @@ namespace UiFramework.Editor.Window.Elements
             List<string> groupNames = AddressablesAssetUtility.GetGroupNames(settings);
             if (groupNames.Count == 0)
             {
-                groupNames.Add(defaultUiElementsGroupName);
+                groupNames.Add(DefaultUiElementsGroupName);
             }
-            else if (!groupNames.Contains(defaultUiElementsGroupName))
+            else if (!groupNames.Contains(DefaultUiElementsGroupName))
             {
-                groupNames.Insert(0, defaultUiElementsGroupName);
+                groupNames.Insert(0, DefaultUiElementsGroupName);
             }
 
             AddressableAssetEntry entry = null;
@@ -446,12 +470,12 @@ namespace UiFramework.Editor.Window.Elements
                 }
             }
 
-            if (selectedLabels.Count == 0 && !string.IsNullOrEmpty(defaultUiElementsLabel))
+            if (selectedLabels.Count == 0 && !string.IsNullOrEmpty(DefaultUiElementsLabel))
             {
-                selectedLabels.Add(defaultUiElementsLabel);
+                selectedLabels.Add(DefaultUiElementsLabel);
             }
 
-            string selectedGroup = defaultUiElementsGroupName;
+            string selectedGroup = DefaultUiElementsGroupName;
             if (isAddressable && entry != null && entry.parentGroup != null)
             {
                 selectedGroup = entry.parentGroup.Name;

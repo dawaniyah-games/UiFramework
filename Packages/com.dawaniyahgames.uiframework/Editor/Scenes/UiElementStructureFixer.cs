@@ -14,9 +14,9 @@ namespace UiFramework.Editor.Scenes
         public const string CanvasObjectName = "Canvas";
         public const string ContentRootObjectName = "Root";
 
-        private const string alternateContentRootObjectName = "ContentRoot";
-        private const string undoName = "Fix UI Element Structure";
-        private const string uiLayerName = "UI";
+        private const string AlternateContentRootObjectName = "ContentRoot";
+        private const string UndoName = "Fix UI Element Structure";
+        private const string UiLayerName = "UI";
 
         // Applies every fixable issue, then re-validates and returns the report of what remains.
         // Content that doesn't fill the screen is always wrapped in a new full-screen Root, never resized, so the
@@ -33,7 +33,7 @@ namespace UiFramework.Editor.Scenes
 
             Undo.IncrementCurrentGroup();
             int undoGroup = Undo.GetCurrentGroup();
-            Undo.SetCurrentGroupName(undoName);
+            Undo.SetCurrentGroupName(UndoName);
 
             try
             {
@@ -153,7 +153,7 @@ namespace UiFramework.Editor.Scenes
                 {
                     if (canvasChildNames[i] == ContentRootObjectName)
                     {
-                        return alternateContentRootObjectName;
+                        return AlternateContentRootObjectName;
                     }
                 }
             }
@@ -179,7 +179,7 @@ namespace UiFramework.Editor.Scenes
 
             if (report.Canvas != null)
             {
-                Undo.RegisterChildrenOrderUndo(elementRoot, undoName);
+                Undo.RegisterChildrenOrderUndo(elementRoot, UndoName);
                 report.Canvas.transform.SetSiblingIndex(0);
                 return;
             }
@@ -254,7 +254,7 @@ namespace UiFramework.Editor.Scenes
                 SceneManager.MoveGameObjectToScene(created, parent.gameObject.scene);
             }
 
-            int uiLayer = LayerMask.NameToLayer(uiLayerName);
+            int uiLayer = LayerMask.NameToLayer(UiLayerName);
             if (uiLayer >= 0)
             {
                 created.layer = uiLayer;
@@ -262,7 +262,7 @@ namespace UiFramework.Editor.Scenes
 
             created.transform.SetParent(parent, false);
             created.transform.SetAsFirstSibling();
-            Undo.RegisterCreatedObjectUndo(created, undoName);
+            Undo.RegisterCreatedObjectUndo(created, UndoName);
             return created;
         }
 
@@ -303,8 +303,8 @@ namespace UiFramework.Editor.Scenes
                 anchoredPosition3D = rectTransform.anchoredPosition3D;
             }
 
-            Undo.SetTransformParent(child, newParent, undoName);
-            Undo.RecordObject(child, undoName);
+            Undo.SetTransformParent(child, newParent, UndoName);
+            Undo.RecordObject(child, UndoName);
 
             if (rectTransform != null)
             {

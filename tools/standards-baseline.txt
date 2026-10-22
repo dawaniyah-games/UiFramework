@@ -1,0 +1,6 @@
+# Known legacy deviations that tools/check-standards.sh skips: one "path rule" per line.
+# These files predate the rule. They are fixed only together with a real change to the file, never in a mass
+# clean-up (CODING_STANDARDS.md Appendix B). New code never goes in here; remove a line once its file is fixed.
+Packages/com.dawaniyahgames.uiframework/Core/UiCompoenets/IUiElement.cs using-outside-namespace
+Packages/com.dawaniyahgames.uiframework/Editor/Window/Tabs/BaseVisualElementTab.cs using-outside-namespace
+Packages/com.dawaniyahgames.uiframework/Editor/Window/Tabs/IVisualElementTab.cs using-outside-namespace
