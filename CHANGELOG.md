@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Creating an element no longer brings up Unity's "Open scene(s) modified externally" dialog: the script is attached and the scene saved after the script reload has finished, not inside it
+- The Elements tab shows a new element as ready (✓) as soon as its script is attached, without pressing *Refresh*
+- The Elements tab reads its scenes again when Play Mode ends, instead of showing them as unavailable until *Refresh*
+
+### Changed
+- Docs: the tutorial, step and showcase video slots now point at the published videos
+
 ## [1.3.0] - 2026-10-22
 
 ### Added
