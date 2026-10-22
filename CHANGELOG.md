@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-22
+
 ### Added
 - Sample project: a showcase app in the host project (`Assets/`). It has an intro, four tabs under a shared TopBar and NavBar, and Settings, Reward and Confirm-purchase popups. It demonstrates serialized navigation, per-call `UiTransition`s by tab order, context params, shared re-population and custom element animation (see DESIGN.md §14)
 - `tools/check-standards.sh` checks the scriptable rules of CODING_STANDARDS.md (no `var`, no target-typed `new()`, no expression bodies, braces / Allman, usings, field prefixes, PascalCase constants, `Ui` casing, tagged ASCII logs, no blocking waits, `Async` suffix on `Task` methods). The new **Coding standards** workflow runs it on every pull request and on pushes to `dev` / `main`. Legacy exceptions live in `tools/standards-baseline.txt`
