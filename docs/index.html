@@ -54,6 +54,11 @@ try {
     --green: #34d399;
     --orange: #ff8a3d;
 
+    /* Strokes of the Hairline figures; their lit strokes use --link. */
+    --fig-edge: #737a99;
+    --fig-mid: #aab0c8;
+    --fig-lo: #dde1ec;
+
     --radius: 14px;
     --max: 1160px;
     --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -80,6 +85,10 @@ try {
     --warn: #ffcf5a;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.25);
     --header-bg: rgba(14, 16, 32, 0.88);
+
+    --fig-edge: #6d74a3;
+    --fig-mid: #3d4374;
+    --fig-lo: #2a2f58;
 }
 
 * { box-sizing: border-box; }
@@ -200,7 +209,7 @@ code {
 }
 
 .tab:hover { color: var(--heading); background: var(--surface-raised); }
-.tab[aria-selected="true"] { color: #fff; background: var(--primary); }
+.tab[aria-selected="true"] { color: #2a1700; background: linear-gradient(135deg, #ffc83d, #ff8a3d); }
 
 .header-actions { display: flex; gap: 8px; align-items: center; }
 
@@ -349,8 +358,9 @@ td code { white-space: nowrap; }
 }
 
 .btn:hover { text-decoration: none; }
-.btn-primary { background: var(--primary); color: #fff; box-shadow: 0 8px 22px rgba(91, 61, 245, 0.3); }
-.btn-primary:hover { background: var(--primary-hover); }
+/* Warm call-to-action, dark text: white on orange is too low contrast to read. */
+.btn-primary { background: linear-gradient(135deg, #ffc83d, #ff8a3d); color: #2a1700; box-shadow: 0 8px 22px rgba(255, 138, 61, 0.35); }
+.btn-primary:hover { background: linear-gradient(135deg, #ffd45e, #ff9a52); box-shadow: 0 10px 26px rgba(255, 138, 61, 0.45); }
 .btn-ghost { background: var(--surface); color: var(--heading); border-color: var(--border-strong); }
 .btn-ghost:hover { border-color: var(--primary); }
 
@@ -684,8 +694,8 @@ figcaption { color: var(--text-dim); font-size: 0.88rem; margin-top: 8px; }
     display: grid;
     place-items: center;
     font-weight: 800;
-    color: #fff;
-    background: var(--primary);
+    color: #2a1700;
+    background: linear-gradient(135deg, #ffc83d, #ff8a3d);
 }
 
 .step h3 { margin-top: 6px; }
@@ -702,7 +712,7 @@ figcaption { color: var(--text-dim); font-size: 0.88rem; margin-top: 8px; }
 
 .toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 28px; }
 .toc a { font-size: 0.88rem; font-weight: 600; color: var(--text-muted); border: 1px solid var(--border); background: var(--surface); padding: 6px 12px; border-radius: 8px; }
-.toc a:hover { color: var(--heading); border-color: var(--primary); text-decoration: none; }
+.toc a:hover { color: var(--heading); border-color: #ff8a3d; text-decoration: none; }
 
 .playlist { list-style: none; padding: 0; margin: 0 0 8px; display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
@@ -820,6 +830,354 @@ details[open] summary::before { content: "\2212"; }
 .gallery .shot-frame { aspect-ratio: 9 / 16; border-radius: 16px; }
 .gallery .shot-frame img { height: 100%; object-fit: cover; }
 .gallery .shot.missing .shot-missing { min-height: 100%; height: 100%; }
+
+/* ---------- Hairline figures: live line drawings that answer the pointer (hairline.lucasmarkes.com, MIT) ---------- */
+
+/* Figures sit on the dark stage in both themes, in the showcase app's neon colours: one accent per figure. */
+.fig {
+    --fig-c: var(--purple);
+    margin: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow 0.3s, transform 0.3s;
+}
+
+.fig:hover { box-shadow: 0 14px 44px color-mix(in srgb, var(--fig-c) 28%, transparent), var(--shadow); }
+
+.fig:has([data-figure="exploded"]), .fig:has([data-figure="hub"]) { --fig-c: var(--cyan); }
+.fig:has([data-figure="settle"]) { --fig-c: var(--gold); }
+.fig:has([data-figure="elevator"]) { --fig-c: var(--green); }
+.fig:has([data-figure="format"]) { --fig-c: var(--pink); }
+.fig:has([data-figure="branches"]) { --fig-c: var(--orange); }
+
+/* The plate colour must match what the figure sits on, so the box stays a flat --stage. */
+.fig-plate {
+    --hairline-plate: var(--stage);
+    --hairline-hi: var(--fig-c);
+    --hairline-edge: #a7aee8;
+    --hairline-mid: #5f68b8;
+    --hairline-lo: #323874;
+    --hairline-stroke: 1.9;
+    aspect-ratio: 5 / 4;
+    background: var(--stage);
+    cursor: crosshair;
+}
+
+.fig-plate svg { filter: drop-shadow(0 0 4px color-mix(in srgb, var(--fig-c) 40%, transparent)); }
+
+.figures-off .fig-plate { display: none; }
+
+.fig-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    background: var(--stage);
+    border-top: 1px solid var(--stage-border);
+    font-size: 0.8rem;
+    color: var(--stage-muted);
+}
+
+.figures-off .fig-bar { display: none; }
+
+.fig-live { width: 8px; height: 8px; border-radius: 50%; background: var(--fig-c); box-shadow: 0 0 10px var(--fig-c); animation: fig-live 1.6s ease-in-out infinite; }
+
+@keyframes fig-live {
+    50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fig-live { animation: none; }
+}
+
+.fig-hint { flex: 1; }
+.fig-readout { font-family: var(--mono); font-size: 0.8rem; color: var(--fig-c); font-weight: 700; min-width: 4ch; text-align: right; }
+
+.fig-body { padding: 16px 18px 18px; flex: 1; }
+.fig-body h3 { font-size: 1.08rem; margin: 0 0 6px; }
+.fig-body p { color: var(--text-muted); font-size: 0.95rem; margin: 0 0 8px; }
+.fig-body a { font-size: 0.92rem; }
+
+.hero-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 44px;
+    align-items: center;
+    text-align: left;
+    margin-bottom: 44px;
+}
+
+.hero-split h1 { margin-left: 0; }
+.hero-split .lead { margin: 0; }
+.hero-split .hero-actions, .hero-split .hero-meta { justify-content: flex-start; }
+.hero-split .hero-meta { margin-bottom: 0; }
+
+/* A soft halo behind the hero figure; the figure itself keeps its flat plate. */
+.fig-hero { position: relative; overflow: visible; box-shadow: 0 24px 70px color-mix(in srgb, var(--fig-c) 30%, transparent), var(--shadow); }
+.fig-hero .fig-plate { --hairline-stroke: 2.1; border-radius: var(--radius) var(--radius) 0 0; overflow: hidden; }
+
+@media (max-width: 900px) {
+    .hero-split { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+    .fig-hero { max-width: 460px; width: 100%; margin: 0 auto; }
+}
+
+/* ---------- Live explainer: the showcase screen pulled apart into its element scenes, in 3D ---------- */
+
+.ex { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+
+@media (max-width: 960px) {
+    .ex { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Each element scene is drawn in its own colour (--c, set per layer); plates are tinted so they hide what is behind. */
+.ex .fig { --fig-c: var(--pink); }
+.ex-svg { display: block; width: 100%; height: auto; background: var(--stage); touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: crosshair; }
+.ex-svg path { fill: color-mix(in srgb, var(--c) 14%, var(--stage)); stroke: var(--c); stroke-width: 2.1; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
+.ex-svg .layer { filter: drop-shadow(0 0 3px color-mix(in srgb, var(--c) 45%, transparent)); }
+.ex-svg .layer.lit { filter: drop-shadow(0 0 10px var(--c)); }
+.ex-svg .layer.lit .body { stroke-width: 2.8; }
+.ex-svg .line { fill: none; stroke-width: 1.7; }
+.ex-svg .frame { fill: none; stroke-width: 1.4; stroke-dasharray: 3 6; opacity: 0.6; }
+.ex-svg .fill { stroke: none; }
+.ex-svg .pulse { fill: none; stroke-width: 2.6; }
+.ex-svg .device { --c: #6670c4; }
+.ex-svg .device path { fill: #0b0d1f; }
+.ex-svg .device .line { fill: none; }
+.ex-svg .guide { fill: none; stroke: #444c92; stroke-width: 1.3; stroke-dasharray: 2 6; }
+.ex-svg .lead { fill: none; stroke: var(--c); stroke-width: 1.2; stroke-dasharray: 2 4; opacity: 0.7; }
+.ex-svg .lit .lead { stroke-dasharray: none; opacity: 1; }
+.ex-svg text { font-family: var(--mono); font-size: 13px; font-weight: 700; fill: #e8eaff; }
+.ex-svg text.sub { font-family: var(--font); font-size: 11.5px; font-weight: 500; fill: #a3a8c7; }
+.ex-svg .lit text:not(.sub) { fill: var(--c); }
+
+.ex-stage { position: relative; background: var(--stage); }
+
+/* What the current call did (or, while pointing, what the layer is), in a strip above the figure. */
+.ex-caption {
+    min-height: 104px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid var(--stage-border);
+    color: var(--stage-text);
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.ex-caption .ex-kicker { display: block; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--stage-muted); }
+.ex-caption strong { color: #fff; font-size: 1rem; margin-right: 8px; }
+.ex-caption code { background: rgba(255, 255, 255, 0.08); color: #d9d0ff; border: 0; font-size: 0.74rem; }
+.ex-caption p { margin: 6px 0 0; color: var(--stage-muted); }
+.ex-caption ul { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.ex-caption li { display: flex; align-items: center; gap: 7px; margin: 0; }
+.ex-caption li i, .ex-caption .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); box-shadow: 0 0 6px var(--c); flex: none; }
+.ex-caption .k { font-weight: 700; font-size: 0.74rem; color: var(--k); white-space: nowrap; }
+
+.ex-bar { flex-wrap: wrap; gap: 10px; }
+
+/* Segmented toggles on the dark figure bars. */
+.seg { display: inline-flex; padding: 3px; border-radius: 10px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--stage-border); }
+.seg button { appearance: none; border: 0; background: transparent; color: var(--stage-muted); font: 600 0.78rem var(--font); padding: 5px 10px; border-radius: 7px; cursor: pointer; }
+.seg button:hover { color: #fff; }
+.seg button[aria-pressed="true"] { background: linear-gradient(135deg, #ffc83d, #ff8a3d); color: #2a1700; }
+
+.ex-next { appearance: none; border: 0; margin-left: auto; font: 700 0.84rem var(--font); padding: 7px 14px; border-radius: 9px; cursor: pointer; background: linear-gradient(135deg, #ffc83d, #ff8a3d); color: #2a1700; box-shadow: 0 4px 14px rgba(255, 138, 61, 0.3); }
+.ex-next:hover { box-shadow: 0 6px 20px rgba(255, 138, 61, 0.45); }
+
+.ex-steps { display: grid; gap: 8px; }
+
+.ex-step {
+    appearance: none;
+    width: 100%;
+    text-align: left;
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 1px 12px;
+    align-items: center;
+    padding: 11px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.ex-step:hover { border-color: #ff8a3d; transform: translateY(-1px); }
+.ex-step .n { grid-row: span 2; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; font-weight: 800; font-size: 0.9rem; background: var(--surface-raised); color: var(--text-muted); transition: background 0.2s; }
+.ex-step b { font-size: 0.97rem; color: var(--heading); line-height: 1.3; }
+.ex-step code { display: block; background: none; border: 0; padding: 0; font-size: 0.74rem; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ex-step[aria-pressed="true"] { border-color: #ff8a3d; box-shadow: 0 6px 20px rgba(255, 138, 61, 0.18); }
+.ex-step[aria-pressed="true"] .n { background: linear-gradient(135deg, #ffc83d, #ff8a3d); color: #2a1700; }
+
+.ex-now { margin: 14px 0; padding: 14px 16px; border-radius: 12px; background: var(--primary-soft); font-size: 0.95rem; line-height: 1.6; min-height: 7.4em; }
+.ex-status { display: grid; gap: 12px; }
+.ex-status h4 { margin: 0 0 6px; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); }
+.ex-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ex-chip { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 0.74rem; padding: 3px 8px; border-radius: 7px; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); }
+.ex-chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--c, var(--text-dim)); box-shadow: 0 0 6px var(--c, transparent); }
+.ex-chip.new { border-color: #ff8a3d; color: var(--heading); box-shadow: 0 0 0 3px rgba(255, 138, 61, 0.14); }
+.ex-chip.gone { text-decoration: line-through; opacity: 0.55; }
+.ex-chip.top { border-color: var(--link); color: var(--heading); }
+.ex-sep { color: var(--text-dim); font-size: 0.8rem; }
+
+/* ---------- Layer story: scrolling takes one tangled layer apart and stacks clean layers ---------- */
+
+:root {
+    --ls-red: #e5484d;
+    --ls-backend: #5b63c9;
+    --ls-systems: #0d9488;
+    --ls-app: #e8742a;
+    --ls-framework: #c98a00;
+    --ls-ui: #7c5cff;
+    --ls-home: #7c5cff;
+    --ls-store: #0b93d1;
+    --ls-profile: #0f9f6e;
+    --ls-reward: #e23d84;
+}
+
+:root[data-theme="dark"] {
+    --ls-red: #ff6b6b;
+    --ls-backend: #8b93f0;
+    --ls-systems: #2dd4bf;
+    --ls-app: #ff8a3d;
+    --ls-framework: #ffc83d;
+    --ls-ui: #9d86ff;
+    --ls-home: #9d86ff;
+    --ls-store: #2ec5ff;
+    --ls-profile: #34d399;
+    --ls-reward: #ff4f8b;
+}
+
+/* The layer story runs edge to edge; clip the sideways overflow a 100vw section causes beside a scrollbar. */
+html, body { overflow-x: clip; }
+
+.ls { margin-top: 2.2em; }
+.ls > h2 { margin-top: 0; }
+.ls-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
+    gap: 3vw;
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    padding: 0 max(16px, 4vw);
+}
+.ls-stage { position: sticky; top: 64px; height: calc(100vh - 64px); }
+.ls-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.ls-steps { padding: 22vh 0 40vh; }
+.ls-step { min-height: 78vh; display: flex; flex-direction: column; justify-content: center; opacity: 0.18; transform: translateY(18px); transition: opacity 0.45s, transform 0.45s; }
+.ls-step.on { opacity: 1; transform: none; }
+.ls-kicker { font-size: 0.8rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--c); }
+.ls-step h3 { font-size: clamp(1.7rem, 2.7vw, 2.6rem); font-weight: 800; letter-spacing: -0.025em; line-height: 1.12; margin: 10px 0 16px; }
+.ls-step p { font-size: 1.15rem; color: var(--text-muted); max-width: 28em; margin: 0; }
+.ls-foot { max-width: 820px; color: var(--text-muted); margin: 0 0 1em; }
+
+/* --ls-c is each piece's colour; the script blends it from tangle red to the layer colour as the piece rises. */
+.ls-svg path { stroke: var(--ls-c); stroke-width: 2.2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.ls-svg .top { fill: color-mix(in srgb, var(--ls-c) 16%, var(--bg)); }
+.ls-svg .side { fill: color-mix(in srgb, var(--ls-c) 38%, var(--bg)); }
+/* Plates are tinted glass, so the pieces and the tap route stay visible through the whole stack. */
+.ls-svg .plate .top { fill: color-mix(in srgb, var(--ls-c) 11%, transparent); }
+.ls-svg .plate .side { fill: color-mix(in srgb, var(--ls-c) 40%, transparent); }
+.ls-svg .now { filter: drop-shadow(0 0 10px color-mix(in srgb, var(--ls-c) 70%, transparent)); }
+.ls-svg .ring { fill: none; stroke-width: 2.6; }
+
+/* Red calls race through the tangle; calm calls flow along the clean wires. */
+.ls-svg .tangle { fill: none; stroke: var(--ls-red); stroke-width: 2; stroke-dasharray: 7 6; animation: ls-flow 0.7s linear infinite; }
+.ls-svg .wire { fill: none; stroke: var(--ls-c); stroke-width: 2.8; stroke-linecap: round; stroke-dasharray: 8 5; animation: ls-flow 1.6s linear infinite; }
+
+@keyframes ls-flow {
+    to { stroke-dashoffset: -26; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ls-svg .tangle, .ls-svg .wire { animation: none; }
+}
+
+.ls-svg .lead { fill: none; stroke: var(--text-dim); stroke-width: 1; stroke-dasharray: 2 4; }
+.ls-svg .route { fill: none; stroke: var(--ls-app); stroke-width: 3; opacity: 0.45; }
+.ls-svg .ls-dot { fill: var(--ls-app); stroke: none; filter: drop-shadow(0 0 8px var(--ls-app)); }
+.ls-svg text { font-family: var(--font); }
+.ls-svg .dot-text { font-size: 14px; font-weight: 800; fill: var(--ls-app); }
+.ls-svg .tile-text { font-size: 14px; font-weight: 700; fill: var(--heading); text-anchor: middle; }
+.ls-svg .wire-text { font-family: var(--mono); font-size: 12.5px; font-weight: 700; fill: var(--text); }
+.ls-svg .layer-name { font-size: 19px; font-weight: 800; fill: var(--ls-c); }
+.ls-svg .now .layer-name { font-size: 22px; }
+.ls-svg .layer-sub { font-size: 13.5px; font-weight: 500; fill: var(--text-dim); }
+
+@media (max-width: 900px) {
+    .ls-body { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .ls-stage { top: 64px; height: 52vh; z-index: 2; background: var(--bg); }
+    .ls-steps { padding: 4vh 0 30vh; }
+    .ls-step { min-height: 62vh; justify-content: flex-start; }
+}
+
+@media (max-width: 820px) {
+    .ls-stage { top: 100px; }
+}
+
+/* The drawing is small on a phone, so its text grows in drawing units to stay readable. */
+@media (max-width: 620px) {
+    .ls-svg .layer-name { font-size: 26px; }
+    .ls-svg .now .layer-name { font-size: 29px; }
+    .ls-svg .layer-sub { font-size: 19px; }
+    .ls-svg .tile-text { font-size: 18px; }
+    .ls-svg .wire-text, .ls-svg .dot-text { font-size: 17px; }
+}
+
+.problem { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 32px; align-items: start; }
+
+@media (max-width: 900px) {
+    .problem { grid-template-columns: minmax(0, 1fr); }
+}
+
+.x-list { list-style: none; padding: 0; }
+.x-list li { padding-left: 32px; position: relative; margin: 0 0 14px; color: var(--text-muted); }
+.x-list li strong { display: block; }
+.x-list li::before { content: "\00d7"; position: absolute; left: 0; top: 0.15em; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 0.85rem; line-height: 1; color: var(--pink); background: rgba(255, 79, 139, 0.12); border: 1px solid rgba(255, 79, 139, 0.45); }
+
+.compare th:nth-child(2) { color: var(--text-dim); }
+.compare th:nth-child(3) { color: var(--primary); }
+.compare td:first-child { font-weight: 650; color: var(--heading); white-space: nowrap; }
+.compare td:nth-child(2) { color: var(--text-dim); }
+
+/* On a phone each row becomes a small card: the topic, then "Without" and "With". */
+@media (max-width: 620px) {
+    .compare thead { display: none; }
+    .compare tr { display: block; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+    .compare tr:last-child { border-bottom: 0; }
+    .compare td { display: block; padding: 2px 0; border: 0; }
+    .compare td:first-child { margin-bottom: 4px; }
+    .compare td:nth-child(2)::before, .compare td:nth-child(3)::before { display: block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+    .compare td:nth-child(2)::before { content: "Without it"; color: var(--text-dim); }
+    .compare td:nth-child(3)::before { content: "With UI Framework"; color: var(--primary); margin-top: 6px; }
+    .compare td code { white-space: normal; }
+}
+
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 24px 0; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.stat b { display: block; font-size: 2.4rem; font-weight: 800; line-height: 1; color: var(--primary); letter-spacing: -0.03em; margin-bottom: 8px; }
+.stat span { color: var(--text-muted); font-size: 0.92rem; }
+
+@media (max-width: 900px) {
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.author { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 26px; align-items: start; padding: 28px; }
+.author-mark { width: 76px; height: 76px; border-radius: 22px; display: grid; place-items: center; font-weight: 800; font-size: 1.6rem; color: #fff; background: linear-gradient(135deg, #7c5cff, #2ec5ff); box-shadow: 0 10px 30px rgba(91, 61, 245, 0.3); }
+.author h2 { margin-top: 0; }
+.credits { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 14px; }
+.credits .pill { font-size: 0.9rem; color: var(--heading); }
+.fine-print { font-size: 0.8rem; color: var(--text-dim); margin: 0; }
+
+@media (max-width: 620px) {
+    .author { grid-template-columns: minmax(0, 1fr); padding: 22px; }
+}
 </style>
 </head>
 <body>
@@ -860,19 +1218,29 @@ details[open] summary::before { content: "\2212"; }
 <section class="panel" id="overview" data-panel="overview" role="tabpanel">
 
     <div class="hero">
-        <span class="eyebrow">Unity package &middot; UGUI &middot; Addressables &middot; free and open source</span>
-        <h1>The screen and popup framework for <span class="accent">Unity</span> game UI</h1>
-        <p class="lead">Build every screen as its own Addressable scene. A state stack decides what is on screen, shared elements like your nav bar stay put, every transition is animated with no flash, and a Unity editor window generates the scripts, scenes and config for you.</p>
-        <div class="hero-actions">
-            <a class="btn btn-primary" href="#start">Add it to your Unity project</a>
-            <a class="btn btn-ghost" href="#tutorial">Watch the tutorial</a>
-        </div>
-        <div class="hero-meta">
-            <span class="pill">Unity 2021.3 &ndash; Unity 6</span>
-            <span class="pill">Install with the Package Manager</span>
-            <span class="pill">UGUI &middot; Addressables</span>
-            <span class="pill">async / await</span>
-            <span class="pill">MIT license</span>
+        <div class="hero-split">
+            <div>
+                <span class="eyebrow">Unity package &middot; UGUI &middot; Addressables &middot; free and open source</span>
+                <h1>Pro-grade game UI for <span class="accent">Unity</span>, without a pro-sized team</h1>
+                <p class="lead">Build your UI the way professional studios do, from the very first prototype. Every screen is its own Addressable scene, a state stack decides what is on screen, shared elements like your nav bar stay put, every transition animates with no flash, and an editor window writes the scripts, scenes and config for you.</p>
+                <div class="hero-actions">
+                    <a class="btn btn-primary" href="#start">Add it to your Unity project</a>
+                    <a class="btn btn-ghost" href="#problem">Why it matters</a>
+                </div>
+                <div class="hero-meta">
+                    <span class="pill">Unity 2021.3 &ndash; Unity 6</span>
+                    <span class="pill">Package Manager</span>
+                    <span class="pill">Production-ready by default</span>
+                    <span class="pill">Merge-friendly</span>
+                    <span class="pill">async / await</span>
+                    <span class="pill">MIT license</span>
+                </div>
+            </div>
+            <figure class="fig fig-hero">
+                <div class="fig-plate" data-figure="exploded" aria-label="An app window pulled apart into four layers, like a screen built from four element scenes"></div>
+                <div class="fig-bar"><span class="fig-live"></span><span class="fig-hint">Move across to pull the screen apart</span><output class="fig-readout">&ndash;</output></div>
+                <figcaption class="fig-body"><p>One screen, four layers. In UI Framework every layer is its own element scene, and a state stacks them into the screen your player sees.</p></figcaption>
+            </figure>
         </div>
 
         <figure class="shot has-fallback hero-shot" data-shot>
@@ -976,6 +1344,119 @@ details[open] summary::before { content: "\2212"; }
         </div>
     </div>
 
+    <h2 id="problem">Game UI turns into a tangle. It doesn't have to.</h2>
+    <p class="lead">Almost every game starts its UI the same way, and almost every game hits the same wall a few months in. If any of this sounds familiar, the framework was made for you.</p>
+    <div class="problem">
+        <ul class="x-list">
+            <li><strong>One giant UI scene.</strong>Every screen lives in one scene or prefab, loads at boot, and two people can't touch it at the same time without a merge conflict.</li>
+            <li><strong>SetActive spaghetti.</strong>Screens switch each other on and off by hand. A popup stays open, a canvas never closes, and Back goes to the wrong place.</li>
+            <li><strong>A new screen manager for every game.</strong>Each project rewrites its own, with its own bugs, and only the person who wrote it knows how it works.</li>
+            <li><strong>Motion as an afterthought.</strong>Screens pop in, flash an empty frame, or move differently on every screen because each one was tuned by hand.</li>
+            <li><strong>Managers and singletons everywhere.</strong><code>UIManager.Instance</code>, <code>PopupManager.Instance</code>, <code>GameManager.Instance</code>: every screen reaches into a handful of singletons. It only works with all of them in the scene, start-up order starts to matter, and one null <code>Instance</code> breaks a screen.</li>
+            <li><strong>UI logic tangled with game logic and the backend.</strong>A Buy button's <code>OnClick</code> checks the price, calls the server, updates the save and opens a popup. Change the backend and you are rewriting screens; test the economy and you need the UI running.</li>
+            <li><strong>Setup by hand.</strong>Screens are wired with drag-and-drop references to managers in other scenes, sort orders are picked by feel, and a renamed object silently breaks a screen nobody opened today.</li>
+            <li><strong>One config the whole team takes turns on.</strong>Every new screen or state edits the same registry asset, so people lock it, push it to dev, and only then can the next person start.</li>
+        </ul>
+        <figure class="fig">
+            <div class="fig-plate" data-figure="settle" aria-label="Twelve crooked tiles around a hub slide into a tidy tree as the pointer comes near"></div>
+            <div class="fig-bar"><span class="fig-live"></span><span class="fig-hint">Bring your pointer close</span><output class="fig-readout">&ndash;</output></div>
+            <figcaption class="fig-body"><p>Scattered screens settle into one tree. A state stack and a single scene contract do the same to your UI.</p></figcaption>
+        </figure>
+    </div>
+
+    <h3>What changes when you use it</h3>
+    <div class="table-wrap"><table class="compare">
+        <thead><tr><th></th><th>Without it</th><th>With UI Framework</th></tr></thead>
+        <tbody>
+            <tr><td>A new screen</td><td>Build a prefab, wire references, register it with a manager by hand</td><td><strong>New Element</strong> creates the script and the scene; <strong>Build Runtime UiConfig</strong> makes it Addressable and registers it</td></tr>
+            <tr><td>Navigation</td><td><code>SetActive</code> calls spread through the code</td><td><code>await UiManager.ShowState&lt;StoreUiState&gt;()</code></td></tr>
+            <tr><td>Popups</td><td>Sort-order fights and hand-written close logic</td><td>Pushed on top with <code>additive: true</code>, closed with <code>HideUI()</code></td></tr>
+            <tr><td>Shared bars</td><td>Copied into every screen, or reloaded with a flicker</td><td>Shared elements stay loaded and on screen while screens change</td></tr>
+            <tr><td>Memory</td><td>Every screen loaded at boot</td><td>Scenes load on demand and unload when no state uses them</td></tr>
+            <tr><td>Motion</td><td>Tuned by hand, screen by screen</td><td>Ten tuned presets, chosen per element or per call</td></tr>
+            <tr><td>Data</td><td>Screens reach into singletons</td><td>Data is passed in through <code>Populate</code>, so every screen opens on its own</td></tr>
+            <tr><td>Dependencies</td><td>Screens call game managers and the backend directly</td><td>Screens only show what they are given and report taps; game systems and the backend never meet the UI</td></tr>
+            <tr><td>Setup</td><td>References dragged between scenes, sort orders picked by feel</td><td>Generated scenes with one contract; canvas, sorting and Addressables set per element in the editor</td></tr>
+            <tr><td>Teamwork</td><td>One shared config: lock it, push to dev, then the next person goes</td><td>One asset per state and one scene per element: branches add screens in parallel and merge cleanly</td></tr>
+            <tr><td>Structure</td><td>Drifts silently until something breaks</td><td>Every scene validated, and fixed in one click</td></tr>
+        </tbody>
+    </table></div>
+
+    <h2 id="explainer">Watch a screen come together</h2>
+    <p class="lead">This is the showcase app, pulled apart into the element scenes it is made of. Press <strong>Next</strong> to run each call, and the figure tells you what <code>UiManager</code> loaded, kept and unloaded. Point at any layer to see what it is.</p>
+    <div class="ex">
+        <figure class="fig">
+            <div class="ex-stage">
+                <div class="ex-caption" id="ex-caption" aria-live="polite"></div>
+                <svg class="ex-svg" id="ex-svg" viewBox="0 0 720 560" role="img" aria-label="A phone screen in 3D, pulled apart into its element scenes: the main menu or store screen, the shared top bar and nav bar, and a reward popup on top"></svg>
+            </div>
+            <div class="fig-bar ex-bar">
+                <div class="seg" role="group" aria-label="View">
+                    <button type="button" data-view="apart" aria-pressed="true">Pulled apart</button>
+                    <button type="button" data-view="together" aria-pressed="false">As the player sees it</button>
+                </div>
+                <span class="fig-hint">Point at a layer to see what it is</span>
+                <button class="ex-next" id="ex-next" type="button">Next</button>
+            </div>
+        </figure>
+        <div>
+            <div class="ex-steps" id="ex-steps">
+                <button class="ex-step" type="button" data-step="0" aria-pressed="true"><span class="n">1</span><b>Open the main menu</b><code>await UiManager.ShowState&lt;MainMenuUiState&gt;();</code></button>
+                <button class="ex-step" type="button" data-step="1" aria-pressed="false"><span class="n">2</span><b>Go to the store</b><code>await UiManager.ShowState&lt;StoreUiState&gt;();</code></button>
+                <button class="ex-step" type="button" data-step="2" aria-pressed="false"><span class="n">3</span><b>Push a reward popup</b><code>await UiManager.ShowState&lt;RewardUiState&gt;(reward, additive: true);</code></button>
+                <button class="ex-step" type="button" data-step="3" aria-pressed="false"><span class="n">4</span><b>Close the popup</b><code>await UiManager.HideUI();</code></button>
+            </div>
+            <p class="ex-now" id="ex-now" aria-live="polite"></p>
+            <div class="ex-status">
+                <div><h4>State stack</h4><div class="ex-chips" id="ex-stack"></div></div>
+                <div><h4>Loaded scenes</h4><div class="ex-chips" id="ex-scenes"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ls" id="layers">
+        <h2>UI is only the view</h2>
+        <p class="lead">Scroll to pull a typical game UI apart and put every piece where it belongs.</p>
+        <div class="ls-body">
+            <div class="ls-stage">
+                <svg class="ls-svg" id="ls-svg" viewBox="0 0 720 640" role="img" aria-label="Screens and singletons tangled on one layer, then lifted out piece by piece into stacked 3D layers: UI scenes, UiManager, your app, game systems and the backend"></svg>
+            </div>
+            <div class="ls-steps">
+                <div class="ls-step" style="--c: var(--ls-red)">
+                    <span class="ls-kicker">Today</span>
+                    <h3>Most game UIs are one big layer.</h3>
+                    <p>Screens, managers and the backend client sit side by side, and every piece calls every other one. Each red line is a direct dependency: 22 of them, through six singletons. Scroll to pull it apart.</p>
+                </div>
+                <div class="ls-step" style="--c: var(--ls-ui)">
+                    <span class="ls-kicker">Step 1 &middot; UI scenes</span>
+                    <h3>Lift the screens out.</h3>
+                    <p>Home, Store, Profile and the Reward popup become UI scenes. They only show what they are given and report taps, so every red line from a screen into a manager goes with them.</p>
+                </div>
+                <div class="ls-step" style="--c: var(--ls-framework)">
+                    <span class="ls-kicker">Step 2 &middot; UiManager</span>
+                    <h3>UIManager and PopupManager become one door.</h3>
+                    <p><code>UiManager</code> loads the scenes a state needs, hands your params to every element in <code>Populate</code>, animates and unloads. A popup is just another state, so PopupManager merges into it.</p>
+                </div>
+                <div class="ls-step" style="--c: var(--ls-app)">
+                    <span class="ls-kicker">Step 3 &middot; Your app</span>
+                    <h3>GameManager becomes your app.</h3>
+                    <p>One navigator decides what to show and when. It calls <code>ShowState</code> and <code>HideUI</code> with the params each screen needs, and it is the only code that talks to UiManager.</p>
+                </div>
+                <div class="ls-step" style="--c: var(--ls-systems)">
+                    <span class="ls-kicker">Step 4 &middot; Game systems</span>
+                    <h3>The other managers become game systems.</h3>
+                    <p>Economy and Audio keep the rules of your game. Your app calls them; they never reference a screen, so they run and test without any UI.</p>
+                </div>
+                <div class="ls-step" style="--c: var(--ls-backend)">
+                    <span class="ls-kicker">Step 5 &middot; Backend</span>
+                    <h3>What's left is the backend.</h3>
+                    <p>Only Economy talks to the server, and nothing above it knows the server exists. Now watch a Buy tap: it travels down to the game, and the reward comes back up through UiManager.</p>
+                </div>
+            </div>
+        </div>
+        <p class="ls-foot">The framework stays out of your architecture: it has no service locator, no signals and no network code, and params are plain C# classes. These layers are the structure it makes easy, and the showcase app follows it with one navigator for every call.</p>
+    </div>
+
     <h2>Why teams use it</h2>
     <div class="grid grid-3">
         <div class="card">
@@ -1008,6 +1489,63 @@ details[open] summary::before { content: "\2212"; }
             <h3>Editor tooling</h3>
             <p>The UI Setup Manager creates element scripts and scenes, builds states, validates every scene, fixes structure in one click and generates the runtime config.</p>
         </div>
+    </div>
+
+    <h2 id="teams">Made for teams: no config to lock</h2>
+    <p class="lead">Many UI tools keep every screen in one shared config. Adding a screen means locking that file and pushing it to dev before anyone else can add theirs. UI Framework has no such file to fight over, so the whole team adds screens and states at the same time.</p>
+    <div class="problem">
+        <ul class="check-list">
+            <li><strong>One asset per state.</strong> A new state is a new <code>UiStateDefinition</code> file in <code>UiConfigs/UiStateDefinitions</code>. Two branches that add two states never touch the same file.</li>
+            <li><strong>One scene and one script per element.</strong> A new screen is new files too, so designers and developers work side by side without merge fights.</li>
+            <li><strong>The shared files are generated.</strong> <code>RuntimeUiConfig</code> and the Addressables group are rebuilt from the state definitions by <em>Build Runtime UiConfig</em>, in a stable order. If both branches changed them, keep either side and build again; nobody merges them by hand.</li>
+            <li><strong>Settings you set once.</strong> <code>UiEditorConfig</code> only holds paths and namespaces, so it almost never changes.</li>
+        </ul>
+        <figure class="fig">
+            <div class="fig-plate" data-figure="branches" aria-label="A commit graph with a branch forking off main and merging back"></div>
+            <div class="fig-bar"><span class="fig-live"></span><span class="fig-hint">Point along the history</span><output class="fig-readout">&ndash;</output></div>
+            <figcaption class="fig-body"><p>Branch off, add your screens and states, merge back. No waiting for someone else to push the config first.</p></figcaption>
+        </figure>
+    </div>
+
+    <h2 id="ideas">Four ideas, live</h2>
+    <p class="lead">The whole framework rests on four ideas. Each figure below is live: move your pointer over it, or tap it on a phone.</p>
+    <div class="grid grid-4">
+        <figure class="fig">
+            <div class="fig-plate" data-figure="stack" aria-label="A stack of five frames; pointing at one lifts the frames above it away"></div>
+            <div class="fig-bar"><span class="fig-live"></span><span class="fig-hint">Point up and down</span><output class="fig-readout">&ndash;</output></div>
+            <figcaption class="fig-body">
+                <h3>The state stack</h3>
+                <p>Screens and popups stack up. Lift the frames above and the screen underneath is still there, exactly as <code>HideUI()</code> leaves it.</p>
+                <a href="#stack">How the stack works &rarr;</a>
+            </figcaption>
+        </figure>
+        <figure class="fig">
+            <div class="fig-plate" data-figure="hub" aria-label="A hub with eight tiles on dashed links; the tile under the pointer rises and its link turns solid"></div>
+            <div class="fig-bar"><span class="fig-live"></span><span class="fig-hint">Point at a tile</span><output class="fig-readout">&ndash;</output></div>
+            <figcaption class="fig-body">
+                <h3>Shared, counted scenes</h3>
+                <p><code>UiManager</code> sits at the centre. A scene links in when a state needs it and stays loaded while any state on the stack still uses it.</p>
+                <a href="#shared">Shared elements &rarr;</a>
+            </figcaption>
+        </figure>
+        <figure class="fig">
+            <div class="fig-plate" data-figure="elevator" aria-label="Four floors beside a shaft; the pointer's height picks a floor and the car travels there"></div>
+            <div class="fig-bar"><span class="fig-live"></span><span class="fig-hint">Pick a floor</span><output class="fig-readout">&ndash;</output></div>
+            <figcaption class="fig-body">
+                <h3>One call between screens</h3>
+                <p><code>ShowState</code> takes you to any screen. The old one animates out while the new one animates in, with no empty frame in between.</p>
+                <a href="#feel">What makes it feel good &rarr;</a>
+            </figcaption>
+        </figure>
+        <figure class="fig">
+            <div class="fig-plate" data-figure="format" aria-label="Ten crooked lines snap square as the pointer runs down them"></div>
+            <div class="fig-bar"><span class="fig-live"></span><span class="fig-hint">Run your pointer down</span><output class="fig-readout">&ndash;</output></div>
+            <figcaption class="fig-body">
+                <h3>One scene contract</h3>
+                <p>Every element scene has the same shape. The editor checks them all and snaps a scene that drifted back into shape in one click.</p>
+                <a href="#contract">The scene contract &rarr;</a>
+            </figcaption>
+        </figure>
     </div>
 
     <h2>How it works, in one picture</h2>
@@ -1079,12 +1617,37 @@ await UiManager.HideUI();</code></pre></div>
         </div>
     </div>
 
-    <h2>Built for production</h2>
+    <h2 id="pro">The professional approach, ready on day one</h2>
+    <p class="lead">Large games don't keep their UI in one scene. They split it into content the team can load, own and ship separately. A state machine drives what is on screen, data is passed in, and tooling guards the structure. UI Framework gives you that approach from the first screen. An indie team builds like a professional studio, and a prototype is production-ready by default: when the game grows, nothing gets rewritten.</p>
+    <div class="stats">
+        <div class="stat"><b>1</b><span>call to show any screen or popup</span></div>
+        <div class="stat"><b>10</b><span>tuned animation presets, per element or per call</span></div>
+        <div class="stat"><b>0</b><span>screen managers to write yourself</span></div>
+        <div class="stat"><b>15+</b><span>years of shipping games behind the design</span></div>
+    </div>
+
+    <h3>Built for production</h3>
     <div class="grid grid-4">
         <div class="card"><h4>Ref-counted scenes</h4><p>Scenes are keyed by Addressables GUID and unloaded only when no state on the stack uses them.</p></div>
         <div class="card"><h4>Resilient transitions</h4><p>An exception in your <code>Populate</code> is logged, and the stack is cleaned up anyway.</p></div>
         <div class="card"><h4>Scene contract</h4><p>Every element scene has the same shape, checked and fixed by the editor, so animation always works.</p></div>
         <div class="card"><h4>Tested</h4><p>EditMode tests for the editor tools, PlayMode tests that play the animations frame by frame.</p></div>
+    </div>
+
+    <div class="card author" id="author" style="margin-top: 2.2em">
+        <div class="author-mark" aria-hidden="true">MM</div>
+        <div>
+            <span class="eyebrow">Who made it</span>
+            <h2>Built from 15 years of shipping games</h2>
+            <p>UI Framework is made by <strong>Mohamed Moghazi</strong>, Game Engineer at Electronic Arts, with more than 15 years of professional work on large productions, including:</p>
+            <div class="credits">
+                <span class="pill">Freeletics</span>
+                <span class="pill">XCOM</span>
+                <span class="pill">Angry Birds Evolution</span>
+            </div>
+            <p>Big projects teach the same lesson every time: UI that is loaded, navigated and animated by clear rules is what lets a team keep shipping. This framework puts those rules in your project from the first screen, so an indie team builds like a professional studio and every prototype is production-ready by default. Free for everyone.</p>
+            <p class="fine-print">UI Framework is a personal project, built and maintained independently. It is not affiliated with, sponsored or endorsed by Electronic Arts or any other company named here. Product names are trademarks of their owners and are listed as work history.</p>
+        </div>
     </div>
 
     <div class="next-link"><a class="btn btn-primary" href="#start" data-go="start">Install it in two minutes &rarr;</a></div>
@@ -1454,7 +2017,7 @@ await UiManager.ShowState&lt;MainMenuUiState&gt;(data);</code></pre></div>
     }
     catch (Exception exception)
     {
-        Debug.LogError("[HomeUiElement] Could not open the store: " + exception);
+        Debug.LogError("[MainMenuUiElement] Could not open the store: " + exception);
     }
 }</code></pre></div>
                 </div>
@@ -1473,8 +2036,10 @@ await UiManager.ShowState&lt;MainMenuUiState&gt;(data);</code></pre></div>
                         <li>Open it with data, close it from its buttons:</li>
                     </ol>
                     <div class="code"><div class="code-head"><span>Popup</span><button class="copy">Copy</button></div>
-<pre><code class="language-csharp">ConfirmPurchaseParams purchase = new ConfirmPurchaseParams();
-purchase.ProductId = "neon_blade";
+<pre><code class="language-csharp">// ConfirmPurchaseUiElementParams is generated by "Include Parameters Class".
+ConfirmPurchaseUiElementParams purchase = new ConfirmPurchaseUiElementParams();
+purchase.ItemName = "Neon Blade";
+purchase.Price = 250;
 
 await UiManager.ShowState&lt;ConfirmPurchaseUiState&gt;(purchase, additive: true);
 
@@ -1817,6 +2382,7 @@ await TweenPresets.ShakeLocal(buyButton.transform);  // "no": not enough coins</
     <details><summary>Two fast taps show the wrong screen</summary><p>Calls aren't queued for you. Await each call, or route navigation through one place that queues calls, like the showcase's <code>ShowcaseNavigator</code>.</p></details>
 
     <h2>Questions</h2>
+    <details><summary>Can several people add screens and states at the same time?</summary><p>Yes. Each state is its own <code>UiStateDefinition</code> asset and each element its own scene and script, so parallel branches add different files and merge cleanly. The only shared files, <code>RuntimeUiConfig</code> and the Addressables group, are generated: after a merge, press <em>Build Runtime UiConfig</em> and they are rebuilt from the state definitions. Never resolve them by hand.</p></details>
     <details><summary>Does it work with TextMeshPro, my own components, my art?</summary><p>Yes. The framework only cares about the scene's shape; anything UGUI can draw works inside <code>Root</code>.</p></details>
     <details><summary>Screen Space Overlay or Camera?</summary><p>Both. Pick the default in Global Canvas Settings and per element in the Canvas section. With Camera, assign your UI camera at runtime as scenes load (the showcase's <code>UiCanvasCamera</code> shows how).</p></details>
     <details><summary>Can I load UI scenes from a remote content server?</summary><p>Element scenes are ordinary Addressables, so any Addressables setup works, including remote groups.</p></details>
@@ -1977,6 +2543,1082 @@ await TweenPresets.ShakeLocal(buyButton.transform);  // "no": not enough coins</
             card.querySelector(".hide").textContent = "Hide: " + preset[3];
             grid.appendChild(card);
         });
+    }
+
+    // ---------- Hairline figures: each [data-figure] names the figure to draw ----------
+    // The figures follow the page theme through [data-theme="dark"] in CSS. Offline, the boxes hide.
+    var figures = document.querySelectorAll("[data-figure]");
+    if (figures.length > 0) {
+        var calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        import("https://cdn.jsdelivr.net/npm/@lucasmarkes/hairline@0.5.1/+esm").then(function (hairline) {
+            figures.forEach(function (plate) {
+                var draw = hairline[plate.getAttribute("data-figure")];
+                var readout = plate.closest(".fig").querySelector(".fig-readout");
+                if (typeof draw !== "function") {
+                    return;
+                }
+
+                draw(plate, {
+                    play: !calm,
+                    intensity: 0.9,
+                    onRead: function (text) {
+                        if (readout) {
+                            readout.textContent = text || "–";
+                        }
+                    }
+                });
+            });
+        }).catch(function () {
+            document.documentElement.classList.add("figures-off");
+        });
+    }
+
+    // ---------- Live explainer: the showcase screen in 3D, pulled apart into its element scenes ----------
+    var explainer = document.getElementById("ex-svg");
+    if (explainer) {
+        buildExplainer(explainer);
+    }
+
+    var layerStory = document.getElementById("layers");
+    if (layerStory) {
+        buildLayerStory(layerStory);
+    }
+
+    function buildExplainer(svg) {
+        var ns = "http://www.w3.org/2000/svg";
+        var calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var centreX = 280;
+        var centreY = 388;
+        var labelX = 538;
+        var scale = 1.1;
+        var cos30 = Math.cos(Math.PI / 6);
+        var sin30 = Math.sin(Math.PI / 6);
+        var apartGap = 0.85;
+
+        // The showcase app's palette, a touch brighter for lines on the dark stage.
+        var colours = { purple: "#9d86ff", cyan: "#2ec5ff", gold: "#ffc83d", green: "#34d399", pink: "#ff4f8b" };
+
+        // What a call did to each scene, in words and colour.
+        var kinds = {
+            loaded: { word: "LOADED", text: "loaded and populated", colour: "#34d399" },
+            populated: { word: "RE-POPULATED", text: "kept, populated again", colour: "#ffc83d" },
+            kept: { word: "KEPT", text: "kept, untouched", colour: "#a3a8c7" },
+            unloaded: { word: "UNLOADED", text: "unloaded", colour: "#ff6b6b" }
+        };
+
+        // On a phone the label column is cropped off so the figure fills the width; the caption names the layers.
+        var compact = window.matchMedia("(max-width: 620px)");
+        function fit() {
+            svg.setAttribute("viewBox", compact.matches ? "0 0 560 560" : "0 0 720 560");
+        }
+        fit();
+        compact.addEventListener("change", fit);
+
+        // Glided values ease toward their target; sprung ones overshoot a little and settle, like the presets.
+        function eased(value) {
+            return { v: value, t: value, vel: 0 };
+        }
+
+        var gap = eased(apartGap);
+        var yaw = eased(0);
+        var navX = eased(-60);
+        var hovering = false;
+        var pointerY = 0;
+        var lit = null;
+
+        // Plane coordinates: the screen is 180 x 320 around 0,0, y pointing down the screen; z is height.
+        function project(x, y, z) {
+            var c = Math.cos(yaw.v);
+            var s = Math.sin(yaw.v);
+            var xr = x * c - y * s;
+            var yr = x * s + y * c;
+            return [centreX + (xr - yr) * cos30 * scale, centreY + ((xr + yr) * sin30 - z) * scale];
+        }
+
+        function trace(points, z, dx, close) {
+            var d = "";
+            for (var i = 0; i < points.length; i++) {
+                var p = project(points[i][0] + dx, points[i][1], z);
+                d += (i === 0 ? "M" : "L") + p[0].toFixed(1) + " " + p[1].toFixed(1);
+            }
+            return close ? d + "Z" : d;
+        }
+
+        function traceAll(list, z, dx, close) {
+            var d = "";
+            for (var i = 0; i < list.length; i++) {
+                d += trace(list[i], z, dx, close);
+            }
+            return d;
+        }
+
+        function box(x0, y0, x1, y1, r) {
+            var points = [];
+            var corners = [[x1 - r, y0 + r, -90], [x1 - r, y1 - r, 0], [x0 + r, y1 - r, 90], [x0 + r, y0 + r, 180]];
+            corners.forEach(function (corner) {
+                for (var i = 0; i <= 4; i++) {
+                    var a = (corner[2] + i * 22.5) * Math.PI / 180;
+                    points.push([corner[0] + Math.cos(a) * r, corner[1] + Math.sin(a) * r]);
+                }
+            });
+            return points;
+        }
+
+        function ring(x, y, r) {
+            var points = [];
+            for (var i = 0; i < 20; i++) {
+                var a = i / 20 * Math.PI * 2;
+                points.push([x + Math.cos(a) * r, y + Math.sin(a) * r]);
+            }
+            return points;
+        }
+
+        function star(x, y, outer, inner) {
+            var points = [];
+            for (var i = 0; i < 10; i++) {
+                var a = -Math.PI / 2 + i * Math.PI / 5;
+                var r = i % 2 === 0 ? outer : inner;
+                points.push([x + Math.cos(a) * r, y + Math.sin(a) * r]);
+            }
+            return points;
+        }
+
+        var screenFrame = box(-90, -160, 90, 160, 14);
+        var slab = box(-100, -178, 100, 178, 24);
+
+        // ---- What each element scene looks like, roughly as in the showcase app ----
+        var mainMenu = {
+            body: [box(-80, -112, 80, -30, 10)],
+            lines: [[[-68, -96], [-20, -96]], [[-68, -86], [-4, -86]], [[-68, -76], [-30, -76]]],
+            fills: { gold: [[[30, -92], [38, -104], [46, -94], [54, -106], [62, -94], [70, -104], [70, -84], [30, -84]], box(30, -48, 70, -38, 5)], purple: [], green: [] }
+        };
+        [-20, 20, 60].forEach(function (y) {
+            mainMenu.body.push(box(-80, y, 80, y + 30, 8));
+            mainMenu.fills.purple.push(ring(-66, y + 15, 7));
+            mainMenu.fills.green.push(box(48, y + 9, 72, y + 21, 5));
+            mainMenu.lines.push([[-52, y + 15], [38, y + 15]]);
+        });
+
+        var store = { body: [box(2, -112, 80, -98, 7)], lines: [], fills: { cyan: [box(-80, -112, -2, -98, 7)], gold: [] } };
+        [-80, 4].forEach(function (x) {
+            [-90, -30, 30].forEach(function (y) {
+                store.body.push(box(x, y, x + 76, y + 54, 8), ring(x + 38, y + 22, 11));
+                store.fills.gold.push(box(x + 20, y + 40, x + 56, y + 49, 4));
+            });
+        });
+
+        var topBar = {
+            body: [box(-82, -152, 82, -120, 10), box(16, -143, 48, -129, 7), box(52, -143, 80, -129, 7)],
+            lines: [[[-52, -141], [-14, -141]], [[-52, -132], [-28, -132]]],
+            fills: { purple: [ring(-66, -136, 9)], gold: [ring(24, -136, 4)], cyan: [ring(60, -136, 4)] }
+        };
+
+        var reward = {
+            body: [box(-64, -84, 64, 70, 14)],
+            lines: [[[-34, 6], [34, 6]], [[-22, 18], [22, 18]]],
+            fills: { gold: [star(0, -34, 26, 11)], green: [box(-40, 36, 40, 56, 9)] }
+        };
+        for (var ray = 0; ray < 8; ray++) {
+            var angle = ray * Math.PI / 4 + Math.PI / 8;
+            reward.lines.push([[Math.cos(angle) * 33, -34 + Math.sin(angle) * 33], [Math.cos(angle) * 43, -34 + Math.sin(angle) * 43]]);
+        }
+
+        function navBar() {
+            var shapes = { body: [box(-82, 122, 82, 152, 12)], lines: [], fills: { green: [] } };
+            [-60, -20, 20, 60].forEach(function (x) {
+                shapes.body.push(box(x - 6, 129, x + 6, 141, 3));
+            });
+            shapes.fills.green.push(box(navX.v - 6, 129, navX.v + 6, 141, 3), box(navX.v - 14, 145, navX.v + 14, 149, 2));
+            return shapes;
+        }
+
+        var layers = [
+            {
+                id: "mainmenu", scene: "MainMenuUiElement", level: 1, colour: colours.purple, sub: "screen",
+                about: "The Home screen's own scene. Only <code>MainMenuUiState</code> uses it, so it unloads as soon as you leave Home.",
+                shapes: function () { return mainMenu; }, x: eased(0), a: eased(1)
+            },
+            {
+                id: "store", scene: "StoreUiElement", level: 1, colour: colours.cyan, sub: "screen",
+                about: "The Store screen's own scene. It loads when <code>StoreUiState</code> is shown and unloads when no state on the stack uses it.",
+                shapes: function () { return store; }, x: eased(120), a: eased(0)
+            },
+            {
+                id: "topbar", scene: "TopBarUiElement", level: 2, colour: colours.gold, sub: "shared",
+                about: "Shared by every tab. It stays loaded and on screen while the tabs change; each switch only populates it again with the new data.",
+                shapes: function () { return topBar; }
+            },
+            {
+                id: "navbar", scene: "NavBarUiElement", level: 3, colour: colours.green, sub: "shared",
+                about: "Shared by every tab too. Populating it again is what moves the active tab, without reloading or re-animating it.",
+                shapes: navBar
+            },
+            {
+                id: "reward", scene: "RewardPopupUiElement", level: 4, colour: colours.pink, sub: "popup",
+                about: "The only scene of <code>RewardUiState</code>. It is pushed over the current tab with <code>additive: true</code> and removed with <code>HideUI()</code>.",
+                shapes: function () { return reward; }, a: eased(0), drop: eased(140)
+            }
+        ];
+
+        function make(name, attributes, parent) {
+            var node = document.createElementNS(ns, name);
+            Object.keys(attributes).forEach(function (key) {
+                node.setAttribute(key, attributes[key]);
+            });
+            parent.appendChild(node);
+            return node;
+        }
+
+        function makeLabel(parent, title, subtitle) {
+            var label = { group: make("g", {}, parent) };
+            label.lead = make("path", { "class": "lead" }, label.group);
+            label.title = make("text", { x: labelX }, label.group);
+            label.title.textContent = title;
+            label.subtitle = make("text", { x: labelX, "class": "sub" }, label.group);
+            label.status = make("tspan", { "font-weight": "800" }, label.subtitle);
+            label.rest = make("tspan", {}, label.subtitle);
+            label.rest.textContent = subtitle;
+            return label;
+        }
+
+        function placeLabel(label, anchor, alpha) {
+            label.group.setAttribute("opacity", alpha.toFixed(2));
+            label.lead.setAttribute("d", "M" + (anchor[0] + 8).toFixed(1) + " " + anchor[1].toFixed(1) + "H" + (labelX - 10));
+            label.title.setAttribute("y", (anchor[1] - 1).toFixed(1));
+            label.subtitle.setAttribute("y", (anchor[1] + 14).toFixed(1));
+        }
+
+        var device = make("g", { "class": "device" }, svg);
+        var slabLow = make("path", {}, device);
+        var slabTop = make("path", {}, device);
+        var deviceLines = make("path", { "class": "line" }, device);
+        var deviceLabel = makeLabel(device, "UiManager", "loads · populates · unloads");
+        var guides = make("path", { "class": "guide" }, svg);
+        var rails = [[-90, -160], [90, -160], [90, 160], [-90, 160]];
+
+        layers.forEach(function (layer) {
+            layer.lift = eased(0);
+            layer.pulseAt = -1e9;
+            layer.kind = null;
+            layer.group = make("g", { "class": "layer", style: "--c:" + layer.colour }, svg);
+            layer.pulse = make("path", { "class": "pulse" }, layer.group);
+            layer.frame = make("path", { "class": "frame" }, layer.group);
+            layer.body = make("path", { "class": "body" }, layer.group);
+            layer.fillPaths = {};
+            Object.keys(layer.shapes().fills).forEach(function (key) {
+                layer.fillPaths[key] = make("path", { "class": "fill", style: "fill:" + colours[key] }, layer.group);
+            });
+            layer.lines = make("path", { "class": "line" }, layer.group);
+            layer.label = makeLabel(layer.group, layer.scene, layer.sub);
+        });
+
+        function clamp(value) {
+            return Math.max(0, Math.min(1, value));
+        }
+
+        function alphaOf(layer) {
+            return layer.a ? layer.a.v : 1;
+        }
+
+        function byId(id) {
+            return layers.filter(function (layer) { return layer.id === id; })[0] || null;
+        }
+
+        function byScene(scene) {
+            return layers.filter(function (layer) { return layer.scene === scene; })[0] || null;
+        }
+
+        // ---- The caption on the figure: the current call, or the layer under the pointer ----
+        var caption = document.getElementById("ex-caption");
+        var stepCaption = "";
+        var shownLit = null;
+
+        function layerCaption(layer) {
+            var kind = layer.kind ? kinds[layer.kind] : null;
+            return "<span class=\"ex-kicker\">Element scene</span><strong style=\"color:" + layer.colour + "\">" + layer.scene + "</strong>" +
+                "<p>" + layer.about + "</p>" + (kind ? "<ul><li><i style=\"--c:" + kind.colour + "\"></i>In this step<span class=\"k\" style=\"--k:" + kind.colour + "\">" + kind.text + "</span></li></ul>" : "");
+        }
+
+        function render(now) {
+            var unit = 5 + gap.v * 48;
+            var labelAlpha = compact.matches ? 0 : clamp((gap.v - 0.3) / 0.25);
+
+            slabLow.setAttribute("d", trace(slab, -12, 0, true));
+            slabTop.setAttribute("d", trace(slab, 0, 0, true));
+            deviceLines.setAttribute("d", trace(screenFrame, 0, 0, true) + trace([[-18, -170], [18, -170]], 0, 0, false));
+            var base = project(100, -178, 0);
+            placeLabel(deviceLabel, [base[0], base[1] + 14], labelAlpha);
+
+            // Dashed rails from the device's corners up to the top layer.
+            var guide = "";
+            rails.forEach(function (rail) {
+                var low = project(rail[0], rail[1], 0);
+                var high = project(rail[0], rail[1], 4 * unit);
+                guide += "M" + low[0].toFixed(1) + " " + low[1].toFixed(1) + "L" + high[0].toFixed(1) + " " + high[1].toFixed(1);
+            });
+            guides.setAttribute("d", guide);
+            guides.setAttribute("opacity", clamp((gap.v - 0.15) / 0.3).toFixed(2));
+
+            // The layer under the pointer, picked by the height of its label, while the stack is open.
+            lit = null;
+            if (hovering && gap.v > 0.5) {
+                var nearest = 36;
+                layers.forEach(function (layer) {
+                    if (alphaOf(layer) > 0.5 && Math.abs(layer.labelY - pointerY) < nearest) {
+                        nearest = Math.abs(layer.labelY - pointerY);
+                        lit = layer;
+                    }
+                });
+            }
+            if (lit !== shownLit) {
+                shownLit = lit;
+                caption.innerHTML = lit ? layerCaption(lit) : stepCaption;
+            }
+
+            layers.forEach(function (layer) {
+                var alpha = alphaOf(layer);
+                layer.group.style.display = alpha < 0.01 ? "none" : "";
+                if (alpha < 0.01) {
+                    return;
+                }
+
+                var dx = layer.x ? layer.x.v : 0;
+                var z = layer.level * unit + layer.lift.v + (layer.drop ? layer.drop.v : 0);
+                var shapes = layer.shapes();
+
+                layer.group.setAttribute("opacity", alpha.toFixed(3));
+                layer.group.setAttribute("class", layer === lit ? "layer lit" : "layer");
+                layer.frame.setAttribute("d", trace(screenFrame, z, dx, true));
+                layer.body.setAttribute("d", traceAll(shapes.body, z, dx, true));
+                layer.lines.setAttribute("d", traceAll(shapes.lines, z, dx, false));
+                Object.keys(shapes.fills).forEach(function (key) {
+                    layer.fillPaths[key].setAttribute("d", traceAll(shapes.fills[key], z, dx, true));
+                });
+
+                // A ring that grows and fades when the scene is loaded or populated again.
+                var p = (now - layer.pulseAt) / 900;
+                if (p >= 0 && p < 1) {
+                    var grown = 1 + 0.24 * p;
+                    layer.pulse.style.display = "";
+                    layer.pulse.setAttribute("opacity", (1 - p).toFixed(2));
+                    layer.pulse.setAttribute("d", trace(screenFrame.map(function (q) { return [q[0] * grown, q[1] * grown]; }), z, dx, true));
+                } else {
+                    layer.pulse.style.display = "none";
+                }
+
+                // Labels stay put while a layer lifts under the pointer, so they never run into each other.
+                var anchor = project(90, -160, z - layer.lift.v);
+                layer.labelY = anchor[1];
+                // The two screens share a level, so while they cross only the arriving one keeps its label.
+                placeLabel(layer.label, anchor, labelAlpha * clamp(alpha * 2 - 1));
+            });
+        }
+
+        function glide(value, rate, dt) {
+            value.v += (value.t - value.v) * (calm ? 1 : 1 - Math.exp(-rate * dt));
+        }
+
+        function spring(value, dt) {
+            if (calm) {
+                value.v = value.t;
+                value.vel = 0;
+                return;
+            }
+            value.vel += (value.t - value.v) * 140 * dt;
+            value.vel *= Math.exp(-11 * dt);
+            value.v += value.vel * dt;
+        }
+
+        var last = 0;
+        var running = false;
+
+        function frame(now) {
+            var dt = Math.min(0.05, (now - last) / 1000 || 0);
+            last = now;
+
+            glide(gap, 6, dt);
+            glide(yaw, 5, dt);
+            glide(navX, 9, dt);
+            layers.forEach(function (layer) {
+                layer.lift.t = layer === lit ? 22 : 0;
+                glide(layer.lift, 10, dt);
+                if (layer.a) {
+                    glide(layer.a, 8, dt);
+                }
+                if (layer.x) {
+                    spring(layer.x, dt);
+                }
+                if (layer.drop) {
+                    spring(layer.drop, dt);
+                }
+            });
+
+            render(now);
+            if (running) {
+                requestAnimationFrame(frame);
+            }
+        }
+
+        // Draw only while the explainer is on screen.
+        new IntersectionObserver(function (entries) {
+            var visible = entries[0].isIntersecting;
+            if (visible && !running) {
+                running = true;
+                last = performance.now();
+                requestAnimationFrame(frame);
+            }
+            running = visible;
+        }).observe(svg);
+
+        // The pointer tilts the view a little and picks a layer. A tap keeps its layer until the next tap.
+        function point(event) {
+            var bounds = svg.getBoundingClientRect();
+            hovering = true;
+            pointerY = (event.clientY - bounds.top) / bounds.height * 560;
+            yaw.t = ((event.clientX - bounds.left) / bounds.width - 0.5) * 0.36;
+        }
+
+        svg.addEventListener("pointermove", point);
+        svg.addEventListener("pointerdown", point);
+        svg.addEventListener("pointerleave", function (event) {
+            if (event.pointerType === "touch") {
+                return;
+            }
+            hovering = false;
+            yaw.t = 0;
+        });
+
+        // ---- The calls. Scenes and states match the showcase app (DESIGN.md §14) ----
+        var steps = [
+            {
+                title: "Open the main menu", call: "ShowState&lt;MainMenuUiState&gt;()", kind: "show", screen: "mainmenu", nav: -60, popup: false,
+                stack: ["MainMenuUiState"],
+                scenes: ["MainMenuUiElement", "TopBarUiElement", "NavBarUiElement"],
+                text: "<code>MainMenuUiState</code> is three element scenes: MainMenu, TopBar and NavBar. <code>UiManager</code> loads them through Addressables, hands each one its data with <code>Populate</code> and animates them in together."
+            },
+            {
+                title: "Go to the store", call: "ShowState&lt;StoreUiState&gt;()", kind: "show", screen: "store", nav: -20, popup: false,
+                stack: ["StoreUiState"],
+                scenes: ["StoreUiElement", "TopBarUiElement", "NavBarUiElement"],
+                text: "<code>StoreUiState</code> uses TopBar and NavBar too, so they stay loaded and on screen. They are only populated again, which moves the nav indicator. StoreUiElement slides in while MainMenuUiElement slides out and unloads."
+            },
+            {
+                title: "Push a reward popup", call: "ShowState&lt;RewardUiState&gt;(reward, additive: true)", kind: "push", screen: "store", nav: -20, popup: true,
+                stack: ["StoreUiState", "RewardUiState"],
+                scenes: ["StoreUiElement", "TopBarUiElement", "NavBarUiElement", "RewardPopupUiElement"],
+                text: "<code>additive: true</code> pushes <code>RewardUiState</code> on top of the stack. The store underneath stays loaded and visible, exactly as it was."
+            },
+            {
+                title: "Close the popup", call: "HideUI()", kind: "hide", screen: "store", nav: -20, popup: false,
+                stack: ["StoreUiState"],
+                scenes: ["StoreUiElement", "TopBarUiElement", "NavBarUiElement"],
+                text: "<code>HideUI()</code> pops the popup. It animates out and its scene unloads, because no state on the stack uses it any more. Nothing underneath reloads."
+            }
+        ];
+
+        var stateColours = { MainMenuUiState: colours.purple, StoreUiState: colours.cyan, RewardUiState: colours.pink };
+
+        var buttons = document.querySelectorAll("#ex-steps .ex-step");
+        var narration = document.getElementById("ex-now");
+        var stackChips = document.getElementById("ex-stack");
+        var sceneChips = document.getElementById("ex-scenes");
+        var next = document.getElementById("ex-next");
+        var current = -1;
+
+        function chip(parent, text, className, colour) {
+            var node = document.createElement("span");
+            node.className = "ex-chip" + (className ? " " + className : "");
+            node.style.setProperty("--c", colour);
+            node.textContent = text;
+            parent.appendChild(node);
+        }
+
+        // What happened to each scene: new ones load, ones a non-additive switch keeps are populated again,
+        // ones a push or a pop keeps are untouched, and ones nothing uses any more unload.
+        function changesFor(before, step) {
+            var changes = [];
+            step.scenes.forEach(function (scene) {
+                var kind = before.indexOf(scene) < 0 ? "loaded" : step.kind === "show" ? "populated" : "kept";
+                changes.push({ scene: scene, kind: kind });
+            });
+            before.forEach(function (scene) {
+                if (step.scenes.indexOf(scene) < 0) {
+                    changes.push({ scene: scene, kind: "unloaded" });
+                }
+            });
+            return changes;
+        }
+
+        function run(index) {
+            var step = steps[index];
+            var before = current < 0 ? [] : steps[current].scenes;
+            var changes = changesFor(before, step);
+            var now = performance.now();
+            current = index;
+
+            layers.forEach(function (layer) {
+                layer.kind = null;
+            });
+            changes.forEach(function (change) {
+                var layer = byScene(change.scene);
+                layer.kind = change.kind;
+                if (change.kind === "loaded" || change.kind === "populated") {
+                    layer.pulseAt = now + (change.kind === "loaded" ? 180 : 60);
+                }
+            });
+
+            layers.forEach(function (layer) {
+                if (!layer.x) {
+                    return;
+                }
+                if (layer.id === step.screen) {
+                    if (layer.a.t === 0) {
+                        layer.x.v = 120;
+                        layer.x.vel = 0;
+                    }
+                    layer.x.t = 0;
+                    layer.a.t = 1;
+                } else if (layer.a.t === 1) {
+                    layer.x.t = -120;
+                    layer.a.t = 0;
+                }
+            });
+
+            var popup = byId("reward");
+            if (step.popup && popup.a.t === 0) {
+                popup.a.t = 1;
+                popup.drop.v = 140;
+                popup.drop.vel = 0;
+                popup.drop.t = 0;
+            } else if (!step.popup && popup.a.t === 1) {
+                popup.a.t = 0;
+                popup.drop.t = 140;
+            }
+            navX.t = step.nav;
+
+            // Status words on the layer labels.
+            layers.forEach(function (layer) {
+                var kind = layer.kind ? kinds[layer.kind] : null;
+                layer.label.status.textContent = kind ? kind.word + " · " : "";
+                layer.label.status.setAttribute("fill", kind ? kind.colour : "#a3a8c7");
+            });
+
+            stepCaption = "<span class=\"ex-kicker\">Step " + (index + 1) + " of " + steps.length + "</span><strong>" + step.title + "</strong><code>" + step.call + "</code><ul>" +
+                changes.map(function (change) {
+                    var kind = kinds[change.kind];
+                    return "<li><i style=\"--c:" + byScene(change.scene).colour + "\"></i>" + change.scene + "<span class=\"k\" style=\"--k:" + kind.colour + "\">" + kind.text + "</span></li>";
+                }).join("") + "</ul>";
+            shownLit = undefined;
+
+            var following = steps[(index + 1) % steps.length];
+            next.innerHTML = index === steps.length - 1 ? "Start again ↺" : "Next: " + following.title + " →";
+
+            buttons.forEach(function (button, i) {
+                button.setAttribute("aria-pressed", i === index ? "true" : "false");
+            });
+            narration.innerHTML = step.text;
+
+            stackChips.innerHTML = "";
+            step.stack.forEach(function (state, i) {
+                if (i > 0) {
+                    var sep = document.createElement("span");
+                    sep.className = "ex-sep";
+                    sep.textContent = "▸";
+                    stackChips.appendChild(sep);
+                }
+                chip(stackChips, state, i === step.stack.length - 1 ? "top" : "", stateColours[state]);
+            });
+
+            sceneChips.innerHTML = "";
+            changes.forEach(function (change) {
+                chip(sceneChips, change.scene, change.kind === "loaded" && before.length > 0 ? "new" : change.kind === "unloaded" ? "gone" : "", byScene(change.scene).colour);
+            });
+
+            if (!running) {
+                caption.innerHTML = stepCaption;
+                shownLit = null;
+            }
+        }
+
+        buttons.forEach(function (button) {
+            button.addEventListener("click", function () {
+                run(Number(button.getAttribute("data-step")));
+            });
+        });
+
+        next.addEventListener("click", function () {
+            run((current + 1) % steps.length);
+        });
+
+        document.querySelectorAll(".ex-bar [data-view]").forEach(function (button) {
+            button.addEventListener("click", function () {
+                var apart = button.getAttribute("data-view") === "apart";
+                gap.t = apart ? apartGap : 0;
+                document.querySelectorAll(".ex-bar [data-view]").forEach(function (other) {
+                    other.setAttribute("aria-pressed", other === button ? "true" : "false");
+                });
+            });
+        });
+
+        run(0);
+    }
+
+    // ---------- Layer story: scrolling lifts each piece out of one tangled layer into its own layer ----------
+    function buildLayerStory(section) {
+        var ns = "http://www.w3.org/2000/svg";
+        var svg = section.querySelector(".ls-svg");
+        var stepBlocks = section.querySelectorAll(".ls-step");
+        var calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var plateX = 190;
+        var plateY = 116;
+        var layerGap = 96;
+        var plateHeight = 12;
+        var tileHeight = 18;
+        var tileDepth = 40;
+        var cos30 = Math.cos(Math.PI / 6);
+        var sin30 = Math.sin(Math.PI / 6);
+
+        // World to drawing. The camera (the viewBox) frames whatever is on screen, so there is no fixed origin.
+        function project(x, y, z) {
+            return [(x - y) * cos30, (x + y) * sin30 - z];
+        }
+
+        var labelX = project(plateX, -plateY, 0)[0] + 44;
+
+        function pathOf(points, close) {
+            var d = "";
+            points.forEach(function (point, i) {
+                var p = project(point[0], point[1], point[2]);
+                d += (i === 0 ? "M" : "L") + p[0].toFixed(1) + " " + p[1].toFixed(1);
+            });
+            return close ? d + "Z" : d;
+        }
+
+        function make(name, attributes, parent) {
+            var node = document.createElementNS(ns, name);
+            Object.keys(attributes).forEach(function (key) {
+                node.setAttribute(key, attributes[key]);
+            });
+            parent.appendChild(node);
+            return node;
+        }
+
+        // A box seen from above: its top, and the two sides that face the reader.
+        function makeBox(parent, colour, className) {
+            var group = make("g", { "class": className || "", style: "--ls-c:" + colour }, parent);
+            return {
+                group: group,
+                left: make("path", { "class": "side" }, group),
+                right: make("path", { "class": "side" }, group),
+                top: make("path", { "class": "top" }, group)
+            };
+        }
+
+        function placeBox(box, x0, y0, x1, y1, top, height) {
+            var bottom = top - height;
+            box.left.setAttribute("d", pathOf([[x0, y1, top], [x1, y1, top], [x1, y1, bottom], [x0, y1, bottom]], true));
+            box.right.setAttribute("d", pathOf([[x1, y0, top], [x1, y1, top], [x1, y1, bottom], [x1, y0, bottom]], true));
+            box.top.setAttribute("d", pathOf([[x0, y0, top], [x1, y0, top], [x1, y1, top], [x0, y1, top]], true));
+        }
+
+        function makeLabel(parent) {
+            var group = make("g", { "class": "label" }, parent);
+            return {
+                group: group,
+                lead: make("path", { "class": "lead" }, group),
+                name: make("text", { "class": "layer-name", x: labelX }, group),
+                sub: make("text", { "class": "layer-sub", x: labelX }, group)
+            };
+        }
+
+        function placeLabel(label, z) {
+            var anchor = project(plateX, -plateY, z);
+            label.lead.setAttribute("d", "M" + (anchor[0] + 10).toFixed(1) + " " + anchor[1].toFixed(1) + "H" + (labelX - 12).toFixed(1));
+            label.name.setAttribute("y", (anchor[1] - 2).toFixed(1));
+            label.sub.setAttribute("y", (anchor[1] + 17).toFixed(1));
+        }
+
+        function colour(name) {
+            return "var(--ls-" + name + ")";
+        }
+
+        function clamp(value) {
+            return Math.max(0, Math.min(1, value));
+        }
+
+        function smooth(t) {
+            return t * t * (3 - 2 * t);
+        }
+
+        function lerp(a, b, t) {
+            return a + (b - a) * t;
+        }
+
+        // A colour part way from one to another, so a piece changes colour with the scroll, not after it.
+        function blend(from, to, t) {
+            if (t <= 0) {
+                return from;
+            }
+            if (t >= 1) {
+                return to;
+            }
+            return "color-mix(in srgb, " + to + " " + Math.round(t * 100) + "%, " + from + ")";
+        }
+
+        // ---- The layers, bottom to top. Step k of the story lifts out the pieces of layer 5 - k. ----
+        var layers = [
+            { name: "Backend", sub: "server · saves", colour: colour("backend") },
+            { name: "Game systems", sub: "economy · audio", colour: colour("systems") },
+            { name: "Your app", sub: "ShowState / HideUI", colour: colour("app") },
+            { name: "UiManager", sub: "one door to the UI", colour: colour("framework") },
+            { name: "UI scenes", sub: "screens · popups", colour: colour("ui") }
+        ];
+
+        function stepOf(layer) {
+            return 5 - layer;
+        }
+
+        // ---- Every piece: where it sits in the tangle, and the layer it ends up on ----
+        var tiles = {
+            home: { from: ["Home", -126, -70, colour("home")], to: ["Home", 4, -129, 0, 78, colour("home")] },
+            store: { from: ["Store", -38, -76, colour("store")], to: ["Store", 4, -43, 0, 78, colour("store")] },
+            profile: { from: ["Profile", 52, -64, colour("profile")], to: ["Profile", 4, 43, 0, 78, colour("profile")] },
+            reward: { from: ["Reward", 134, -72, colour("reward")], to: ["Reward", 4, 129, 0, 78, colour("reward")] },
+            ui: { from: ["UIManager", -2, -2, colour("red")], to: ["UiManager", 3, 0, 0, 136, colour("framework")] },
+            popup: { from: ["PopupManager", 120, 6, colour("red")], to: ["", 3, 0, 0, 136, colour("framework")], merges: true },
+            game: { from: ["GameManager", -120, 4, colour("red")], to: ["Navigator", 2, 0, 0, 136, colour("app")] },
+            economy: { from: ["EconomyManager", -110, 72, colour("red")], to: ["Economy", 1, -78, 0, 116, colour("systems")] },
+            audio: { from: ["AudioManager", 8, 68, colour("red")], to: ["Audio", 1, 78, 0, 116, colour("systems")] },
+            backend: { from: ["BackendClient", 124, 74, colour("red")], to: ["Backend", 0, 0, 0, 132, colour("backend")] }
+        };
+
+        var tangleLinks = [["home", "game"], ["home", "ui"], ["home", "economy"], ["home", "backend"], ["home", "store"],
+            ["store", "economy"], ["store", "backend"], ["store", "popup"], ["store", "audio"], ["store", "game"],
+            ["profile", "backend"], ["profile", "game"], ["profile", "ui"],
+            ["reward", "economy"], ["reward", "popup"], ["reward", "audio"], ["reward", "home"],
+            ["game", "ui"], ["popup", "ui"], ["economy", "backend"], ["game", "backend"], ["game", "audio"]];
+
+        // The clean connections between neighbouring layers, drawn once both ends are in place.
+        var wires = [["ui", "home"], ["ui", "store", "Populate(params)"], ["ui", "profile"], ["ui", "reward"],
+            ["game", "ui", "ShowState / HideUI"], ["game", "economy"], ["game", "audio"], ["economy", "backend"]];
+
+        // ---- Build the drawing once, back to front ----
+        var layerNodes = layers.map(function () {
+            return {};
+        });
+
+        layerNodes[0].plate = makeBox(svg, colour("red"), "plate");
+        layerNodes[0].label = makeLabel(layerNodes[0].plate.group);
+        var linkGroup = make("g", {}, svg);
+        var linkPaths = tangleLinks.map(function () {
+            return make("path", { "class": "tangle" }, linkGroup);
+        });
+
+        layers.forEach(function (layer, index) {
+            var nodes = layerNodes[index];
+            if (index > 0) {
+                nodes.wireGroup = make("g", { style: "--ls-c:" + layer.colour }, svg);
+                nodes.plate = makeBox(svg, layer.colour, "plate");
+                nodes.label = makeLabel(nodes.plate.group);
+            }
+            nodes.tileGroup = make("g", {}, svg);
+        });
+
+        Object.keys(tiles).forEach(function (key, i) {
+            var tile = tiles[key];
+            tile.layer = tile.to[1];
+            tile.phase = i * 1.7;
+            tile.landedAt = 0;
+            tile.box = makeBox(layerNodes[tile.layer].tileGroup, tile.from[3], "tile");
+            tile.ring = make("path", { "class": "ring" }, tile.box.group);
+            tile.text = make("text", { "class": "tile-text" }, tile.box.group);
+        });
+
+        // Wire labels sit above everything so no piece hides them.
+        var wireTextGroup = make("g", {}, svg);
+        wires.forEach(function (wire) {
+            var upper = Math.max(tiles[wire[0]].layer, tiles[wire[1]].layer);
+            wire.path = make("path", { "class": "wire" }, layerNodes[upper].wireGroup);
+            if (wire[2]) {
+                wire.text = make("text", { "class": "wire-text" }, wireTextGroup);
+                wire.text.textContent = wire[2];
+            }
+        });
+
+        var routePath = make("path", { "class": "route" }, svg);
+        var dot = make("circle", { "class": "ls-dot", r: 8 }, svg);
+        var dotText = make("text", { "class": "dot-text" }, svg);
+
+        // ---- Scroll position to story position: f = i + 0.5 when step i's middle sits at the anchor line ----
+        function storyPosition() {
+            var anchor = window.innerHeight * (window.innerWidth <= 900 ? 0.78 : 0.55);
+            var centres = Array.prototype.map.call(stepBlocks, function (block) {
+                var bounds = block.getBoundingClientRect();
+                return bounds.top + bounds.height / 2;
+            });
+            var last = centres.length - 1;
+            var spacing = centres[1] - centres[0];
+            if (anchor < centres[0]) {
+                return Math.max(0, 0.5 - (centres[0] - anchor) / spacing);
+            }
+            for (var i = 0; i < last; i++) {
+                if (anchor < centres[i + 1]) {
+                    return i + 0.5 + (anchor - centres[i]) / (centres[i + 1] - centres[i]);
+                }
+            }
+            return Math.min(centres.length, last + 0.5 + (anchor - centres[last]) / spacing);
+        }
+
+        var story = 0;
+
+        // How far layer k's pieces have travelled, 0 in the tangle to 1 in place.
+        function progressOf(layer) {
+            return smooth(clamp((story - stepOf(layer) + 0.35) / 0.7));
+        }
+
+        // Plates drop in from above, and the layer the text is about lifts a little.
+        function plateZ(index, activeLayer) {
+            var p = index === 0 ? 1 : progressOf(index);
+            return index * layerGap + (1 - p) * 80 + (index === activeLayer ? 14 : 0);
+        }
+
+        // ---- The camera: a viewBox that frames what is on screen, so the drawing always fills the stage ----
+        function grow(box, x, y) {
+            box[0] = Math.min(box[0], x);
+            box[1] = Math.min(box[1], y);
+            box[2] = Math.max(box[2], x);
+            box[3] = Math.max(box[3], y);
+        }
+
+        function plateBox(z, label) {
+            var box = [Infinity, Infinity, -Infinity, -Infinity];
+            [[-plateX, -plateY], [plateX, -plateY], [plateX, plateY], [-plateX, plateY]].forEach(function (corner) {
+                var top = project(corner[0], corner[1], z);
+                var bottom = project(corner[0], corner[1], z - plateHeight);
+                grow(box, top[0], top[1]);
+                grow(box, bottom[0], bottom[1]);
+            });
+            // The label is measured, so the frame fits it at whatever size the text is drawn.
+            if (label) {
+                var text = label.group.getBBox();
+                grow(box, text.x + text.width + 8, text.y - 6);
+                grow(box, text.x + text.width + 8, text.y + text.height + 6);
+            }
+            return box;
+        }
+
+        function frameCamera(activeLayer) {
+            var box = plateBox(plateZ(0, activeLayer), layerNodes[0].label);
+            Object.keys(tiles).forEach(function (key) {
+                var tile = tiles[key];
+                var at = project(tile.restX, tile.restY, tile.restZ + tileHeight);
+                grow(box, at[0] - 70, at[1] - 40);
+                grow(box, at[0] + 70, at[1] + 30);
+            });
+            for (var index = 1; index < layers.length; index++) {
+                var p = progressOf(index);
+                if (p <= 0) {
+                    continue;
+                }
+                var other = plateBox(plateZ(index, activeLayer), layerNodes[index].label);
+                box = [lerp(box[0], Math.min(box[0], other[0]), p), lerp(box[1], Math.min(box[1], other[1]), p),
+                    lerp(box[2], Math.max(box[2], other[2]), p), lerp(box[3], Math.max(box[3], other[3]), p)];
+            }
+
+            var pad = 28;
+            var x = box[0] - pad;
+            var y = box[1] - pad;
+            var w = box[2] - box[0] + pad * 2;
+            var h = box[3] - box[1] + pad * 2;
+            var bounds = svg.getBoundingClientRect();
+            var aspect = bounds.width > 0 && bounds.height > 0 ? bounds.width / bounds.height : 1.2;
+            if (w / h < aspect) {
+                x -= (h * aspect - w) / 2;
+                w = h * aspect;
+            } else {
+                y -= (w / aspect - h) / 2;
+                h = w / aspect;
+            }
+            svg.setAttribute("viewBox", x.toFixed(1) + " " + y.toFixed(1) + " " + w.toFixed(1) + " " + h.toFixed(1));
+        }
+
+        function render(now) {
+            var active = Math.max(0, Math.min(stepBlocks.length - 1, Math.floor(story)));
+            var activeLayer = active === 0 ? -1 : 5 - active;
+            var alive = !calm;
+
+            // Where every piece is right now: jittering in the tangle, rising in an arc, or landed on its layer.
+            Object.keys(tiles).forEach(function (key) {
+                var tile = tiles[key];
+                var p = progressOf(tile.layer);
+                tile.p = p;
+                tile.x = lerp(tile.from[1], tile.to[2], p);
+                tile.y = lerp(tile.from[2], tile.to[3], p);
+                tile.z = lerp(0, plateZ(tile.layer, activeLayer), p) + Math.sin(Math.PI * p) * 60;
+                tile.width = lerp(84, tile.to[4], p);
+                // The camera frames the resting position, so the jitter never shakes the view.
+                tile.restX = tile.x;
+                tile.restY = tile.y;
+                tile.restZ = tile.z;
+                if (alive && p <= 0) {
+                    tile.x += Math.sin(now / 170 + tile.phase) * 1.6;
+                    tile.z += 3 + Math.sin(now / 230 + tile.phase) * 3;
+                }
+
+                if (p >= 1 && !tile.landedAt) {
+                    tile.landedAt = now;
+                } else if (p < 0.95) {
+                    tile.landedAt = 0;
+                }
+
+                tile.box.group.style.setProperty("--ls-c", blend(tile.from[3], tile.to[5], p));
+                tile.box.group.setAttribute("class", "tile" + (tile.layer === activeLayer ? " now" : ""));
+                tile.box.group.setAttribute("opacity", tile.merges ? (1 - p).toFixed(2) : "1");
+                tile.box.group.style.display = tile.merges && p >= 1 ? "none" : "";
+                tile.text.textContent = p > 0.5 ? tile.to[0] : tile.from[0];
+
+                var w = tile.width / 2;
+                var d = tileDepth / 2;
+                placeBox(tile.box, tile.x - w, tile.y - d, tile.x + w, tile.y + d, tile.z + tileHeight, tileHeight);
+                var at = project(tile.x, tile.y, tile.z + tileHeight);
+                tile.text.setAttribute("x", at[0].toFixed(1));
+                tile.text.setAttribute("y", (at[1] + 5).toFixed(1));
+
+                // A ripple spreads across the plate where a piece lands.
+                var q = tile.landedAt && alive ? (now - tile.landedAt) / 900 : 1;
+                if (q < 1) {
+                    var spread = 1 + q * 1.4;
+                    tile.ring.style.display = "";
+                    tile.ring.setAttribute("opacity", (1 - q).toFixed(2));
+                    tile.ring.setAttribute("d", pathOf([[tile.x - w * spread, tile.y - d * spread, tile.z], [tile.x + w * spread, tile.y - d * spread, tile.z],
+                        [tile.x + w * spread, tile.y + d * spread, tile.z], [tile.x - w * spread, tile.y + d * spread, tile.z]], true));
+                } else {
+                    tile.ring.style.display = "none";
+                }
+            });
+
+            // The tangle: a red line disappears as soon as either of its ends is lifted out.
+            var remaining = 0;
+            tangleLinks.forEach(function (pair, i) {
+                var a = tiles[pair[0]];
+                var b = tiles[pair[1]];
+                var gone = Math.max(a.p, b.p);
+                if (gone < 0.5) {
+                    remaining++;
+                }
+                linkPaths[i].style.display = gone >= 1 ? "none" : "";
+                linkPaths[i].setAttribute("opacity", (0.85 * (1 - gone)).toFixed(2));
+                var p0 = project(a.x, a.y, a.z + tileHeight);
+                var p2 = project(b.x, b.y, b.z + tileHeight);
+                var c = project((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2 + tileHeight + 52);
+                linkPaths[i].setAttribute("d", "M" + p0[0].toFixed(1) + " " + p0[1].toFixed(1) + "Q" + c[0].toFixed(1) + " " + c[1].toFixed(1) + " " + p2[0].toFixed(1) + " " + p2[1].toFixed(1));
+            });
+
+            // The plates: the bottom one is the tangle until the last step makes it the backend.
+            layers.forEach(function (layer, index) {
+                var nodes = layerNodes[index];
+                var p = index === 0 ? 1 : progressOf(index);
+                var z = plateZ(index, activeLayer);
+                var isBackend = index > 0 || progressOf(0) > 0.5;
+                nodes.plate.group.style.display = p <= 0 ? "none" : "";
+                nodes.plate.group.setAttribute("opacity", p.toFixed(2));
+                nodes.plate.group.setAttribute("class", "plate" + (index === activeLayer ? " now" : ""));
+                if (index === 0) {
+                    nodes.plate.group.style.setProperty("--ls-c", blend(colour("red"), layer.colour, progressOf(0)));
+                }
+                placeBox(nodes.plate, -plateX, -plateY, plateX, plateY, z, plateHeight);
+                nodes.label.name.textContent = isBackend ? layer.name : "One layer";
+                nodes.label.sub.textContent = isBackend ? layer.sub : remaining + " tangled links";
+                placeLabel(nodes.label, z);
+            });
+
+            // Clean connections between neighbouring layers.
+            wires.forEach(function (wire) {
+                var a = tiles[wire[0]];
+                var b = tiles[wire[1]];
+                var low = a.z <= b.z ? a : b;
+                var high = a.z <= b.z ? b : a;
+                var alpha = Math.min(a.p, b.p);
+                wire.path.style.display = alpha <= 0 ? "none" : "";
+                wire.path.setAttribute("opacity", alpha.toFixed(2));
+                wire.path.setAttribute("d", pathOf([[low.x, low.y, low.z + tileHeight], [high.x, high.y, high.z - plateHeight]], false));
+                if (wire.text) {
+                    var mid = project((low.x + high.x) / 2, (low.y + high.y) / 2, (low.z + tileHeight + high.z - plateHeight) / 2);
+                    wire.text.setAttribute("x", (mid[0] + 10).toFixed(1));
+                    wire.text.setAttribute("y", (mid[1] + 4).toFixed(1));
+                    wire.text.setAttribute("opacity", clamp(alpha * 2 - 1).toFixed(2));
+                }
+            });
+
+            // Once everything is in place, a Buy tap travels down to the game and the reward comes back up.
+            var done = progressOf(0) >= 0.98;
+            routePath.style.display = done ? "" : "none";
+            dot.style.display = done && alive ? "" : "none";
+            dotText.style.display = done && alive ? "" : "none";
+            if (done) {
+                var stops = ["store", "game", "economy", "backend", "economy", "game", "ui", "reward"].map(function (key) {
+                    var tile = tiles[key];
+                    return [tile.x, tile.y, tile.z + tileHeight];
+                });
+                routePath.setAttribute("d", pathOf(stops, false));
+                if (alive) {
+                    var t = (now / 5200) % 1 * (stops.length - 1);
+                    var leg = Math.floor(t);
+                    var from = stops[leg];
+                    var to = stops[Math.min(stops.length - 1, leg + 1)];
+                    var u = smooth(t - leg);
+                    var point = project(lerp(from[0], to[0], u), lerp(from[1], to[1], u), lerp(from[2], to[2], u));
+                    dot.setAttribute("cx", point[0].toFixed(1));
+                    dot.setAttribute("cy", point[1].toFixed(1));
+                    dotText.textContent = leg < 3 ? "Buy tap \u2193" : "Reward \u2191";
+                    dotText.setAttribute("x", (point[0] + 14).toFixed(1));
+                    dotText.setAttribute("y", (point[1] - 10).toFixed(1));
+                }
+            }
+
+            frameCamera(activeLayer);
+
+            stepBlocks.forEach(function (block, i) {
+                block.classList.toggle("on", i === active);
+            });
+        }
+
+        // Scroll moves the story; the tangle's jitter, the ripples and the tap keep their own clock on screen.
+        var visible = false;
+        var queued = false;
+
+        function frame(now) {
+            queued = false;
+            story = storyPosition();
+            render(now);
+            if (visible && !calm) {
+                queue();
+            }
+        }
+
+        function queue() {
+            if (!queued) {
+                queued = true;
+                requestAnimationFrame(frame);
+            }
+        }
+
+        new IntersectionObserver(function (entries) {
+            visible = entries[0].isIntersecting;
+            if (visible) {
+                queue();
+            }
+        }).observe(section);
+
+        window.addEventListener("scroll", function () {
+            if (visible) {
+                queue();
+            }
+        }, { passive: true });
+        window.addEventListener("resize", queue);
+
+        story = storyPosition();
+        render(performance.now());
     }
 
     // ---------- Light / dark ----------
