@@ -6,6 +6,12 @@
 
 Open `docs/index.html` in a browser. Screenshots load from `docs/images/`; code highlighting and fonts load from the internet, and the page still reads fine offline.
 
+YouTube does not play embedded videos on a page opened from disk (`file://`), because the page sends no referrer. There each video slot shows its thumbnail and links to YouTube instead. To see the players as they appear on the site, serve the folder and open `http://localhost:8080`:
+
+```bash
+npx serve docs -l 8080
+```
+
 ## Publish with GitHub Pages
 
 Repository **Settings → Pages → Build and deployment → Deploy from a branch**, branch `main`, folder `/docs`. The site is then served at `https://dawaniyah-games.github.io/UiFramework/`.
@@ -52,7 +58,7 @@ Each tutorial step has a video slot, and the "Video series" list at the top of t
 
 The Showcase tab has one more slot (`data-title="The showcase app in the Unity editor"`) for the showcase video.
 
-The slot turns into an embedded player (privacy-enhanced `youtube-nocookie.com`), and the step shows "Watch" in the list. The large slot at the top of the Tutorial tab is for a full walkthrough.
+The slot turns into an embedded player (privacy-enhanced `youtube-nocookie.com`), and the step shows "Watch" in the list. Opened from a file, it shows the video's thumbnail with a "Watch on YouTube" link instead (see [Preview](#preview)). The large slot at the top of the Tutorial tab is for a full walkthrough.
 
 Planned episodes, in order (one per tutorial step):
 
