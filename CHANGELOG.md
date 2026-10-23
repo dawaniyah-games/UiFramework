@@ -7,14 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.2] - 2026-10-23
+
+### Fixed
+- Docs: the tutorial step videos play at full 16:9 size instead of in a 120 px strip
+- Docs: opened from disk (`file://`), where YouTube refuses to play embeds, each video shows its thumbnail and a "Watch on YouTube" link instead of the player's error. Served over http(s) the videos play on the page as before
+
 ## [1.3.1] - 2026-10-23
 
 ### Fixed
 - Creating an element no longer brings up Unity's "Open scene(s) modified externally" dialog: the script is attached and the scene saved after the script reload has finished, not inside it
 - The Elements tab shows a new element as ready (✓) as soon as its script is attached, without pressing *Refresh*
 - The Elements tab reads its scenes again when Play Mode ends, instead of showing them as unavailable until *Refresh*
-- Docs: the tutorial step videos play at full 16:9 size instead of in a 120 px strip
-- Docs: opened from disk (`file://`), where YouTube refuses to play embeds, each video shows its thumbnail and a "Watch on YouTube" link instead of the player's error. Served over http(s) the videos play on the page as before
 
 ### Changed
 - Docs: the tutorial, step and showcase video slots now point at the published videos
