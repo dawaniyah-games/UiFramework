@@ -1,0 +1,33 @@
+name: Update website docs
+
+# Rebuilds dawaniyahgames.com so /uiframework/ shows the latest docs.
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/index.html'
+      - 'docs/images/**'
+  workflow_dispatch:
+
+# The dispatch uses WEBSITE_DISPATCH_TOKEN, so the job needs nothing from GITHUB_TOKEN.
+permissions: {}
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger website deploy
+        env:
+          GH_TOKEN: ${{ secrets.WEBSITE_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            # A manual run is a deliberate redeploy, so fail it instead of passing without doing anything.
+            if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+              echo "::error::WEBSITE_DISPATCH_TOKEN is not set; cannot trigger the website rebuild."
+              exit 1
+            fi
+            echo "::warning::WEBSITE_DISPATCH_TOKEN is not set; skipping website rebuild."
+            exit 0
+          fi
+          gh api --method POST repos/dawaniyah-games/Dawaniyah-Games-Website/dispatches \
+            -f event_type=uiframework-docs-updated

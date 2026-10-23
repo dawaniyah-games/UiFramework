@@ -6,15 +6,13 @@
 
 Open `docs/index.html` in a browser. Screenshots load from `docs/images/`; code highlighting and fonts load from the internet, and the page still reads fine offline.
 
-YouTube does not play embedded videos on a page opened from disk (`file://`), because the page sends no referrer. There a click on a video opens it on YouTube instead of in the popup player. To see the videos as they play on the site, serve the folder and open `http://localhost:8080`:
+## Publishing
 
-```bash
-npx serve docs -l 8080
-```
+The docs site is live at [https://dawaniyahgames.com/uiframework/](https://dawaniyahgames.com/uiframework/). The website repo ([Dawaniyah-Games-Website](https://github.com/dawaniyah-games/Dawaniyah-Games-Website)) copies `docs/` from this repo's `main` branch every time it deploys.
 
-## Publish with GitHub Pages
+Merging a change to `docs/index.html` or `docs/images/` into `main` redeploys the website automatically. The **Update website docs** workflow (`.github/workflows/notify-website-docs.yml`) sends a `uiframework-docs-updated` repository dispatch to the website repo, which starts its deploy. Docs changes reach `main` with a release ([CONTRIBUTING.md](../CONTRIBUTING.md)), so the site updates when a release is merged.
 
-Repository **Settings → Pages → Build and deployment → Deploy from a branch**, branch `main`, folder `/docs`. The site is then served at `https://dawaniyah-games.github.io/UiFramework/`.
+The dispatch uses the `WEBSITE_DISPATCH_TOKEN` repository secret: a fine-grained token with access only to Dawaniyah-Games-Website and the **Contents: Read and write** permission. Without it, pushes to `main` skip the rebuild with a warning. To redeploy by hand (for example after rotating the token), run **Update website docs** from the Actions tab; a manual run fails if the secret is missing.
 
 ## Screenshots
 
