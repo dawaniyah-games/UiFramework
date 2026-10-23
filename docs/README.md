@@ -6,7 +6,7 @@
 
 Open `docs/index.html` in a browser. Screenshots load from `docs/images/`; code highlighting and fonts load from the internet, and the page still reads fine offline.
 
-YouTube does not play embedded videos on a page opened from disk (`file://`), because the page sends no referrer. There each video slot shows its thumbnail and links to YouTube instead. To see the players as they appear on the site, serve the folder and open `http://localhost:8080`:
+YouTube does not play embedded videos on a page opened from disk (`file://`), because the page sends no referrer. There a click on a video opens it on YouTube instead of in the popup player. To see the videos as they play on the site, serve the folder and open `http://localhost:8080`:
 
 ```bash
 npx serve docs -l 8080
@@ -56,9 +56,9 @@ Each tutorial step has a video slot, and the "Video series" list at the top of t
 <div class="video compact" data-video-id="dQw4w9WgXcQ" data-title="Step 2: Create your first element" data-length="2 min"></div>
 ```
 
-The Showcase tab has one more slot (`data-title="The showcase app in the Unity editor"`) for the showcase video.
+Two larger slots hold the showcase video (`hpVuNT5nFos`): "Start here" at the top of the Tutorial tab, as the intro, and "See it in motion" on the Showcase tab. There is no full-length walkthrough video; every video stays short.
 
-The slot turns into an embedded player (privacy-enhanced `youtube-nocookie.com`), and the step shows "Watch" in the list. Opened from a file, it shows the video's thumbnail with a "Watch on YouTube" link instead (see [Preview](#preview)). The large slot at the top of the Tutorial tab is for a full walkthrough.
+A slot with an id shows the video's YouTube thumbnail, title and length, and the step shows "Watch" in the list. Clicking either opens the video in a popup player (privacy-enhanced `youtube-nocookie.com`) that starts playing right away; Esc, the close button or a click outside closes it and stops the sound. Nothing loads from YouTube until a video is opened. Opened from a file, a click opens the video on YouTube instead (see [Preview](#preview)).
 
 Planned episodes, in order (one per tutorial step):
 

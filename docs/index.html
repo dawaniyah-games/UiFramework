@@ -478,7 +478,6 @@ figcaption { color: var(--text-dim); font-size: 0.88rem; margin-top: 8px; }
     color: #fff;
 }
 
-.video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
 .video-soon { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 20px; }
 
@@ -498,18 +497,51 @@ figcaption { color: var(--text-dim); font-size: 0.88rem; margin-top: 8px; }
 .video-soon span { color: #c9cdf0; font-size: 0.88rem; }
 
 .video.compact { aspect-ratio: auto; min-height: 120px; }
-.video.compact:has(iframe) { aspect-ratio: 16 / 9; }
+.video.compact:has(.video-link) { aspect-ratio: 16 / 9; }
 .video.compact .video-soon { position: relative; padding: 18px; }
+.video.compact .video-link { position: absolute; }
 .video.compact .video-soon .play { width: 44px; height: 44px; margin-bottom: 8px; }
 
-/* Opened from a file, a video slot links to YouTube over the video's thumbnail. */
+/* A published video shows its thumbnail; clicking it opens the player in a popup (or YouTube, from a file). */
 .video-link { background: center / cover no-repeat; color: #fff; font-weight: inherit; }
-.video-link::before { content: ""; position: absolute; inset: 0; background: rgba(10, 12, 30, 0.62); }
+.video-link::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(10, 12, 30, 0.85), rgba(10, 12, 30, 0.35)); transition: opacity 0.2s; }
 .video-link > div { position: relative; }
 .video-link:hover { text-decoration: none; }
+.video-link:hover::before { opacity: 0.75; }
 .video-link:hover .play { background: rgba(255, 255, 255, 0.24); }
 
 .feature-video { max-width: 880px; }
+
+.video-dialog {
+    width: min(1100px, calc(100vw - 32px));
+    max-width: none;
+    padding: 0;
+    border: 1px solid var(--stage-border);
+    border-radius: 14px;
+    background: var(--stage);
+    color: #fff;
+    overflow: hidden;
+}
+
+.video-dialog::backdrop { background: rgba(6, 8, 20, 0.82); }
+.video-dialog-bar { display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 18px; }
+.video-dialog-bar strong { flex: 1; font-size: 0.98rem; }
+
+.video-dialog-close {
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.video-dialog-close:hover { background: rgba(255, 255, 255, 0.2); }
+.video-dialog-frame { position: relative; aspect-ratio: 16 / 9; background: #000; }
+.video-dialog-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
 /* ---------- Hero ---------- */
 
@@ -1848,7 +1880,9 @@ await UiManager.ShowState&lt;MainMenuUiState&gt;(data);</code></pre></div>
         <p>Ten steps from an empty project to a working screen with a popup. Every step has a short video. Open the editor with <span class="menu-path">UiFramework &rarr; UI Setup Manager</span>.</p>
     </div>
 
-    <div class="video feature-video" data-video-id="" data-title="The whole tutorial in one video" data-length="about 16 minutes"></div>
+    <h3>Start here</h3>
+    <p>See where you are heading first: the showcase app, a complete mobile game UI built only with UI Framework, with an intro, four tabs under shared bars, and reward, purchase and settings popups. Then build your own, one short video per step.</p>
+    <div class="video feature-video" data-video-id="hpVuNT5nFos" data-title="Intro: the showcase app built with UI Framework" data-length="under 2 minutes"></div>
     <h3>Video series</h3>
     <ol class="playlist" id="playlist"></ol>
 
@@ -2519,41 +2553,73 @@ await TweenPresets.ShakeLocal(buyButton.transform);  // "no": not enough coins</
         }
     });
 
-    // ---------- Videos: paste a YouTube id into data-video-id and the player appears ----------
+    // ---------- Videos: paste a YouTube id into data-video-id and the video appears ----------
     var playIcon = '<svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg>';
     // YouTube refuses to play an embed that arrives without a Referer, and a page opened from disk sends none,
-    // so there each video links out to YouTube instead of showing the player's error.
+    // so there each video links out to YouTube instead of opening a player that would only show an error.
     var openedFromFile = location.protocol === "file:";
+    var videoDialog = null;
+
+    // One popup for every video. The player is created on open and removed on close, so closing stops the sound.
+    function openVideo(id, title) {
+        if (!videoDialog) {
+            videoDialog = document.createElement("dialog");
+            videoDialog.className = "video-dialog";
+            videoDialog.innerHTML = '<div class="video-dialog-bar"><strong></strong><button type="button" class="video-dialog-close" aria-label="Close video">&times;</button></div><div class="video-dialog-frame"></div>';
+            videoDialog.querySelector(".video-dialog-close").addEventListener("click", function () {
+                videoDialog.close();
+            });
+            // A click on the backdrop lands on the dialog itself; clicks inside land on its children.
+            videoDialog.addEventListener("click", function (e) {
+                if (e.target === videoDialog) {
+                    videoDialog.close();
+                }
+            });
+            // "close" fires after the dialog has closed; skip it if another video was opened in the meantime.
+            videoDialog.addEventListener("close", function () {
+                if (!videoDialog.open) {
+                    videoDialog.querySelector(".video-dialog-frame").innerHTML = "";
+                }
+            });
+            document.body.appendChild(videoDialog);
+        }
+
+        var frame = document.createElement("iframe");
+        frame.src = "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(id) + "?rel=0&autoplay=1";
+        frame.title = title;
+        frame.allow = "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen";
+        // Stated explicitly so a stricter policy on the hosting site cannot strip the Referer YouTube needs.
+        frame.referrerPolicy = "strict-origin-when-cross-origin";
+        videoDialog.querySelector(".video-dialog-bar strong").textContent = title;
+        videoDialog.querySelector(".video-dialog-frame").innerHTML = "";
+        videoDialog.querySelector(".video-dialog-frame").appendChild(frame);
+        videoDialog.showModal();
+    }
 
     document.querySelectorAll(".video").forEach(function (slot) {
         var id = slot.getAttribute("data-video-id");
         var title = slot.getAttribute("data-title") || "Video";
         var length = slot.getAttribute("data-length") || "";
 
-        if (id && openedFromFile) {
+        if (id) {
             var link = document.createElement("a");
             link.className = "video-soon video-link";
             link.href = "https://www.youtube.com/watch?v=" + encodeURIComponent(id);
             link.target = "_blank";
             link.rel = "noopener";
-            link.title = "Videos play on this page when it is served over http(s), not opened as a file";
             link.style.backgroundImage = "url(\"https://i.ytimg.com/vi/" + encodeURIComponent(id) + "/hqdefault.jpg\")";
             link.innerHTML = '<div><div class="play">' + playIcon + '</div><strong></strong><span></span></div>';
             link.querySelector("strong").textContent = title;
-            link.querySelector("span").textContent = "Watch on YouTube" + (length ? " · " + length : "");
+            link.querySelector("span").textContent = (openedFromFile ? "Watch on YouTube" : "Play") + (length ? " · " + length : "");
+            if (openedFromFile) {
+                link.title = "Videos play on this page when it is served over http(s), not opened as a file";
+            } else {
+                link.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    openVideo(id, title);
+                });
+            }
             slot.appendChild(link);
-            return;
-        }
-
-        if (id) {
-            var frame = document.createElement("iframe");
-            frame.src = "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(id) + "?rel=0";
-            frame.title = title;
-            frame.allow = "accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen";
-            // Stated explicitly so a stricter policy on the hosting site cannot strip the Referer YouTube needs.
-            frame.referrerPolicy = "strict-origin-when-cross-origin";
-            frame.loading = "lazy";
-            slot.appendChild(frame);
             return;
         }
 
@@ -2583,6 +2649,10 @@ await TweenPresets.ShakeLocal(buyButton.transform);  // "no": not enough coins</
             }
             item.style.cursor = "pointer";
             item.addEventListener("click", function () {
+                if (live && !openedFromFile) {
+                    openVideo(slot.getAttribute("data-video-id"), slot.getAttribute("data-title") || step.querySelector("h3").textContent);
+                    return;
+                }
                 location.hash = step.id;
             });
             playlist.appendChild(item);
