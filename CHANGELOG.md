@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.4] - 2026-10-23
+
 ### Fixed
 - Docs: the UI Setup Manager screenshots (General, New Element, Elements, States) no longer end in a tall empty gray area, and screenshots show at most at their own size instead of being stretched
 - Docs: the video popup's title is readable, the thumbnail's play button and caption sit in a bar along the bottom instead of over the title YouTube bakes into each thumbnail (1280 × 720 when available), and the page no longer scrolls behind an open video
