@@ -6,6 +6,12 @@
 
 Open `docs/index.html` in a browser. Screenshots load from `docs/images/`; code highlighting and fonts load from the internet, and the page still reads fine offline.
 
+YouTube does not play embedded videos on a page opened from disk (`file://`), because the page sends no referrer. There a click on a video opens it on YouTube instead of in the popup player. To see the videos as they play on the site, serve the folder and open `http://localhost:8080`:
+
+```bash
+npx serve docs -l 8080
+```
+
 ## Publishing
 
 The docs site is live at [https://dawaniyahgames.com/uiframework/](https://dawaniyahgames.com/uiframework/). The website repo ([Dawaniyah-Games-Website](https://github.com/dawaniyah-games/Dawaniyah-Games-Website)) copies `docs/` from this repo's `main` branch every time it deploys.
