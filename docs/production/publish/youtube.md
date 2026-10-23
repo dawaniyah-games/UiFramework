@@ -2,7 +2,7 @@
 
 Everything to paste when uploading each video: title, description (with chapters and links), tags, thumbnail, captions, playlist and end screen. Generated from the scripts by `build_kit.py`; after the edit, check every chapter time against the final timeline (YouTube needs the first chapter at 0:00 and each chapter at least 10 s long).
 
-**Playlist:** *UI Framework for Unity · Coin Shop tutorial* (Episodes 1 to 10 in order, then the full tutorial and the showcase).  
+**Playlist:** *UiFramework Tutorial* (already created on the channel, unlisted, manual order) (Episodes 1 to 10 in order, then the full tutorial and the showcase).  
 **Upload as:** Unlisted, check it, then Public. Category *Education*, language English, captions from `captions/`.  
 **Never use `<` or `>` in a title or description:** YouTube rejects them, so code stays in the docs and the pinned comment links there.
 
