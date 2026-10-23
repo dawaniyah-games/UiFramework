@@ -43,18 +43,18 @@ Status: `todo` → `recorded` → `voiced` → `edited` → `live` (screenshots:
 
 | Video | Script | Slot `data-title` | Target length | Status |
 | --- | --- | --- | --- | --- |
-| Episode 1 | [01-install-and-config.md](scripts/01-install-and-config.md) | Step 1: Install and create the config | 2 min | todo |
-| Episode 2 | [02-first-element.md](scripts/02-first-element.md) | Step 2: Create your first element | 2 min | todo |
-| Episode 3 | [03-build-the-screen.md](scripts/03-build-the-screen.md) | Step 3: Build a screen under Root | 3 min | todo |
-| Episode 4 | [04-animations.md](scripts/04-animations.md) | Step 4: Choose animations | 1 min | todo |
-| Episode 5 | [05-validate-and-fix.md](scripts/05-validate-and-fix.md) | Step 5: Validate and fix scenes | 2 min | todo |
-| Episode 6 | [06-canvas-and-addressables.md](scripts/06-canvas-and-addressables.md) | Step 6: Canvas and Addressables settings | 2 min | todo |
-| Episode 7 | [07-states.md](scripts/07-states.md) | Step 7: States and shared elements | 2 min | todo |
-| Episode 8 | [08-build-runtime-config.md](scripts/08-build-runtime-config.md) | Step 8: Build the runtime config | 1 min | todo |
-| Episode 9 | [09-show-from-code.md](scripts/09-show-from-code.md) | Step 9: Show states from code | 3 min | todo |
-| Episode 10 | [10-popup.md](scripts/10-popup.md) | Step 10: Popups and overlays | 3 min | todo |
-| Full walkthrough | [00-full-walkthrough.md](scripts/00-full-walkthrough.md) | (slot removed) | about 12 min (estimate 13:40) | dropped: the Tutorial tab opens with the showcase video as its intro, and every video stays short |
-| Showcase | [showcase.md](scripts/showcase.md) | The showcase app in the Unity editor | about 1 min | todo |
+| Episode 1 | [01-install-and-config.md](scripts/01-install-and-config.md) | Step 1: Install and create the config | 2 min | uploaded: `_Mc-aUATrYk`, 1:49 |
+| Episode 2 | [02-first-element.md](scripts/02-first-element.md) | Step 2: Create your first element | 2 min | uploaded: `mi2QsiLNpUg`, 1:28 |
+| Episode 3 | [03-build-the-screen.md](scripts/03-build-the-screen.md) | Step 3: Build a screen under Root | 3 min | uploaded: `Qcp0wL3Dx9o`, 1:38 |
+| Episode 4 | [04-animations.md](scripts/04-animations.md) | Step 4: Choose animations | 1 min | uploaded: `6cd4fDIcWHk`, 1:10 |
+| Episode 5 | [05-validate-and-fix.md](scripts/05-validate-and-fix.md) | Step 5: Validate and fix scenes | 2 min | uploaded: `Rxfrlrh5Bh4`, 2:01 |
+| Episode 6 | [06-canvas-and-addressables.md](scripts/06-canvas-and-addressables.md) | Step 6: Canvas and Addressables settings | 2 min | uploaded: `o69ZmSlKco4`, 2:01 |
+| Episode 7 | [07-states.md](scripts/07-states.md) | Step 7: States and shared elements | 2 min | uploaded: `yX7aF8d0Sp4`, 2:22 |
+| Episode 8 | [08-build-runtime-config.md](scripts/08-build-runtime-config.md) | Step 8: Build the runtime config | 1 min | uploaded: `nJAiAknB2xU`, 1:03 |
+| Episode 9 | [09-show-from-code.md](scripts/09-show-from-code.md) | Step 9: Show states from code | 3 min | uploaded: `o7GmqM-fGyo`, 1:55 |
+| Episode 10 | [10-popup.md](scripts/10-popup.md) | Step 10: Popups and overlays | 3 min | uploaded: `jp-1FsexQnI`, 2:32 |
+| Full walkthrough | [00-full-walkthrough.md](scripts/00-full-walkthrough.md) | (slot removed) | about 12 min (estimate 13:40) | uploaded (`wpTpHrUapho`, 16:07) but not on the page: the Tutorial tab opens with the showcase video as its intro, and every video stays short |
+| Showcase | [showcase.md](scripts/showcase.md) | The showcase app in the Unity editor | about 1 min | uploaded: `7zNgdCb6PNQ`, 1:42 |
 
 When a video's real length differs from the slot, update `data-length` too.
 
