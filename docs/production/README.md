@@ -53,7 +53,7 @@ Status: `todo` → `recorded` → `voiced` → `edited` → `live` (screenshots:
 | Episode 8 | [08-build-runtime-config.md](scripts/08-build-runtime-config.md) | Step 8: Build the runtime config | 1 min | todo |
 | Episode 9 | [09-show-from-code.md](scripts/09-show-from-code.md) | Step 9: Show states from code | 3 min | todo |
 | Episode 10 | [10-popup.md](scripts/10-popup.md) | Step 10: Popups and overlays | 3 min | todo |
-| Full walkthrough | [00-full-walkthrough.md](scripts/00-full-walkthrough.md) | The whole tutorial in one video | about 12 min (estimate 13:40) | todo |
+| Full walkthrough | [00-full-walkthrough.md](scripts/00-full-walkthrough.md) | (slot removed) | about 12 min (estimate 13:40) | dropped: the Tutorial tab opens with the showcase video as its intro, and every video stays short |
 | Showcase | [showcase.md](scripts/showcase.md) | The showcase app in the Unity editor | about 1 min | todo |
 
 When a video's real length differs from the slot, update `data-length` too.
