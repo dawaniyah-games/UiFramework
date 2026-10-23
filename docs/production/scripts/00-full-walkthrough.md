@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Length | about 12 min |
+| Length | about 16 min |
 | Docs slot | Top of the Tutorial tab, "The whole tutorial in one video" |
 | Made from | The ten edited episodes; no new screen recording |
 
@@ -22,5 +22,5 @@ This is an edit, not a new recording. Join the ten episodes, trim them, and add 
 ## Intro voiceover
 
 - SCREEN: The finished Coin Shop running (from Episode 10).
-- SAY: "In the next twelve minutes we build the UI for a small game from an empty Unity project: a main menu, a store, two bars they share, and a purchase popup. Every screen in its own scene, set up in the editor, with only a few lines of code. Follow along, or jump to any step with the chapters."
+- SAY: "In the next sixteen minutes we build the UI for a small game from an empty Unity project: a main menu, a store, two bars they share, and a purchase popup. Every screen in its own scene, set up in the editor, with only a few lines of code. Follow along, or jump to any step with the chapters."
 - ON SCREEN: `UI Framework for Unity · the full tutorial`

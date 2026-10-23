@@ -2,7 +2,7 @@
 
 Everything to paste when uploading each video: title, description (with chapters and links), tags, thumbnail, captions, playlist and end screen. Generated from the scripts by `build_kit.py`; after the edit, check every chapter time against the final timeline (YouTube needs the first chapter at 0:00 and each chapter at least 10 s long).
 
-**Playlist:** *UI Framework for Unity · Coin Shop tutorial* (Episodes 1 to 10 in order, then the full tutorial and the showcase).  
+**Playlist:** *UiFramework Tutorial* (already created on the channel, unlisted, manual order) (Episodes 1 to 10 in order, then the full tutorial and the showcase).  
 **Upload as:** Unlisted, check it, then Public. Category *Education*, language English, captions from `captions/`.  
 **Never use `<` or `>` in a title or description:** YouTube rejects them, so code stays in the docs and the pinned comment links there.
 
@@ -521,7 +521,7 @@ Build a Unity Game UI from Scratch · UI Framework Full Tutorial
 **Description**
 
 ```text
-Build a small game UI in Unity from an empty project in about twelve minutes: screens, shared bars and a popup, each in its own scene, set up in the editor with a few lines of code. Chapters below.
+Build a small game UI in Unity from an empty project in about sixteen minutes: screens, shared bars and a popup, each in its own scene, set up in the editor with a few lines of code. Chapters below.
 
 Chapters
 0:00 Intro

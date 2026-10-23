@@ -264,6 +264,24 @@ namespace UiFramework.Editor.Window.Tabs
             RenderSceneList();
         }
 
+        // Called when Play Mode ends: scenes that could not be read during Play are read again.
+        public void RefreshUnavailableScenes()
+        {
+            if (listView == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < sceneInfos.Count; i++)
+            {
+                if (!sceneInfos[i].IsAvailable)
+                {
+                    RefreshSceneList();
+                    return;
+                }
+            }
+        }
+
         private UiElementSceneInfo FindInfo(string scenePath)
         {
             if (string.IsNullOrEmpty(scenePath))
