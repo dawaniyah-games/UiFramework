@@ -126,7 +126,7 @@ Then open **UiFramework → UI Setup Manager → Elements** and change a screen'
 
 | Doc | For |
 | --- | --- |
-| [Docs site](docs/index.html) | Overview, getting started, a step-by-step UI Setup Manager tutorial, animations, the showcase and the API ([how to add screenshots and videos](docs/README.md)) |
+| [Docs site](https://dawaniyahgames.com/uiframework/) | Overview, getting started, a step-by-step UI Setup Manager tutorial, animations, the showcase and the API ([how to add screenshots and videos](docs/README.md)) |
 | [DESIGN.md](DESIGN.md) | How the framework works: lifecycle, scene ref counting, animation, editor pipeline, limitations |
 | [CODING_STANDARDS.md](CODING_STANDARDS.md) | Code style and project rules (required for all contributions) |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Branching, PRs, releases |
