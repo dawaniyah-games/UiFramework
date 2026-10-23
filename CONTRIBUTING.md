@@ -64,6 +64,7 @@ Group commits by intent (runtime fix / editor tooling / tests / version bump), n
 3. Update the version line at the top of `DESIGN.md` and the pinned example in `README.md`.
 4. Open a PR `dev → main` titled `Release vX.Y.Z: short description`, then merge.
    - `main` is guarded by the **Protect-main** ruleset: 1 approving review and a required status check named "Bump Package Version". That check comes from a workflow that no longer exists, so it never reports. Until the ruleset is updated, repository admins merge release PRs with the bypass (*Merge without waiting for requirements*, or `gh pr merge <n> --merge --admin`).
+   - Keep `dev` after the merge: ignore the *Delete branch* button. The **Protect-dev** ruleset blocks deleting or force-pushing `dev`. Deleting it would also retarget every open PR into `dev` to `main`.
 5. The **Auto release on main** workflow (`.github/workflows/release.yml`) reads the version, creates and pushes tag `vX.Y.Z`, and publishes a GitHub Release with generated notes.
    - It **fails if the tag already exists**, which almost always means step 1 was skipped. Bump the version and merge again.
 
