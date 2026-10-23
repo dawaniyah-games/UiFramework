@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Docs: every video slot points at the narrated uploads, with their real lengths. Step 2 has its video now, and the intro and showcase slots use the new narrated showcase video
+
 ## [1.3.2] - 2026-10-23
 
 ### Changed
