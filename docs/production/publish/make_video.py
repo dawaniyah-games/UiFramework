@@ -161,7 +161,7 @@ def card(path, lines, duration, tmp):
          "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k", path])
 
 
-def segment(path, source, start, stop, speed, hold, inserts, events, banner, tmp):
+def segment(path, source, start, stop, speed, hold, inserts, events, banner, tmp, voice=None, voice_at=0.25, crop=None, inset=None):
     """Cut [start, stop] of source, overlay stills, speed up, hold the last frame, burn captions."""
     raw_len = stop - start
     out_len = raw_len / speed + hold
@@ -175,8 +175,16 @@ def segment(path, source, start, stop, speed, hold, inserts, events, banner, tmp
             handle.write("Dialogue: 1,%s,%s,Banner,,0,0,0,,{\\fad(200,200)}%s\n"
                          % (ass_time(a), ass_time(min(out_len, a + max(3.5, out_len - a if index == len(banner) - 1 else 3.5))), esc(text)))
     inputs = ["-ss", "%.3f" % start, "-t", "%.3f" % raw_len, "-i", source]
-    chain = "[0:v]fps=%d,scale=%d:%d:force_original_aspect_ratio=decrease,pad=%d:%d:(ow-iw)/2:(oh-ih)/2:color=%s,setsar=1,setpts=PTS-STARTPTS[base]" % (
-        FPS, W, H, W, H, NAVY)
+    zoom = "crop=trunc(iw*%.4f/2)*2:trunc(ih*%.4f/2)*2:trunc(iw*%.4f):trunc(ih*%.4f)," % (crop[2], crop[3], crop[0], crop[1]) if crop else ""
+    if inset:
+        # Shrink the shot so the banner (top) and the captions (bottom) sit on the background, not on the footage.
+        fit_h = int(H * inset) // 2 * 2
+        place = "pad=%d:%d:(ow-iw)/2:%d:color=%s" % (W, H, int((H - fit_h) * 0.45), NAVY)
+        chain = ("[0:v]fps=%d," % FPS) + zoom + "scale=%d:%d:force_original_aspect_ratio=decrease,%s,setsar=1,setpts=PTS-STARTPTS[base]" % (
+            W, fit_h, place)
+    else:
+        chain = ("[0:v]fps=%d," % FPS) + zoom + "scale=%d:%d:force_original_aspect_ratio=decrease,pad=%d:%d:(ow-iw)/2:(oh-ih)/2:color=%s,setsar=1,setpts=PTS-STARTPTS[base]" % (
+            W, H, W, H, NAVY)
     last = "base"
     for index, insert in enumerate(inserts):
         inputs += ["-loop", "1", "-t", "%.3f" % raw_len, "-i", insert["image"]]
@@ -186,8 +194,18 @@ def segment(path, source, start, stop, speed, hold, inserts, events, banner, tmp
         last = "ov%d" % index
     chain += ";[%s]setpts=PTS/%.4f,tpad=stop_mode=clone:stop_duration=%.3f,ass=%s:fontsdir=%s,format=yuv420p[v]" % (
         last, speed, hold, ass, FONT_DIR)
-    run(["ffmpeg", "-v", "error", "-y"] + inputs + ["-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo",
-         "-filter_complex", chain, "-map", "[v]", "-map", "%d:a" % (len(inserts) + 1), "-t", "%.3f" % out_len,
+    if voice:
+        # Narration line, delayed slightly, padded with silence to the segment length.
+        inputs += ["-i", voice]
+        delay = int(voice_at * 1000)
+        chain += ";[%d:a]aformat=sample_rates=48000:channel_layouts=stereo,adelay=%d|%d,apad,atrim=0:%.3f[a]" % (
+            len(inserts) + 1, delay, delay, out_len)
+        audio_map = "[a]"
+    else:
+        inputs += ["-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo"]
+        audio_map = "%d:a" % (len(inserts) + 1)
+    run(["ffmpeg", "-v", "error", "-y"] + inputs + [
+         "-filter_complex", chain, "-map", "[v]", "-map", audio_map, "-t", "%.3f" % out_len,
          "-r", str(FPS), "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-c:a", "aac", "-b:a", "128k", path])
     return out_len
 
@@ -237,6 +255,20 @@ def condense(path, recording, ranges):
     return sum(b - a for a, b in ranges)
 
 
+def media_length(path):
+    return float(subprocess.check_output(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", path]))
+
+
+def short_narration(key):
+    """Lines for one video from narration-short.md, in beat order."""
+    text = read(os.path.join(SCRIPTS, "narration-short.md"))
+    for section in re.split(r"\n## ", text)[1:]:
+        head = section.split("\n", 1)[0]
+        if head.split(" ")[0].lower() == key.lower():
+            return re.findall(r"^\d+\. (.*)$", section, re.M)
+    return []
+
+
 def main():
     key, recording, marks_path, out_dir = sys.argv[1:5]
     out_dir = os.path.abspath(out_dir)
@@ -259,9 +291,13 @@ def main():
         intro = [("Kicker", 360, "UI FRAMEWORK FOR UNITY  ·  COIN SHOP TUTORIAL"), ("Big", 490, "Episode %d" % int(key)),
                  ("Title", 620, NAMES[key])]
     first = os.path.join(tmp, "000_intro.mp4")
-    card(first, intro, 3.0, tmp)
+    intro_len = 1.6 if marks.get("voice_dir") else 3.0
+    card(first, intro, intro_len, tmp)
     parts.append(first)
-    clock += 3.0
+    clock += intro_len
+
+    voice_dir = marks.get("voice_dir")
+    narration = short_narration(key) if voice_dir else []
 
     starts = marks.get("beats", {})
     numbers = [b["n"] for b in beats if str(b["n"]) in starts or str(b["n"]) in marks.get("sources", {})]
@@ -303,6 +339,19 @@ def main():
         raw_len = max(stop - start, 0.5)
         spoken = read_time(beat["say"]) + 1.2 if beat["say"] else 2.0
         speed = float(marks.get("speed", {}).get(str(n), 0) or 0)
+        voice = os.path.join(voice_dir, "%03d.wav" % n) if voice_dir else None
+        line = narration[index] if index < len(narration) else beat["say"]
+        if voice and os.path.exists(voice):
+            # Reel pacing: the narration sets the length; footage is sped up to fit (gameplay clips stay near real time).
+            vlen = media_length(voice)
+            spoken = vlen + 0.6
+            if source is not recording:
+                raw_len = min(raw_len, spoken * 1.25)
+                speed = speed or max(1.0, raw_len / spoken)
+            elif not speed:
+                speed = 1.0 if raw_len <= spoken * 1.1 else min(float(marks.get("max_speed", 8.0)), raw_len / spoken)
+        else:
+            voice = None
         if not speed:
             speed = 1.0
             if raw_len > spoken + 6:
@@ -313,13 +362,25 @@ def main():
         hold = max(0.0, max(spoken, 3.0) - shown)
         out_len = shown + hold
         inserts = [dict(m, dur=m["dur"] * speed) for m in mapped] if mapped is not None else []
+        if voice and inserts:
+            # Reel pacing: each still shows ~2 s and never overlaps the previous one (times are in raw footage seconds).
+            inserts.sort(key=lambda m: m["at"])
+            free = 0.0
+            for m in inserts:
+                m["dur"] = 2.0 * speed
+                m["at"] = max(m["at"], free)
+                free = m["at"] + m["dur"]
         for insert in ([] if mapped is not None else marks.get("inserts", [])):
             if source is recording and start <= insert["at"] - marks["start"] < stop:
                 inserts.append({"at": insert["at"] - marks["start"] - start, "image": insert["image"], "dur": insert.get("dur", 4) * speed})
-        events = caption_events(beat["say"], 0.3, out_len - 0.3) if beat["say"] else []
+        if voice:
+            events = caption_events(line, 0.25, min(out_len - 0.1, 0.25 + vlen + 0.2))
+        else:
+            events = caption_events(beat["say"], 0.3, out_len - 0.3) if beat["say"] else []
         banner = [b for b in beat["on_screen"] if not b.startswith("Next:")]
         path = os.path.join(tmp, "%03d_beat.mp4" % n)
-        segment(path, source, start, start + raw_len, speed, hold, inserts, events, banner, tmp)
+        segment(path, source, start, start + raw_len, speed, hold, inserts, events, banner, tmp, voice=voice,
+                crop=marks.get("crop", {}).get(str(n)), inset=marks.get("inset", {}).get(str(n)))
         parts.append(path)
         chapters.append((clock, beat["title"]))
         for a, b, cap in events:
@@ -335,9 +396,10 @@ def main():
     else:
         outro = [("Title", 470, "Coin Shop is done"), ("Small", 600, "dawaniyah-games.github.io/UiFramework")]
     last = os.path.join(tmp, "999_outro.mp4")
-    card(last, outro, 4.0, tmp)
+    outro_len = 2.5 if marks.get("voice_dir") else 4.0
+    card(last, outro, outro_len, tmp)
     parts.append(last)
-    clock += 4.0
+    clock += outro_len
 
     listing = os.path.join(tmp, "parts.txt")
     with open(listing, "w") as handle:

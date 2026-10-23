@@ -1,6 +1,6 @@
 # Short narration (reel style)
 
-One line per beat, in the same order as the episode scripts, so each line still lands on its footage. Conversational, no filler. Replaces the SAY lines when the voiceover is generated.
+One line per beat, in the same order as the episode scripts, so each line still lands on its footage. Conversational, no filler. Replaces the SAY lines when the voiceover is generated. Voice: the designed "UiFramework Narrator" (ElevenLabs v4), mastered to -16 LUFS. Reviewed against each beat's footage on 23 Oct 2026.
 
 ## 01 · Install and create the config
 1. Let's build the whole UI for a small game, Coin Shop. A menu, a store, shared bars and a popup. One quick step per video.
@@ -15,7 +15,7 @@ One line per beat, in the same order as the episode scripts, so each line still 
 2. Elements tab, New Element.
 3. Name it Main Menu UI Element, and tick Include Parameters Class.
 4. Create, and let Unity compile.
-5. You get the script, a params class, and a ready-made scene with the script already attached.
+5. You get the script, a parameters class, and a ready-made scene with the script already attached.
 6. Green tick. Ready to build.
 
 ## 03 · Build a screen under Root
@@ -43,7 +43,7 @@ One line per beat, in the same order as the episode scripts, so each line still 
 6. Fix All does every scene at once.
 
 ## 06 · Canvas and Addressables settings
-1. Now two bars that sit on every screen: a top bar and a nav bar.
+1. Two more elements: a top bar and a nav bar. Both sit on every screen.
 2. Coins at the top. Home and Store at the bottom. Everything under Root.
 3. Sorting order decides what's on top. Screens zero, bars ten, popups a hundred.
 4. Render mode and scaling live here too.
@@ -53,13 +53,13 @@ One line per beat, in the same order as the episode scripts, so each line still 
 ## 07 · States and shared elements
 1. One more screen: the store. Three items, and it slides in from the right.
 2. Here's the key idea. A state is just a list of elements.
-3. Main menu state: the menu, the top bar and the nav bar.
-4. Store state: the store, with the same two bars.
+3. Create the main menu state, and add the menu, the top bar and the nav bar.
+4. Then the store state: the store, with the same two bars.
 5. The bars are shared. Switch screens, and they stay put. No reload, no flicker.
 6. Next: one button that builds it all.
 
 ## 08 · Build the runtime config
-1. General tab: Build Runtime UiConfig.
+1. In the General tab, press Build Runtime UI Config.
 2. It writes your states into the config, and makes every scene Addressable for you.
 3. Changed a state or a scene? Press it again.
 4. Next: a bit of code, and Play.
@@ -68,7 +68,7 @@ One line per beat, in the same order as the episode scripts, so each line still 
 1. A start-up scene: Bootstrap, with a camera and an event system.
 2. Two lines: Initialize, then Show State. No UI manager to set up.
 3. Press Play. The menu and both bars, each in its own scene.
-4. The Store button: one line shows the store state.
+4. The Store button: one line shows the store state. Wire it up, and save.
 5. Same for the nav bar: Home and Store.
 6. Tap Store. It slides in, and the bars never move.
 7. Last step: a popup.
