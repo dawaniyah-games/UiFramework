@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/images/logo.svg" width="96" alt="UI Framework logo"></p>
+
 # UI Framework
 
 [![Unity Version](https://img.shields.io/badge/Unity-2021.3%2B-blue.svg)](https://unity.com)

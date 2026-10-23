@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Docs: a new logo (two screens on the state stack with a popup shown on top) in the docs header, the README and as the docs favicon (`docs/images/logo.svg`)
+- Docs: the landing page hero now reads "Smooth, organized game UI, AI-ready", with a lead on how the fixed per-screen structure keeps AI-generated code organized, and an "AI-friendly" pill
+
 ## [1.3.1] - 2026-10-23
 
 ### Fixed

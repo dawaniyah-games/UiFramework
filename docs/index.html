@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>UI Framework for Unity</title>
 <meta name="description" content="Build Unity game UI from Addressable scenes on a state stack, with shared elements, built-in animations and an editor that generates the scripts, scenes and config for you.">
+<link rel="icon" type="image/svg+xml" href="images/logo.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -175,16 +176,7 @@ code {
 .brand small { font-weight: 600; color: var(--text-dim); font-size: 0.82rem; }
 .brand:hover { text-decoration: none; }
 
-.brand-mark {
-    width: 32px;
-    height: 32px;
-    border-radius: 9px;
-    background: linear-gradient(135deg, #7c5cff, #2ec5ff);
-    display: grid;
-    place-items: center;
-}
-
-.brand-mark svg { width: 18px; height: 18px; }
+.brand-mark { display: block; width: 32px; height: 32px; flex: none; }
 
 .tabs {
     display: flex;
@@ -1227,9 +1219,7 @@ html, body { overflow-x: clip; }
 <header class="site-header">
     <div class="header-inner">
         <a class="brand" href="#overview" data-go="overview">
-            <span class="brand-mark">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M3 9h18M9 21V9"/></svg>
-            </span>
+            <img class="brand-mark" src="images/logo.svg" alt="">
             UI Framework <small>for Unity</small>
         </a>
         <nav class="tabs" role="tablist" aria-label="Documentation sections">
@@ -1263,8 +1253,8 @@ html, body { overflow-x: clip; }
         <div class="hero-split">
             <div>
                 <span class="eyebrow">Unity package &middot; UGUI &middot; Addressables &middot; free and open source</span>
-                <h1>Pro-grade game UI for <span class="accent">Unity</span>, without a pro-sized team</h1>
-                <p class="lead">Build your UI the way professional studios do, from the very first prototype. Every screen is its own Addressable scene, a state stack decides what is on screen, shared elements like your nav bar stay put, every transition animates with no flash, and an editor window writes the scripts, scenes and config for you.</p>
+                <h1>Smooth, organized game UI, <span class="accent">AI-ready</span></h1>
+                <p class="lead">Building with AI? AI tools write a lot of code fast, and without a structure it piles up in places nobody can track. This framework gives every screen the same shape: its own Addressable scene, its own script, its own place in the state stack. Generated code always has a clear place to go, so your project stays easy to follow as it grows. Transitions animate with no flash, and an editor window writes the scripts, scenes and config for you.</p>
                 <div class="hero-actions">
                     <a class="btn btn-primary" href="#start">Add it to your Unity project</a>
                     <a class="btn btn-ghost" href="#problem">Why it matters</a>
@@ -1274,6 +1264,7 @@ html, body { overflow-x: clip; }
                     <span class="pill">Package Manager</span>
                     <span class="pill">Production-ready by default</span>
                     <span class="pill">Merge-friendly</span>
+                    <span class="pill">AI-friendly</span>
                     <span class="pill">async / await</span>
                     <span class="pill">MIT license</span>
                 </div>

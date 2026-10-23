@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- UI Framework mark: two screens stacked on the state stack, with a popup shown additively on top. -->
+  <rect width="64" height="64" rx="15" fill="#121420"/>
+  <polygon points="57.89,37.00 32.00,51.95 32.00,55.86 57.89,40.91" fill="#0d6a91"/>
+  <polygon points="32.00,51.95 6.11,37.00 6.11,40.91 32.00,55.86" fill="#1688b8"/>
+  <polygon points="32.00,22.05 57.89,37.00 32.00,51.95 6.11,37.00" fill="#2ec5ff"/>
+  <polygon points="57.89,26.65 32.00,41.60 32.00,45.51 57.89,30.56" fill="#a84d12"/>
+  <polygon points="32.00,41.60 6.11,26.65 6.11,30.56 32.00,45.51" fill="#cc6620"/>
+  <polygon points="32.00,11.70 57.89,26.65 32.00,41.60 6.11,26.65" fill="#ff9a3d"/>
+  <polygon points="44.95,15.15 32.00,22.63 32.00,26.54 44.95,19.06" fill="#b87a00"/>
+  <polygon points="32.00,22.63 19.05,15.15 19.05,19.06 32.00,26.54" fill="#d99a12"/>
+  <polygon points="32.00,7.68 44.95,15.15 32.00,22.63 19.05,15.15" fill="#ffd84a"/>
+</svg>
