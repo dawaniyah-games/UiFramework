@@ -9,9 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.2] - 2026-10-23
 
+### Changed
+- Docs: videos open in a popup player. Each video slot shows the video's thumbnail, title and length, and a click (or "Watch" in the Video series list) opens a large player that starts right away; Esc, the close button or a click outside closes it and stops the sound. Nothing loads from YouTube until a video is opened
+- Docs: the Tutorial tab starts with the showcase video as its intro ("Start here") instead of a full-length walkthrough; every video stays short
+
 ### Fixed
-- Docs: the tutorial step videos play at full 16:9 size instead of in a 120 px strip
-- Docs: opened from disk (`file://`), where YouTube refuses to play embeds, each video shows its thumbnail and a "Watch on YouTube" link instead of the player's error. Served over http(s) the videos play on the page as before
+- Docs: the tutorial step videos show at full 16:9 size instead of in a 120 px strip
+- Docs: opened from disk (`file://`), where YouTube refuses to play embeds, a click on a video opens it on YouTube instead of a player that only shows YouTube's error
 
 ## [1.3.1] - 2026-10-23
 
