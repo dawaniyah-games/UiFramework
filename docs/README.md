@@ -60,7 +60,7 @@ Each tutorial step has a video slot, and the "Video series" list at the top of t
 <div class="video compact" data-video-id="dQw4w9WgXcQ" data-title="Step 2: Create your first element" data-length="2 min"></div>
 ```
 
-Two larger slots hold the showcase video (`hpVuNT5nFos`): "Start here" at the top of the Tutorial tab, as the intro, and "See it in motion" on the Showcase tab. There is no full-length walkthrough video; every video stays short.
+Two larger slots hold the showcase video (`7zNgdCb6PNQ`): "Start here" at the top of the Tutorial tab, as the intro, and "See it in motion" on the Showcase tab. There is no full-length walkthrough video; every video stays short.
 
 A slot with an id shows the video's YouTube thumbnail, title and length, and the step shows "Watch" in the list. Clicking either opens the video in a popup player (privacy-enhanced `youtube-nocookie.com`) that starts playing right away; Esc, the close button or a click outside closes it and stops the sound. Nothing loads from YouTube until a video is opened. Opened from a file, a click opens the video on YouTube instead (see [Preview](#preview)).
 
