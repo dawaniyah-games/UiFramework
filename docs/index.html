@@ -498,8 +498,16 @@ figcaption { color: var(--text-dim); font-size: 0.88rem; margin-top: 8px; }
 .video-soon span { color: #c9cdf0; font-size: 0.88rem; }
 
 .video.compact { aspect-ratio: auto; min-height: 120px; }
+.video.compact:has(iframe) { aspect-ratio: 16 / 9; }
 .video.compact .video-soon { position: relative; padding: 18px; }
 .video.compact .video-soon .play { width: 44px; height: 44px; margin-bottom: 8px; }
+
+/* Opened from a file, a video slot links to YouTube over the video's thumbnail. */
+.video-link { background: center / cover no-repeat; color: #fff; font-weight: inherit; }
+.video-link::before { content: ""; position: absolute; inset: 0; background: rgba(10, 12, 30, 0.62); }
+.video-link > div { position: relative; }
+.video-link:hover { text-decoration: none; }
+.video-link:hover .play { background: rgba(255, 255, 255, 0.24); }
 
 .feature-video { max-width: 880px; }
 
@@ -2513,17 +2521,37 @@ await TweenPresets.ShakeLocal(buyButton.transform);  // "no": not enough coins</
 
     // ---------- Videos: paste a YouTube id into data-video-id and the player appears ----------
     var playIcon = '<svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg>';
+    // YouTube refuses to play an embed that arrives without a Referer, and a page opened from disk sends none,
+    // so there each video links out to YouTube instead of showing the player's error.
+    var openedFromFile = location.protocol === "file:";
 
     document.querySelectorAll(".video").forEach(function (slot) {
         var id = slot.getAttribute("data-video-id");
         var title = slot.getAttribute("data-title") || "Video";
         var length = slot.getAttribute("data-length") || "";
 
+        if (id && openedFromFile) {
+            var link = document.createElement("a");
+            link.className = "video-soon video-link";
+            link.href = "https://www.youtube.com/watch?v=" + encodeURIComponent(id);
+            link.target = "_blank";
+            link.rel = "noopener";
+            link.title = "Videos play on this page when it is served over http(s), not opened as a file";
+            link.style.backgroundImage = "url(\"https://i.ytimg.com/vi/" + encodeURIComponent(id) + "/hqdefault.jpg\")";
+            link.innerHTML = '<div><div class="play">' + playIcon + '</div><strong></strong><span></span></div>';
+            link.querySelector("strong").textContent = title;
+            link.querySelector("span").textContent = "Watch on YouTube" + (length ? " · " + length : "");
+            slot.appendChild(link);
+            return;
+        }
+
         if (id) {
             var frame = document.createElement("iframe");
             frame.src = "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(id) + "?rel=0";
             frame.title = title;
             frame.allow = "accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen";
+            // Stated explicitly so a stricter policy on the hosting site cannot strip the Referer YouTube needs.
+            frame.referrerPolicy = "strict-origin-when-cross-origin";
             frame.loading = "lazy";
             slot.appendChild(frame);
             return;

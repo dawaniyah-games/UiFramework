@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Docs: the tutorial step videos play at full 16:9 size instead of in a 120 px strip
+- Docs: opened from disk (`file://`), where YouTube refuses to play embeds, each video shows its thumbnail and a "Watch on YouTube" link instead of the player's error. Served over http(s) the videos play on the page as before
+
 ## [1.3.1] - 2026-10-23
 
 ### Fixed
