@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Package: ships its own `README.md`, `LICENSE.md` and `CHANGELOG.md`, and `package.json` now has `documentationUrl`, `changelogUrl` and `licensesUrl`, as the Unity Asset Store requires. The package copies of `LICENSE.md` and `CHANGELOG.md` must match the root files; `tools/check-standards.sh` fails when they don't
+- Package: the `samples` entry is removed from `package.json`. It pointed at `Samples~/BasicSetup`, which never existed
+- Package: ships no samples on purpose. `UiManager.InitializeAsync()` always loads the Addressable `UiConfig`, so a project has exactly one config, and a sample with its own would clash with yours or silently replace it. Build your config with the UI Setup Manager; the showcase app stays in this repository's host project (`Assets/Scenes/Bootstrapper.unity`)
+
 ## [1.3.4] - 2026-10-23
 
 ### Fixed

@@ -20,7 +20,9 @@ A Unity UI framework that builds screens from **Addressable scenes** loaded addi
 
 ## Installation
 
-**Package Manager → + → Add package from git URL…**
+**From the Unity Asset Store:** add *UI Framework* to your assets, then install it from **Window → Package Manager → My Assets**. It is the same package as the git URL below, without the sample app.
+
+**From git: Package Manager → + → Add package from git URL…**
 
 ```
 https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework

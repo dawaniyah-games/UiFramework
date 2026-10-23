@@ -26,11 +26,7 @@
     "url": "https://github.com/dawaniyah-games/UiFramework.git"
   },
   "license": "MIT",
-  "samples": [
-    {
-      "displayName": "Basic UI Setup",
-      "description": "Sample scenes and scripts demonstrating basic UI Framework setup",
-      "path": "Samples~/BasicSetup"
-    }
-  ]
+  "documentationUrl": "https://dawaniyahgames.com/uiframework/",
+  "changelogUrl": "https://github.com/dawaniyah-games/UiFramework/blob/main/CHANGELOG.md",
+  "licensesUrl": "https://github.com/dawaniyah-games/UiFramework/blob/main/LICENSE.md"
 }

@@ -1,0 +1,417 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Changed
+- Package: ships its own `README.md`, `LICENSE.md` and `CHANGELOG.md`, and `package.json` now has `documentationUrl`, `changelogUrl` and `licensesUrl`, as the Unity Asset Store requires. The package copies of `LICENSE.md` and `CHANGELOG.md` must match the root files; `tools/check-standards.sh` fails when they don't
+- Package: the `samples` entry is removed from `package.json`. It pointed at `Samples~/BasicSetup`, which never existed
+- Package: ships no samples on purpose. `UiManager.InitializeAsync()` always loads the Addressable `UiConfig`, so a project has exactly one config, and a sample with its own would clash with yours or silently replace it. Build your config with the UI Setup Manager; the showcase app stays in this repository's host project (`Assets/Scenes/Bootstrapper.unity`)
+
+## [1.3.4] - 2026-10-23
+
+### Fixed
+- Docs: the UI Setup Manager screenshots (General, New Element, Elements, States) no longer end in a tall empty gray area, and screenshots show at most at their own size instead of being stretched
+- Docs: the video popup's title is readable, the thumbnail's play button and caption sit in a bar along the bottom instead of over the title YouTube bakes into each thumbnail (1280 × 720 when available), and the page no longer scrolls behind an open video
+- Docs: the Video series list can be used from the keyboard, and long menu paths wrap on phones
+
+## [1.3.3] - 2026-10-23
+
+### Changed
+- Docs: every video slot points at the narrated uploads, with their real lengths. Step 2 has its video now, and the intro and showcase slots use the new narrated showcase video
+
+## [1.3.2] - 2026-10-23
+
+### Changed
+- Docs: videos open in a popup player. Each video slot shows the video's thumbnail, title and length, and a click (or "Watch" in the Video series list) opens a large player that starts right away; Esc, the close button or a click outside closes it and stops the sound. Nothing loads from YouTube until a video is opened
+- Docs: the Tutorial tab starts with the showcase video as its intro ("Start here") instead of a full-length walkthrough; every video stays short
+
+### Fixed
+- Docs: the tutorial step videos show at full 16:9 size instead of in a 120 px strip
+- Docs: opened from disk (`file://`), where YouTube refuses to play embeds, a click on a video opens it on YouTube instead of a player that only shows YouTube's error
+
+## [1.3.1] - 2026-10-23
+
+### Fixed
+- Creating an element no longer brings up Unity's "Open scene(s) modified externally" dialog: the script is attached and the scene saved after the script reload has finished, not inside it
+- The Elements tab shows a new element as ready (✓) as soon as its script is attached, without pressing *Refresh*
+- The Elements tab reads its scenes again when Play Mode ends, instead of showing them as unavailable until *Refresh*
+
+### Changed
+- Docs: the tutorial, step and showcase video slots now point at the published videos
+- Docs: a new logo (two screens on the state stack with a popup shown on top) in the docs header, the README and as the docs favicon (`docs/images/logo.svg`)
+- Docs: the landing page hero now reads "Smooth, organized game UI, AI-ready", with a lead on how the fixed per-screen structure keeps AI-generated code organized, and an "AI-friendly" pill
+
+## [1.3.0] - 2026-10-22
+
+### Added
+- Sample project: a showcase app in the host project (`Assets/`). It has an intro, four tabs under a shared TopBar and NavBar, and Settings, Reward and Confirm-purchase popups. It demonstrates serialized navigation, per-call `UiTransition`s by tab order, context params, shared re-population and custom element animation (see DESIGN.md §14)
+- `tools/check-standards.sh` checks the scriptable rules of CODING_STANDARDS.md (no `var`, no target-typed `new()`, no expression bodies, braces / Allman, usings, field prefixes, PascalCase constants, `Ui` casing, tagged ASCII logs, no blocking waits, `Async` suffix on `Task` methods). The new **Coding standards** workflow runs it on every pull request and on pushes to `dev` / `main`. Legacy exceptions live in `tools/standards-baseline.txt`
+- Docs site (`docs/index.html`, ready for GitHub Pages): overview, getting started, a ten-step UI Setup Manager tutorial with a video slot per step, concepts, animated preset demos, the showcase, the API reference and an FAQ. Screenshot and video slots fill in from `docs/images/` and YouTube ids (`docs/README.md`). The Overview opens with the problem the framework solves, a before / after comparison, the professional approach and who made it, and explains its four core ideas with live, pointer-driven [Hairline](https://hairline.lucasmarkes.com) figures. A live 3D explainer pulls the showcase screen apart into its element scenes and runs `ShowState` / `HideUI` on it step by step, saying for every scene whether it loaded, was kept and populated again, was kept untouched, or unloaded. "UI is only the view" is a scroll story: each screen and singleton on one tangled layer is lifted into its own 3D layer (UI scenes, UiManager, your app, game systems, backend), changing colour and name as it goes, then a Buy tap travels through the stack. "Made for teams" and a new FAQ entry explain why the editor setup merges cleanly: one asset per state, one scene per element, and the shared runtime config and Addressables group are regenerated by *Build Runtime UiConfig* instead of merged by hand
+
+### Fixed
+- Creating an element no longer overwrites an existing script with the same name: the generator keeps the file and logs a warning
+- The state generator no longer logs "Output directory does not exist" on every run
+- The States tab's "Add element scene" list now shows every matching unassigned scene in a scrolling list with a match count, instead of stopping at 8 with "+N more"
+- Creating a state in the States tab now creates its `UiStateDefinition` too, so its scenes can be added straight away instead of first pressing a separate *Create Config* button
+- A new element's scene is saved after its script is attached on the next compile, instead of being left with unsaved changes
+- The UI Setup Manager keeps the open tab when scripts recompile instead of jumping back to General
+- The UI Setup Manager opens on the current project's `UiEditorConfig` when the saved choice (an editor preference shared by all projects) points at another project's config, instead of showing no config
+- The editor stylesheets (`UiSetupTabs.uss`, `EditorWindow.uss`) no longer log "Unknown property" warnings on import: unsupported `font-weight`, `outline`, `border`, `gap` and `unity-font-style` are replaced with their UI Toolkit equivalents
+- Entering Play Mode with the Elements tab open no longer logs a "Cannot open scene ... while in Play Mode" warning for every element; scenes that aren't loaded show as unavailable until the tab is refreshed after Play
+
+### Changed
+- CODING_STANDARDS.md now includes the DenDon team rules: how we work and the hand-off report (§0), PascalCase for every constant, `*UiDisplay` for sub-widgets, try/catch only at async / IO boundaries, the log format, the game-agnostic and scene contract rules, the frozen consumer API and the consumer impact note (§8). Commit subjects are imperative sentence case with no prefix (CONTRIBUTING.md)
+- Editor tool log messages are tagged `[UiFramework]`, contain no emoji and say what to do next; the generators no longer log every step
+- Internal clean-up with no API change: private constants are PascalCase, private methods returning a `Task` end in `Async` (e.g. `UiManager.LoadAndPushStateAsync`), `UiElementScriptBinder` moved into `UiFramework.Editor.CodeGeneration`, and the remaining target-typed `new()`, single-line blocks and trailing whitespace are gone
+- Sample project: `MainMenuUiElement`, `StoreUiElement`, `NavBarUiElement` and `NavBarButton` are rewritten for the showcase and moved to the `UiShowcase.*` namespaces. The sample `UiEditorConfig` generates new elements and states into `UiShowcase.Elements` / `UiShowcase.States`. The bootstrap camera clears to the app background colour. `BootStrapper` now guarantees one camera and one EventSystem under a `DontDestroyOnLoad` `PersistentRoot`: it creates any that are missing and drops duplicates when the bootstrap scene loads again. The sample's element canvases are Screen Space – Camera (Scale With Screen Size 1080x1920, Expand), and `UiCanvasCamera` assigns them the bootstrap camera as their scenes load
+
+## [1.2.0] - 2026-10-17
+
+### Added
+- Optional per-call animation override: `UiManager.ShowState<T>` / `ShowStateByKey` / `HideUI` take an optional `UiTransition` (`UiTransition.ShowWith(TweenPresets.ScaleKey)`, `UiTransition.HideWith(...)`, or both). It replaces the elements' configured show / hide animations for that call only; unknown preset names log a warning and fall back to the configured ones
+- `UiElement.PrepareForShow(string presetKey)` and `TweenPresets.TryGetPresetKey`
+
+### Changed
+- Every show / hide animation now fades, which softens the motion: slides, pops and shake fade in during the first 40% of a show and out during the last 40% of a hide (Fade and Scale already fade throughout). Pops and shake used as show / hide now actually show and hide the element. Calling `ClickPop` / `SettlePop` / `ShakeLocal` directly for button feedback is unchanged (no fade)
+
+## [1.1.0] - 2026-10-17
+
+### Added
+- **UI element scene contract** (`<Name>Root → Canvas → one stretched Root`) with validation and one-click fixes (see DESIGN.md §7.1)
+  - `UiGlobalCanvasSettings` asset (`Assets/UiConfigs/UiGlobalCanvasSettings.asset`, auto-created with defaults: Screen Space Overlay, Scale With Screen Size 1080x1920, Expand, 100 PPU), referenced from `UiEditorConfig.GlobalCanvasSettings`
+  - New elements are generated with the full contract hierarchy and the global canvas settings; creating from an existing scene offers a structure fix
+  - All tools live in the UI Setup Manager window. No separate menu items are added
+  - General tab: Global Canvas Settings section. These are the defaults every new element scene starts with (instead of Unity's defaults); editing them never changes existing scenes
+  - Elements tab redesigned like the States tab: search in the top bar, a scrolling element list on the left (status icon, "(open)", double-click opens the scene), and the selected element's settings on the right
+  - Element settings: Open Scene / Select Asset; Structure (issue summaries, Fix Structure…, What to fix by hand…); Animations (show / hide presets); Canvas (Render Mode, Sorting Order, UI Scale Mode, Reference Resolution, Screen Match Mode / Match, Reference PPU, Use Default Settings…); Addressables (toggle, group, labels)
+  - Elements toolbar: Refresh, Validate All, Fix All Structure…, "Only show elements with issues", and a status summary; ➕ New Element opens the create form in the settings panel
+  - Search by name or part of the name in the Elements and States lists (any case, several words, names that start with the text first, Enter selects the first result); the States tab's "Add element scene" is now a search box with suggestions
+  - Clear confirmation popup for every fix and for Use Default Settings: short "What will change" bullets, a Now / After hierarchy preview (new objects highlighted), a Setting · Now → After table for canvas values, collapsed "Needs manual work", and a one-line save/undo note
+  - Short plain-language issue summaries in the popup and tooltips (full details still in the Console)
+  - Fixes only create and reparent objects (Undo-recorded, never delete). Content that doesn't fill the screen is always wrapped in a new full-screen Root and never resized, so the layout is unchanged
+  - Default canvas values are written only when a scene or its Canvas is created, or by an element's Use Default Settings; sorting order/layer, override sorting, world camera, plane distance and shader channels are never touched
+- EditMode tests for the contract under `Tests/Editor`, and PlayMode tests for the animations under `Tests/Runtime`
+- `com.unity.ugui` package dependency
+- `TweenPresets.PrepareShow` and `TweenPresets.Describe`; `Tween.RunAsync` (shared, interruptible animation loop); `UiTweenChannels`
+- Elements tab Animations section shows friendly preset names and what each choice does on show and on hide
+
+### Changed
+- Smoother, calmer animations: entrances ease out, exits are shorter and ease in, slides take 0.32 s in / 0.24 s out instead of 0.20 s, fades 0.22 / 0.16 s
+- `Scale` is now a subtle zoom combined with a fade (0.94× → 1× in, → 0.96× out) instead of a 0.9× scale that popped in and out
+- `Shake` is a smooth, fading side-to-side motion instead of random jitter; `ClickPop` / `SettlePop` are gentler (1.08× / 1.04×) with no bounce
+- `TweenCurves.EaseOut` / `EaseIn` are now true cubic ease-out / ease-in, and `EaseInOut` no longer pauses half-way (their old shapes didn't match their names)
+- A long frame (e.g. right after a scene loads) no longer makes an animation jump ahead: each frame advances at most 1/30 s
+- Stacked states hide in parallel instead of one after another
+- `UiElement.PrepareForShow` uses `TweenPresets.PrepareShow` (one place for start poses)
+
+### Fixed
+- `Scale` show ended at 0.9× instead of the real size, and each show/hide cycle shrank the screen further; `ClickPop` grew a button when tapped repeatedly. Presets now use the recorded base pose
+- Starting an animation on an object while another was running left a mixed pose; the newer animation now stops the older one
+- Slide presets move in their named direction on show and on hide (SlideRight enters from the left and leaves on the right), now covered by tests
+- An element shown again after being hidden by a different preset could stay faded out or off-screen
+- `UiManager.IsLastSceneActive<T>()` threw on an empty stack; it now returns `false`
+- `UiManager.ResetUI()` blocked the main thread with `Task.Wait()` and could deadlock; it no longer blocks
+- Clearer `UiConfig` load error (it named the wrong Addressables key)
+
+### Deprecated
+- `UiManager.ResetUI()`: use `await UiManager.ResetUIAsync()`. `ResetUI()` now starts the reset and returns immediately
+- Elements tab no longer closes scenes the user already had open when reading or writing animation presets. Open scenes are edited in place and left unsaved
+- Creating a UI element now asks to save modified open scenes before replacing them
+- `UiFramework.Tweening` and `UiFramework.Editor` now reference `UnityEngine.UI` explicitly (required on Unity 2021.3/2022.3)
+
+### Documentation
+- `CODING_STANDARDS.md`: a single source of truth for code style and project rules (formatting, naming, Unity null semantics, async, logging, assembly boundaries, versioning, templates), with a list of known deviations
+- `CLAUDE.md` pointing AI assistants at the standards and design docs
+
+### Changed
+- Rewrote `DESIGN.md` to match the current code: assembly graph, data model, runtime lifecycle, GUID ref-counted shared scenes, animation targets/presets, editor build pipeline, Addressables layout, invariants and known limitations
+- `README.md`: fixed the out-of-order structure and the outdated initialization API (`UiManager.InitializeAsync()` takes no config)
+- `CONTRIBUTING.md`: added a PR checklist, Conventional Commit types and the full release steps
+- `.github/copilot-instructions.md`: condensed to point at the authoritative docs (it previously listed the version as 1.0.31 and gave wrong paths)
+- Code templates now emit `using` directives outside the namespace, as the standards require, and document that `UiState` subclasses are type markers only
+- `.editorconfig`: added rules for JSON/asmdef/USS/UXML/YAML/Markdown and block-scoped namespaces; `.gitattributes` now normalizes line endings (`* text=auto`)
+
+## [1.0.40] - 2026-03-09
+
+### Fixed
+- Made `LoadAndPushState` in UiManager resilient to exceptions by adding try/catch/finally blocks
+- Ensured old state cleanup always executes even if transitions or scene loading fails
+- Prevented scene leaks when exceptions occur during state transitions
+
+## [1.0.35] - 2026-02-06
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.35] - 2026-02-04
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.35] - 2026-01-28
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.35] - 2026-01-28
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.35] - 2025-12-12
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.34] - 2025-12-12
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.33] - 2025-12-12
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.32] - 2025-12-12
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.31] - 2025-12-12
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.30] - 2025-12-12
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.29] - 2025-12-12
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.28] - 2025-12-12
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.27] - 2025-12-08
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.26] - 2025-12-08
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.25] - 2025-12-08
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.24] - 2025-12-08
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.23] - 2025-12-08
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.22] - 2025-12-08
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.21] - 2025-12-08
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.20] - 2025-12-05
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.20] - 2025-12-05
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.19] - 2025-12-05
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.18] - 2025-12-05
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.17] - 2025-12-05
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.17] - 2025-12-05
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.17] - 2025-12-05
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.17] - 2025-12-05
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.16] - 2025-12-05
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.16] - 2025-12-05
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.15] - 2025-12-05
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.15] - 2025-12-05
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.14] - 2025-12-05
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.14] - 2025-12-05
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.13] - 2025-12-05
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.13] - 2025-12-05
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.13] - 2025-12-05
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.13] - 2025-12-05
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.11] - 2025-12-05
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+## [1.0.10] - 2025-12-05
+
+### Changed
+- Merged dev branch to main
+- See GitHub release notes for detailed changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+### Removed
+
+## [1.0.0] - 2025-12-05
+
+### Added
+
+- Initial release of UI Framework
+- Core components: `UiManager`, `UiState`, `UiConfig`, `IUiElement`, `UiElement`
+- Addressables-based scene composition with LIFO state stack
+- Runtime API: `ShowState<T>()`, `ShowStateByKey()`, `HideUI()`, `GetCurrentState()`
+- Context-based UI population via `IUiElement.Populate(object context)`
+- Editor window: `UiSetupEditorWindow` for visual configuration
+- Code generation: `UiElementGenerator` and `UiStateGenerator`
+- Template system for generating UI elements, states, references, and params
+- Assembly definitions for Runtime, Core, and Editor namespaces
+- Comprehensive documentation and Copilot instructions
+- `.editorconfig` with strict C# coding standards
+
+### Features
+
+- Type-to-key mapping using reflection for generic API
+- Non-additive state loading with scene preservation
+- Automatic IUiElement discovery in loaded scenes
+- EditorConfig integration with UPM-compatible paths
+- Support for companion classes: `UiElementReference` and `UiPopulationParams`
+
+### Dependencies
+
+- Unity 2021.3 or later
+- Unity Addressables 1.21.0+
+
+[1.0.0]: https://github.com/dawaniyah-games/UiFramework/releases/tag/v1.0.0

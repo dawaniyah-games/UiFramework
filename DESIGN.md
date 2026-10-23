@@ -298,7 +298,7 @@ These hold today. A change that breaks one is a design change and needs this doc
 | Init | `IsInitialized` is `true` before the config finishes loading, and stays `true` if loading fails. |
 | Type resolution | Reflection over all assemblies at init, matched by simple class name (§5.3). |
 | Non-`UiElement` `IUiElement`s | Receive `Populate` but never animate. |
-| Samples | `package.json` declares `Samples~/BasicSetup`, but that folder is empty. The working sample is the showcase app in the host project under `Assets/` (§14). |
+| Samples | The package ships no samples, on purpose. `InitializeAsync` always loads the Addressable `UiConfig`, so a project has exactly one config: a sample with its own would clash with the project's or silently become it, and Addressables entries don't travel with a `Samples~` import. The working sample is the showcase app in the host project under `Assets/` (§14), available by cloning the repository. |
 
 ## 12. Authoring a new screen (quick guide)
 
