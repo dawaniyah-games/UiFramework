@@ -139,6 +139,13 @@ code {
     border-radius: 6px;
     padding: 0.05em 0.45em;
     white-space: nowrap;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+}
+
+/* Long menu paths are wider than a phone, so let them wrap there instead of running off the page. */
+@media (max-width: 620px) {
+    .menu-path { white-space: normal; }
 }
 
 /* ---------- Header and tabs ---------- */
@@ -443,7 +450,9 @@ pre code { background: none; border: 0; padding: 0; color: inherit; font-size: i
     box-shadow: var(--shadow);
 }
 
-.shot-frame img { display: block; width: 100%; height: auto; }
+/* Screenshots show at most at their own size: the editor captures get blurry and very tall when stretched. */
+.shot:not(.missing) .shot-frame { width: fit-content; max-width: 100%; }
+.shot-frame img { display: block; width: auto; max-width: 100%; height: auto; }
 .shot-missing { display: none; }
 .shot.missing img { display: none; }
 
@@ -502,13 +511,22 @@ figcaption { color: var(--text-dim); font-size: 0.88rem; margin-top: 8px; }
 .video.compact .video-link { position: absolute; }
 .video.compact .video-soon .play { width: 44px; height: 44px; margin-bottom: 8px; }
 
-/* A published video shows its thumbnail; clicking it opens the player in a popup (or YouTube, from a file). */
-.video-link { background: center / cover no-repeat; color: #fff; font-weight: inherit; }
-.video-link::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(10, 12, 30, 0.85), rgba(10, 12, 30, 0.35)); transition: opacity 0.2s; }
-.video-link > div { position: relative; }
+/* A published video shows its thumbnail; clicking it opens the player in a popup (or YouTube, from a file).
+   The thumbnails carry their own big title, so the play button and caption sit in a bar along the bottom. */
+.video-link { background: center / cover no-repeat; color: #fff; font-weight: inherit; place-items: end start; text-align: left; padding: 16px 18px; }
+.video-link::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(10, 12, 30, 0.96) 0%, rgba(10, 12, 30, 0.86) 24%, rgba(10, 12, 30, 0) 50%); transition: opacity 0.2s; }
+.video-link > div { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; align-items: center; }
+.video-link .play,
+.video.compact .video-link .play { grid-row: span 2; width: 46px; height: 46px; margin: 0; background: rgba(255, 255, 255, 0.16); transition: background 0.2s, transform 0.2s; }
+.video-link .play svg { width: 18px; height: 18px; margin-left: 3px; }
+.video-link strong { text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5); }
+.video.compact .video-link { padding: 12px 14px; }
+.video.compact .video-link strong { font-size: 0.95rem; }
+.video.compact .video-link span { font-size: 0.82rem; }
 .video-link:hover { text-decoration: none; }
-.video-link:hover::before { opacity: 0.75; }
-.video-link:hover .play { background: rgba(255, 255, 255, 0.24); }
+.video-link:hover::before { opacity: 0.85; }
+.video-link:hover .play,
+.video-link:focus-visible .play { background: var(--primary); transform: scale(1.06); }
 
 .feature-video { max-width: 880px; }
 
@@ -524,8 +542,10 @@ figcaption { color: var(--text-dim); font-size: 0.88rem; margin-top: 8px; }
 }
 
 .video-dialog::backdrop { background: rgba(6, 8, 20, 0.82); }
+/* The page stays put behind an open video. */
+html:has(.video-dialog[open]) { overflow: hidden; }
 .video-dialog-bar { display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 18px; }
-.video-dialog-bar strong { flex: 1; font-size: 0.98rem; }
+.video-dialog-bar strong { flex: 1; font-size: 0.98rem; color: #fff; }
 
 .video-dialog-close {
     width: 36px;
@@ -754,6 +774,7 @@ figcaption { color: var(--text-dim); font-size: 0.88rem; margin-top: 8px; }
 
 .playlist li { display: flex; gap: 12px; align-items: center; padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); margin: 0; }
 .playlist li:hover { border-color: var(--primary); }
+.playlist li:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .playlist .num { width: 30px; height: 30px; border-radius: 8px; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; font-weight: 800; font-size: 0.85rem; flex: none; }
 .playlist .meta { flex: 1; }
 .playlist .meta strong { display: block; font-size: 0.95rem; }
@@ -1911,7 +1932,7 @@ await UiManager.ShowState&lt;MainMenuUiState&gt;(data);</code></pre></div>
                         <li>Set <code>ElementNamespace</code> and <code>StateNamespace</code> to your game's namespaces.</li>
                         <li>In <strong>Global Canvas Settings</strong>, choose the render mode and the Canvas Scaler values (default: Scale With Screen Size, 1080 &times; 1920, Expand). Every new element scene starts with them.</li>
                     </ul>
-                    <div class="callout note"><span class="callout-title">Defaults, not enforcement</span><p>Changing the global settings never edits existing scenes. Each element can still differ, or adopt the defaults with <strong>Use Default Settings&hellip;</strong>.</p></div>
+                    <div class="callout note"><span class="callout-title">Defaults, not enforcement</span><p>Changing the global settings never edits existing scenes. Each element can still differ, or adopt the defaults with <strong>Use Default Settings&hellip;</strong></p></div>
                 </div>
                 <div class="video compact" data-video-id="_Mc-aUATrYk" data-title="Step 1: Install and create the config" data-length="1:49"></div>
             </div>
@@ -2608,6 +2629,15 @@ await TweenPresets.ShakeLocal(buyButton.transform);  // "no": not enough coins</
             link.target = "_blank";
             link.rel = "noopener";
             link.style.backgroundImage = "url(\"https://i.ytimg.com/vi/" + encodeURIComponent(id) + "/hqdefault.jpg\")";
+            // Swap in the 1280 x 720 thumbnail when it exists. For videos without one, YouTube serves a 120 x 90 placeholder.
+            var hd = new Image();
+            hd.onload = function () {
+                if (this.naturalWidth > 120) {
+                    this.target.style.backgroundImage = "url(\"" + this.src + "\")";
+                }
+            };
+            hd.target = link;
+            hd.src = "https://i.ytimg.com/vi/" + encodeURIComponent(id) + "/maxresdefault.jpg";
             link.innerHTML = '<div><div class="play">' + playIcon + '</div><strong></strong><span></span></div>';
             link.querySelector("strong").textContent = title;
             link.querySelector("span").textContent = (openedFromFile ? "Watch on YouTube" : "Play") + (length ? " · " + length : "");
@@ -2648,12 +2678,21 @@ await TweenPresets.ShakeLocal(buyButton.transform);  // "no": not enough coins</
                 item.querySelector(".state").classList.add("live");
             }
             item.style.cursor = "pointer";
+            // Reachable from the keyboard like a button: Tab to it, then Enter or Space.
+            item.tabIndex = 0;
+            item.setAttribute("role", "button");
             item.addEventListener("click", function () {
                 if (live && !openedFromFile) {
                     openVideo(slot.getAttribute("data-video-id"), slot.getAttribute("data-title") || step.querySelector("h3").textContent);
                     return;
                 }
                 location.hash = step.id;
+            });
+            item.addEventListener("keydown", function (e) {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    item.click();
+                }
             });
             playlist.appendChild(item);
         });
