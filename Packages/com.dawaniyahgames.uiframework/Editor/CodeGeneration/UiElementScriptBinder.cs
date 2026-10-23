@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using UiFramework.Editor.Window;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.SceneManagement;
@@ -44,21 +45,31 @@ namespace UiFramework.Editor.CodeGeneration
                 return;
             }
 
+            // Attach after the reload has fully finished: saving the scene from inside the reload callback makes
+            // Unity's import pass see the file change and ask to reload the "externally modified" scene.
+            EditorApplication.delayCall += () => AttachAndSave(name, type);
+        }
+
+        private static void AttachAndSave(string name, Type type)
+        {
             GameObject elementRoot = GameObject.Find(name + "Root");
-            if (elementRoot != null && elementRoot.GetComponent(type) == null)
+            if (elementRoot == null || elementRoot.GetComponent(type) != null)
             {
-                Undo.AddComponent(elementRoot, type);
-
-                // The scene was created and saved by the element creator; save it again so the new element isn't left with unsaved changes.
-                UnityEngine.SceneManagement.Scene scene = elementRoot.scene;
-                EditorSceneManager.MarkSceneDirty(scene);
-                if (!string.IsNullOrEmpty(scene.path))
-                {
-                    EditorSceneManager.SaveScene(scene);
-                }
-
-                Debug.Log($"[UiFramework] Attached {type.Name} to {elementRoot.name} after script reload and saved the scene.");
+                return;
             }
+
+            Undo.AddComponent(elementRoot, type);
+
+            // The scene was created and saved by the element creator; save it again so the new element isn't left with unsaved changes.
+            UnityEngine.SceneManagement.Scene scene = elementRoot.scene;
+            EditorSceneManager.MarkSceneDirty(scene);
+            if (!string.IsNullOrEmpty(scene.path))
+            {
+                EditorSceneManager.SaveScene(scene);
+            }
+
+            Debug.Log($"[UiFramework] Attached {type.Name} to {elementRoot.name} after script reload and saved the scene.");
+            UiSetupEditorWindow.RefreshElementScene(scene.path);
         }
     }
 }

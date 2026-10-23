@@ -48,8 +48,53 @@ namespace UiFramework.Editor.Window
             window.minSize = new Vector2(800, 500);
         }
 
+        // Re-reads one element scene in every open window's Elements tab, e.g. after its script was attached.
+        public static void RefreshElementScene(string scenePath)
+        {
+            if (string.IsNullOrEmpty(scenePath))
+            {
+                return;
+            }
+
+            UiSetupEditorWindow[] windows = Resources.FindObjectsOfTypeAll<UiSetupEditorWindow>();
+            for (int i = 0; i < windows.Length; i++)
+            {
+                for (int j = 0; j < windows[i].tabs.Count; j++)
+                {
+                    if (windows[i].tabs[j] is ElementsTab elementsTab)
+                    {
+                        elementsTab.RefreshScene(scenePath);
+                    }
+                }
+            }
+        }
+
+        private void OnDisable()
+        {
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+        }
+
+        // Element scenes can't be read during Play, so the Elements tab reads them again once Play has ended.
+        private void OnPlayModeStateChanged(PlayModeStateChange change)
+        {
+            if (change != PlayModeStateChange.EnteredEditMode)
+            {
+                return;
+            }
+
+            for (int i = 0; i < tabs.Count; i++)
+            {
+                if (tabs[i] is ElementsTab elementsTab)
+                {
+                    elementsTab.RefreshUnavailableScenes();
+                }
+            }
+        }
+
         private void OnEnable()
         {
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
             tabToRestore = SessionState.GetInt(SelectedTabKey, 0);
 
             VisualElement root = rootVisualElement;
