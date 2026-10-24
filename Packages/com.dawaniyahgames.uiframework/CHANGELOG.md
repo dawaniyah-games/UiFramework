@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Docs: the README marks the Unity Asset Store install as coming soon until the listing is live
+
 ## [1.3.6] - 2026-10-24
 
 ### Changed
