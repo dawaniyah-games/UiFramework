@@ -41,7 +41,7 @@ namespace UiFramework.Editor.Window
             new StatesTab()
         };
 
-        [MenuItem("UiFramework/UI Setup Manager")]
+        [MenuItem("Window/UI Framework/UI Setup Manager")]
         public static void ShowWindow()
         {
             UiSetupEditorWindow window = GetWindow<UiSetupEditorWindow>(false, "UI Setup Manager", true);

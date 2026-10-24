@@ -1,6 +1,6 @@
 # UI Framework: AI Assistant Instructions
 
-Unity UPM package `com.dawaniyahgames.uiframework` (source in `Packages/com.dawaniyahgames.uiframework/`), plus a sample host project in `Assets/`. Unity 2021.3+ (the host project uses Unity 6), Addressables, C# 9.
+Unity UPM package `com.dawaniyahgames.uiframework` (source in `Packages/com.dawaniyahgames.uiframework/`), plus a sample host project in `Assets/`. Unity 2022.3+ (the host project uses Unity 6), Addressables, C# 9.
 
 ## Read first: these are authoritative
 
@@ -31,7 +31,7 @@ Don't restate or override those documents here. If they and this file disagree, 
 - `UiState` subclasses are **only type markers** for `ShowState<T>()`. Their class name must equal the state key, and their code never runs.
 - `Populate` can run several times on the same instance (shared scenes), so it must be idempotent.
 - An optional `UiTransition` overrides the show / hide animation for one call only; never change the elements' configured presets for a one-off.
-- The runtime `UiConfig` asset is **generated** by *UiFramework → UI Setup Manager → General → Build Runtime UiConfig* from `UiStateDefinition` assets. Don't hand-edit it.
+- The runtime `UiConfig` asset is **generated** by *Window → UI Framework → UI Setup Manager → General → Build Runtime UiConfig* from `UiStateDefinition` assets. Don't hand-edit it.
 
 ## When changing things
 

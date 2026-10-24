@@ -35,7 +35,7 @@ Enforced by `.editorconfig`.
 | Braces on control blocks | **MUST** always be present, even for one-line `if`/`for`/`while` and early returns *(checked)* |
 | Single-line blocks | Not allowed; `{ }` bodies are expanded onto separate lines, and statements are never packed onto one line *(checked)* |
 | `using` directives | **MUST** be outside the namespace, at the top of the file, `System.*` first, no blank lines between groups *(checked)*. A few old files still have them inside; don't copy that, and don't mass-fix it either |
-| Namespaces | Block-scoped (`namespace X { }`). File-scoped namespaces need C# 10, which Unity 2021.3 (the package minimum) does not support |
+| Namespaces | Block-scoped (`namespace X { }`). File-scoped namespaces need C# 10, which Unity 2022.3 (the package minimum) does not support |
 
 ## 2. Naming
 
@@ -194,7 +194,7 @@ Tests use NUnit, follow every rule in this document, test one behaviour each, an
 
 Tests don't cover the full UiManager flow (Addressables loading, state switching). Every runtime change **MUST** still be checked in Play Mode with the sample project:
 
-1. *UiFramework → UI Setup Manager → General → Build Runtime UiConfig*, then build Addressables content (or use *Use Asset Database* play mode).
+1. *Window → UI Framework → UI Setup Manager → General → Build Runtime UiConfig*, then build Addressables content (or use *Use Asset Database* play mode).
 2. Run the bootstrap scene and switch states with the NavBar, or use `UiNavigationSmokeTest` (keys `1` / `2` / `` ` ``).
 3. Confirm: no console errors, no leftover scenes in the Hierarchy after switching, no UI flash, and shared elements (NavBar) do not re-animate.
 

@@ -30,7 +30,7 @@
 - SAY: "Every screen will be an Addressable scene, so open Addressables Groups once and create its settings. Set the play mode script to Use Asset Database, so screens load straight from your project when you press Play."
 
 **4. Open the UI Setup Manager and create the config** (1:00)
-- SCREEN: Menu **UiFramework → UI Setup Manager**. Dock it next to the Inspector. **General** tab → **🔄 Create Config**. Click the created `UiEditorConfig` asset; in the Inspector set **Element Namespace** to `CoinShop.Ui.Elements` and **State Namespace** to `CoinShop.Ui.States`.
+- SCREEN: Menu **Window → UI Framework → UI Setup Manager**. Dock it next to the Inspector. **General** tab → **🔄 Create Config**. Click the created `UiEditorConfig` asset; in the Inspector set **Element Namespace** to `CoinShop.Ui.Elements` and **State Namespace** to `CoinShop.Ui.States`.
 - SAY: "This window is where you'll build all of your UI. In the General tab, press Create Config. The config remembers where your scripts and scenes go. Set the two namespaces to your game's: Coin Shop dot UI dot Elements, and Coin Shop dot UI dot States."
 
 **5. Check the canvas defaults** (1:25)
