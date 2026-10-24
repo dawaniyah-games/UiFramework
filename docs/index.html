@@ -1321,7 +1321,7 @@ html, body { overflow-x: clip; }
                     <a class="btn btn-ghost" href="#problem">Why it matters</a>
                 </div>
                 <div class="hero-meta">
-                    <span class="pill">Unity 2021.3 &ndash; Unity 6</span>
+                    <span class="pill">Unity 2022.3 &ndash; Unity 6</span>
                     <span class="pill">Package Manager</span>
                     <span class="pill">Production-ready by default</span>
                     <span class="pill">Merge-friendly</span>
@@ -1431,7 +1431,7 @@ html, body { overflow-x: clip; }
 
         <div class="unity-strip">
             <div class="card"><strong>Package Manager</strong><span>Add by git URL, pin a version</span></div>
-            <div class="card"><strong>Editor window</strong><span>UiFramework &rarr; UI Setup Manager</span></div>
+            <div class="card"><strong>Editor window</strong><span>Window &rarr; UI Framework &rarr; UI Setup Manager</span></div>
             <div class="card"><strong>Scenes as screens</strong><span>Addressable, loaded additively</span></div>
             <div class="card"><strong>UGUI native</strong><span>Canvas, Text, TMP, your components</span></div>
             <div class="card"><strong>Tested</strong><span>EditMode and PlayMode tests</span></div>
@@ -1770,7 +1770,7 @@ await UiManager.HideUI();</code></pre></div>
 
     <h2 id="requirements">Requirements</h2>
     <div class="table-wrap"><table>
-        <tr><th>Unity</th><td>2021.3 or newer (the showcase project uses Unity 6)</td></tr>
+        <tr><th>Unity</th><td>2022.3 or newer (the showcase project uses Unity 6)</td></tr>
         <tr><th>Addressables</th><td>1.21.0 or newer, installed automatically as a dependency</td></tr>
         <tr><th>UI</th><td>UGUI (<code>com.unity.ugui</code>). Any content works inside your scenes: Text, TextMeshPro, images, your own components</td></tr>
         <tr><th>Platforms</th><td>Everything Unity and Addressables support. All animation runs on unscaled time</td></tr>
@@ -1784,13 +1784,13 @@ await UiManager.HideUI();</code></pre></div>
     <div class="code"><div class="code-head"><span>Packages/manifest.json</span><button class="copy">Copy</button></div>
 <pre><code class="language-json">{
   "dependencies": {
-    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.5"
+    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.6"
   }
 }</code></pre></div>
 
     <h2 id="setup">2. Set up the project</h2>
     <ol>
-        <li>Open <span class="menu-path">UiFramework &rarr; UI Setup Manager</span>.</li>
+        <li>Open <span class="menu-path">Window &rarr; UI Framework &rarr; UI Setup Manager</span>.</li>
         <li>In the <strong>General</strong> tab press <strong>Create Config</strong>. Set your script and scene folders and your game's namespaces on the created <code>UiEditorConfig</code>.</li>
         <li>Check the <strong>Global Canvas Settings</strong> in the same tab: every new element scene starts with them.</li>
     </ol>
@@ -1898,8 +1898,10 @@ await UiManager.ShowState&lt;MainMenuUiState&gt;(data);</code></pre></div>
     <div class="page-intro">
         <span class="eyebrow">Tutorial</span>
         <h1>Build a screen with the UI Setup Manager</h1>
-        <p>Ten steps from an empty project to a working screen with a popup. Every step has a short video. Open the editor with <span class="menu-path">UiFramework &rarr; UI Setup Manager</span>.</p>
+        <p>Ten steps from an empty project to a working screen with a popup. Every step has a short video. Open the editor with <span class="menu-path">Window &rarr; UI Framework &rarr; UI Setup Manager</span>.</p>
     </div>
+
+    <div class="callout note"><span class="callout-title">Menu moved in v1.3.6</span><p>Since v1.3.6 the window is under <span class="menu-path">Window &rarr; UI Framework &rarr; UI Setup Manager</span>; the videos show the older <span class="menu-path">UiFramework</span> menu.</p></div>
 
     <h3>Start here</h3>
     <p>See where you are heading first: the showcase app, a complete mobile game UI built only with UI Framework, with an intro, four tabs under shared bars, and reward, purchase and settings popups. Then build your own, one short video per step.</p>
@@ -2382,7 +2384,7 @@ await TweenPresets.ShakeLocal(buyButton.transform);  // "no": not enough coins</
     <ol>
         <li>Clone <a href="https://github.com/dawaniyah-games/UiFramework" target="_blank" rel="noopener">dawaniyah-games/UiFramework</a> and open it in Unity 6.</li>
         <li>Open <code>Assets/Scenes/Bootstrapper.unity</code>, set the Game view to portrait 1080 &times; 1920, and press Play.</li>
-        <li>Open <span class="menu-path">UiFramework &rarr; UI Setup Manager &rarr; Elements</span>, change a screen's animation, and play again.</li>
+        <li>Open <span class="menu-path">Window &rarr; UI Framework &rarr; UI Setup Manager &rarr; Elements</span>, change a screen's animation, and play again.</li>
     </ol>
 
     <h2 id="states">States in the app</h2>

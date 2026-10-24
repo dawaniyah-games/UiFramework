@@ -23,7 +23,7 @@ trim_trailing_whitespace = false
 indent_style = space
 indent_size = 4
 
-# Block-scoped namespaces (file-scoped needs C# 10; Unity 2021.3 is C# 9)
+# Block-scoped namespaces (file-scoped needs C# 10; Unity 2022.3 is C# 9)
 csharp_style_namespace_declarations = block_scoped:warning
 
 # Naming conventions

@@ -1,6 +1,6 @@
 # UI Framework: System Design
 
-> Package `com.dawaniyahgames.uiframework` · describes **v1.3.5** · last reviewed 2026-10-24
+> Package `com.dawaniyahgames.uiframework` · describes **v1.3.6** · last reviewed 2026-10-24
 >
 > This document describes how the framework works *today*. If you change behaviour, update the matching section in the same PR ([CODING_STANDARDS.md §10](CODING_STANDARDS.md#10-comments--documentation)).
 
@@ -92,6 +92,8 @@ await UiManager.InitializeAsync();
 4. For each entry, `stateKey → UiStateEntry` is cached and the `UiState` subclass is resolved (§5.3).
 
 The `defaultState` parameter of `InitializeAsync` is currently unused. There is no synchronous initializer. `UiManager` is never placed in a scene.
+
+The static instance is cleared at `RuntimeInitializeLoadType.SubsystemRegistration`, before any scene loads in each Play session. With *Enter Play Mode Options* and domain reload turned off, statics survive between sessions, so without this the second session would still hold the destroyed manager from the first. Every Play session starts uninitialized and creates its manager on the first `InitializeAsync`. The manager's other state lives on the instance, so it goes with it. No other runtime static holds state: `TweenCurves`, `TweenPresets`' key list and `UiTransition.Default` are read-only.
 
 ### 5.2 Showing a state
 
@@ -249,7 +251,7 @@ Adding a preset means changing `TweenPresets` only: the key constant, the `prese
 
 ## 8. Editor pipeline
 
-Menu: **UiFramework → UI Setup Manager** (`UiSetupEditorWindow`). The selected `UiEditorConfig` is remembered per machine in `EditorPrefs["UiFramework.Editor.ConfigAssetGUID"]`.
+Menu: **Window → UI Framework → UI Setup Manager** (`UiSetupEditorWindow`). The selected `UiEditorConfig` is remembered per machine in `EditorPrefs["UiFramework.Editor.ConfigAssetGUID"]`.
 
 | Tab | What it does |
 | --- | --- |
@@ -282,7 +284,7 @@ A legacy group named `Global Configs` (with a space) is renamed to `GlobalConfig
 
 These hold today. A change that breaks one is a design change and needs this document updated.
 
-1. Exactly one `UiManager` exists, created by `InitializeAsync` and kept alive with `DontDestroyOnLoad`.
+1. Exactly one `UiManager` exists, created by `InitializeAsync` and kept alive with `DontDestroyOnLoad`. Each Play session starts without one, also with domain reload disabled (§5.1).
 2. Only `UiManager` loads or unloads UI scenes. A UI scene is loaded ⇔ its ref count is > 0 or it is in flight.
 3. Scenes are keyed by Addressables GUID, never by scene name.
 4. After a non-additive show completes, the stack holds exactly one state.
@@ -302,7 +304,7 @@ These hold today. A change that breaks one is a design change and needs this doc
 
 ## 12. Authoring a new screen (quick guide)
 
-1. **UiFramework → UI Setup Manager → General → Create Config** (first time only). Adjust the paths and namespaces on the `UiEditorConfig` asset. Set `ElementNamespace` / `StateNamespace` to your game's namespaces; the defaults (`UiFramework.Editor.*`) are placeholders.
+1. **Window → UI Framework → UI Setup Manager → General → Create Config** (first time only). Adjust the paths and namespaces on the `UiEditorConfig` asset. Set `ElementNamespace` / `StateNamespace` to your game's namespaces; the defaults (`UiFramework.Editor.*`) are placeholders.
 2. **Elements tab** → name it (e.g. `ProfileUiElement`) → *Create*. The scene is generated as `ProfileUiElementRoot → Canvas → Root` with the global canvas settings. Put **all** content under `Root` (§7.1) and pick show/hide presets. The row's Structure column should stay ✓.
 3. Override `Populate`, cast `context`, and keep it idempotent:
    ```csharp

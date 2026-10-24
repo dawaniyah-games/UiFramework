@@ -59,7 +59,7 @@ You are helping me capture screenshots of a Unity editor tool for a documentatio
 
 PROJECT
 - Unity project: D:\Repos\UiFramework (open it from Unity Hub if needed).
-- The tool is the "UI Setup Manager" window: menu UiFramework → UI Setup Manager. It has three tabs: General, Elements, States.
+- The tool is the "UI Setup Manager" window: menu Window → UI Framework → UI Setup Manager. It has three tabs: General, Elements, States.
 
 RULES (important)
 - Do NOT save any scene, asset, script or setting, and never press "Build Runtime UiConfig", "Fix Structure…", "Fix All Structure…", "Create Config" or "➕ Create UI Element" to completion. If a dialog would change something, press Cancel. If Unity asks to save, choose "Don't Save".
@@ -104,7 +104,7 @@ WHERE THINGS ARE
 - The tutorial project is a NEW, separate Unity 6 project called CoinShop (not the UiFramework repository). We build one small game UI in it, step by step:
   Main Menu (title, Play, Store), Store (three item cards), shared TopBar (coin count) and NavBar (Home, Store), and a Confirm Purchase popup. Namespaces: CoinShop.Ui.Elements and CoinShop.Ui.States. Colours: background #12142A, panel #20244A, accent #FFC83D, text white.
 - The package is installed from: https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework
-- The tool window: UiFramework → UI Setup Manager (tabs General, Elements, States).
+- The tool window: Window → UI Framework → UI Setup Manager (tabs General, Elements, States).
 
 THE EPISODES (each starts exactly where the previous ended)
 1. Install and create the config: install the package by git URL; Window → Asset Management → Addressables → Groups → Create Addressables Settings, Play Mode Script = Use Asset Database; UI Setup Manager → General → 🔄 Create Config; set the two namespaces; show Global Canvas Settings (Screen Space - Overlay, Scale With Screen Size, 1080 x 1920, Expand).

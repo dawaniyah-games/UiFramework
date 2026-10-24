@@ -6,7 +6,7 @@ The **UI Setup Manager** editor window generates the element scripts, element sc
 
 ## Requirements
 
-- Unity 2021.3 or later
+- Unity 2022.3 or later
 - Addressables 1.21.0 or later and uGUI (installed automatically as dependencies)
 
 ## Installation
@@ -23,7 +23,7 @@ Append `#vX.Y.Z` to pin a [release](https://github.com/dawaniyah-games/UiFramewo
 
 ## Quick start
 
-1. Open **UiFramework → UI Setup Manager**.
+1. Open **Window → UI Framework → UI Setup Manager**.
 2. **General** → *Create Config*. Set your script and scene paths and namespaces on the new `UiEditorConfig`.
 3. **Elements** → enter a name (e.g. `MainMenuUiElement`) → *Create*. This generates the script and the scene. Build the screen under `MainMenuUiElementRoot → Canvas → Root` and pick its show / hide animations in the list.
 4. **States** → create a state (e.g. `MainMenuUiState`), add its element scenes and generate the state class.

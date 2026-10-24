@@ -55,7 +55,7 @@ public class BootStrapper : MonoBehaviour
             string introKey;
             if (!UiManager.TryGetUiStateKeyName<IntroUiState>(out introKey))
             {
-                Debug.LogError("[BootStrapper] IntroUiState is not in the runtime UiConfig, so there is nothing to show. Run UiFramework > UI Setup Manager > General > Build Runtime UiConfig, then press Play again.");
+                Debug.LogError("[BootStrapper] IntroUiState is not in the runtime UiConfig, so there is nothing to show. Run Window > UI Framework > UI Setup Manager > General > Build Runtime UiConfig, then press Play again.");
                 return;
             }
 
