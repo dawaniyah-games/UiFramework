@@ -1,6 +1,6 @@
 # UI Framework: AI Assistant Instructions
 
-Unity UPM package `com.dawaniyahgames.uiframework` (source in `Packages/com.dawaniyahgames.uiframework/`), plus a sample host project in `Assets/`. Unity 2021.3+ (the host project uses Unity 6), Addressables, C# 9.
+Unity UPM package `com.dawaniyahgames.uiframework` (source in `Packages/com.dawaniyahgames.uiframework/`), plus a sample host project in `Assets/`. Unity 2022.3+ (the host project uses Unity 6), Addressables, C# 9.
 
 ## Read first: these are authoritative
 

@@ -6,7 +6,7 @@ The **UI Setup Manager** editor window generates the element scripts, element sc
 
 ## Requirements
 
-- Unity 2021.3 or later
+- Unity 2022.3 or later
 - Addressables 1.21.0 or later and uGUI (installed automatically as dependencies)
 
 ## Installation

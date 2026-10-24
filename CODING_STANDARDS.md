@@ -35,7 +35,7 @@ Enforced by `.editorconfig`.
 | Braces on control blocks | **MUST** always be present, even for one-line `if`/`for`/`while` and early returns *(checked)* |
 | Single-line blocks | Not allowed; `{ }` bodies are expanded onto separate lines, and statements are never packed onto one line *(checked)* |
 | `using` directives | **MUST** be outside the namespace, at the top of the file, `System.*` first, no blank lines between groups *(checked)*. A few old files still have them inside; don't copy that, and don't mass-fix it either |
-| Namespaces | Block-scoped (`namespace X { }`). File-scoped namespaces need C# 10, which Unity 2021.3 (the package minimum) does not support |
+| Namespaces | Block-scoped (`namespace X { }`). File-scoped namespaces need C# 10, which Unity 2022.3 (the package minimum) does not support |
 
 ## 2. Naming
 
