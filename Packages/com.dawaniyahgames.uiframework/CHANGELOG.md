@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.5] - 2026-10-24
+
 ### Changed
 - Package: ships its own `README.md`, `LICENSE.md` and `CHANGELOG.md`, and `package.json` now has `documentationUrl`, `changelogUrl` and `licensesUrl`, as the Unity Asset Store requires. The package copies of `LICENSE.md` and `CHANGELOG.md` must match the root files; `tools/check-standards.sh` fails when they don't
 - Package: the `samples` entry is removed from `package.json`. It pointed at `Samples~/BasicSetup`, which never existed
