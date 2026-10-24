@@ -2,7 +2,7 @@
 # Checks the C# rules from CODING_STANDARDS.md that a script can check reliably. Runs in CI (.github/workflows/
 # standards.yml) and locally from the repository root:
 #
-#   bash tools/check-standards.sh            # check every C# file and code template
+#   bash tools/check-standards.sh            # check every C# file and code template, and the package's doc copies
 #   bash tools/check-standards.sh FILE...    # check only these files
 #
 # Exits 1 when anything fails. A known legacy deviation can be exempted for one file and one rule in
@@ -29,7 +29,9 @@ cd "$root"
 
 baseline="tools/standards-baseline.txt"
 
+check_copies=""
 if [ "${#files[@]}" -eq 0 ]; then
+    check_copies="yes"
     mapfile -t files < <(
         {
             find Packages/com.dawaniyahgames.uiframework Assets/Scripts -name '*.cs' -type f
@@ -140,6 +142,18 @@ for file in "${files[@]}"; do
         failures=$((failures + $(printf '%s\n' "$output" | wc -l)))
     fi
 done
+
+# The package ships copies of these root files for the Asset Store; the root files are the source of truth. Line
+# endings are ignored, because Windows working copies may use CRLF.
+if [ -n "$check_copies" ]; then
+    for copied in LICENSE.md CHANGELOG.md; do
+        packaged="Packages/com.dawaniyahgames.uiframework/$copied"
+        if [ ! -f "$packaged" ] || ! cmp -s <(tr -d '\r' < "$copied") <(tr -d '\r' < "$packaged"); then
+            echo "$packaged: [package-copy] Must match the root $copied. Copy it: cp $copied $packaged"
+            failures=$((failures + 1))
+        fi
+    done
+fi
 
 if [ "$failures" -gt 0 ]; then
     echo ""

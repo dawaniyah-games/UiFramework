@@ -1,28 +1,30 @@
-## UI Framework v1.3.1
+## UI Framework v1.3.5
 
-Editor fixes for creating elements, and the tutorial videos in the docs. A patch on top of v1.3.0.
+The package is ready for the Unity Asset Store. A patch on top of v1.3.4.
 
 ### Highlights
 
-**Creating elements**
-- Creating an element no longer brings up Unity's "Open scene(s) modified externally" dialog: the script is attached and the scene saved after the script reload.
-- The Elements tab shows a new element as ready (✓) as soon as its script is attached, without pressing *Refresh*.
-- The Elements tab reads its scenes again when Play Mode ends, instead of showing them as unavailable until *Refresh*.
+**Asset Store package**
+- The package ships its own `README.md`, `LICENSE.md` and `CHANGELOG.md`, and `package.json` links to the docs site, the changelog and the license, as the Asset Store requires.
+- The broken `samples` entry is removed from `package.json`. It pointed at `Samples~/BasicSetup`, which never existed.
+- The package ships no samples, on purpose. `UiManager.InitializeAsync()` always loads the Addressable `UiConfig`, so a project has exactly one config, and a sample with its own would clash with yours or silently replace it. Build your config with the UI Setup Manager. The showcase app stays in this repository: clone it and play `Assets/Scenes/Bootstrapper.unity`.
 
-**Docs**
-- The tutorial step and showcase video slots now play the published Coin Shop tutorial videos.
+**Repository**
+- `tools/check-standards.sh` fails when the package's `LICENSE.md` or `CHANGELOG.md` differs from the root file. The root files stay the source of truth.
 
 ### Upgrade notes
-- No breaking changes. Editor-only fixes: no runtime or public API change.
+- No breaking changes. Packaging and docs only: no runtime, editor or public API change.
 
-Full details: [CHANGELOG.md](https://github.com/dawaniyah-games/UiFramework/blob/v1.3.1/CHANGELOG.md)
+Full details: [CHANGELOG.md](https://github.com/dawaniyah-games/UiFramework/blob/v1.3.5/CHANGELOG.md)
 
 ### Installation
 
-Package Manager → **+** → *Add package from git URL…*
+From the Unity Asset Store: add *UI Framework* to your assets, then install it from **Window → Package Manager → My Assets**.
+
+Or Package Manager → **+** → *Add package from git URL…*
 
 ```
-https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.1
+https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.5
 ```
 
 Or in `Packages/manifest.json`:
@@ -30,7 +32,7 @@ Or in `Packages/manifest.json`:
 ```json
 {
   "dependencies": {
-    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.1"
+    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.5"
   }
 }
 ```
