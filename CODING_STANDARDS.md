@@ -194,7 +194,7 @@ Tests use NUnit, follow every rule in this document, test one behaviour each, an
 
 Tests don't cover the full UiManager flow (Addressables loading, state switching). Every runtime change **MUST** still be checked in Play Mode with the sample project:
 
-1. *UiFramework → UI Setup Manager → General → Build Runtime UiConfig*, then build Addressables content (or use *Use Asset Database* play mode).
+1. *Window → UI Framework → UI Setup Manager → General → Build Runtime UiConfig*, then build Addressables content (or use *Use Asset Database* play mode).
 2. Run the bootstrap scene and switch states with the NavBar, or use `UiNavigationSmokeTest` (keys `1` / `2` / `` ` ``).
 3. Confirm: no console errors, no leftover scenes in the Hierarchy after switching, no UI flash, and shared elements (NavBar) do not re-animate.
 

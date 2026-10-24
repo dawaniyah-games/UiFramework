@@ -249,7 +249,7 @@ Adding a preset means changing `TweenPresets` only: the key constant, the `prese
 
 ## 8. Editor pipeline
 
-Menu: **UiFramework → UI Setup Manager** (`UiSetupEditorWindow`). The selected `UiEditorConfig` is remembered per machine in `EditorPrefs["UiFramework.Editor.ConfigAssetGUID"]`.
+Menu: **Window → UI Framework → UI Setup Manager** (`UiSetupEditorWindow`). The selected `UiEditorConfig` is remembered per machine in `EditorPrefs["UiFramework.Editor.ConfigAssetGUID"]`.
 
 | Tab | What it does |
 | --- | --- |
@@ -302,7 +302,7 @@ These hold today. A change that breaks one is a design change and needs this doc
 
 ## 12. Authoring a new screen (quick guide)
 
-1. **UiFramework → UI Setup Manager → General → Create Config** (first time only). Adjust the paths and namespaces on the `UiEditorConfig` asset. Set `ElementNamespace` / `StateNamespace` to your game's namespaces; the defaults (`UiFramework.Editor.*`) are placeholders.
+1. **Window → UI Framework → UI Setup Manager → General → Create Config** (first time only). Adjust the paths and namespaces on the `UiEditorConfig` asset. Set `ElementNamespace` / `StateNamespace` to your game's namespaces; the defaults (`UiFramework.Editor.*`) are placeholders.
 2. **Elements tab** → name it (e.g. `ProfileUiElement`) → *Create*. The scene is generated as `ProfileUiElementRoot → Canvas → Root` with the global canvas settings. Put **all** content under `Root` (§7.1) and pick show/hide presets. The row's Structure column should stay ✓.
 3. Override `Populate`, cast `context`, and keep it idempotent:
    ```csharp

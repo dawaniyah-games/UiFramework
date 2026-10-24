@@ -44,7 +44,7 @@ To pin a version, append `#vX.Y.Z` (see [Releases](https://github.com/dawaniyah-
 
 ### 1. Author your UI in the editor
 
-1. Open **UiFramework → UI Setup Manager**.
+1. Open **Window → UI Framework → UI Setup Manager**.
 2. **General** → *Create Config*. Set your script/scene paths and namespaces on the created `UiEditorConfig`.
 3. **Elements** → enter a name (e.g. `MainMenuUiElement`) → *Create*. This generates the script and scene. Build your UI under `MainMenuUiElementRoot → Canvas → Content` and pick show/hide animation presets in the list.
 4. **States** → create a state key (e.g. `MainMenuUiState`), add its element scenes, and generate the state class.
@@ -101,7 +101,7 @@ This repository's host project (`Assets/`) is a small mobile-game shell built on
 1. Clone the repository and open it in Unity 6.
 2. Open `Assets/Scenes/Bootstrapper.unity` and press Play (Addressables play mode *Use Asset Database*, or build Addressables content first). Use a portrait Game view (1080 x 1920).
 
-Then open **UiFramework → UI Setup Manager → Elements** and change a screen's show / hide animation to see the difference. To choreograph a screen without code, add `RevealOnShow`, `StaggeredReveal`, `FillBar`, `CountUpText` or `LoopMotion` to its objects in the Inspector. [DESIGN.md §14](DESIGN.md#14-sample-app-host-project) lists the patterns the sample demonstrates.
+Then open **Window → UI Framework → UI Setup Manager → Elements** and change a screen's show / hide animation to see the difference. To choreograph a screen without code, add `RevealOnShow`, `StaggeredReveal`, `FillBar`, `CountUpText` or `LoopMotion` to its objects in the Inspector. [DESIGN.md §14](DESIGN.md#14-sample-app-host-project) lists the patterns the sample demonstrates.
 
 ## API at a glance
 

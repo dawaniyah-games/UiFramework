@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Editor: the UI Setup Manager moved from the top-level **UiFramework** menu to **Window → UI Framework → UI Setup Manager**, because Asset Store packages may not add a top-level menu. The published tutorial videos still show the old menu; the docs' Tutorial tab says so
+
 ## [1.3.5] - 2026-10-24
 
 ### Changed
