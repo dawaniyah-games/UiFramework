@@ -93,6 +93,8 @@ await UiManager.InitializeAsync();
 
 The `defaultState` parameter of `InitializeAsync` is currently unused. There is no synchronous initializer. `UiManager` is never placed in a scene.
 
+The static instance is cleared at `RuntimeInitializeLoadType.SubsystemRegistration`, before any scene loads in each Play session. With *Enter Play Mode Options* and domain reload turned off, statics survive between sessions, so without this the second session would still hold the destroyed manager from the first. Every Play session starts uninitialized and creates its manager on the first `InitializeAsync`. The manager's other state lives on the instance, so it goes with it. No other runtime static holds state: `TweenCurves`, `TweenPresets`' key list and `UiTransition.Default` are read-only.
+
 ### 5.2 Showing a state
 
 `ShowState<T>(context, additive, transition)` resolves `T` to its key and delegates to `ShowStateByKey(key, context, additive, transition)`, which calls `LoadAndPushStateAsync`:
@@ -282,7 +284,7 @@ A legacy group named `Global Configs` (with a space) is renamed to `GlobalConfig
 
 These hold today. A change that breaks one is a design change and needs this document updated.
 
-1. Exactly one `UiManager` exists, created by `InitializeAsync` and kept alive with `DontDestroyOnLoad`.
+1. Exactly one `UiManager` exists, created by `InitializeAsync` and kept alive with `DontDestroyOnLoad`. Each Play session starts without one, also with domain reload disabled (§5.1).
 2. Only `UiManager` loads or unloads UI scenes. A UI scene is loaded ⇔ its ref count is > 0 or it is in flight.
 3. Scenes are keyed by Addressables GUID, never by scene name.
 4. After a non-additive show completes, the stack holds exactly one state.

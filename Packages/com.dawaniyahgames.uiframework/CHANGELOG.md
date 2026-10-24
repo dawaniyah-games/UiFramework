@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Editor: the UI Setup Manager moved from the top-level **UiFramework** menu to **Window → UI Framework → UI Setup Manager**, because Asset Store packages may not add a top-level menu. The published tutorial videos still show the old menu; the docs' Tutorial tab says so
 - Package: requires Unity 2022.3 or newer (was 2021.3), the oldest version the Asset Store accepts. `package.json` now has `"unity": "2022.3"`
 
+### Fixed
+- `UiManager` clears its static instance when a Play session starts (`RuntimeInitializeOnLoadMethod` at `SubsystemRegistration`), so with *Enter Play Mode Options* and domain reload turned off it no longer holds the destroyed manager from the previous session. Behaviour was already right, because Unity reports the destroyed manager as null; this makes the reset explicit and answers the Asset Store Validator's static-variables warning
+
 ## [1.3.5] - 2026-10-24
 
 ### Changed

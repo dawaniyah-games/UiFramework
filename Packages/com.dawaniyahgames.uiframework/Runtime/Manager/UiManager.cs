@@ -26,6 +26,13 @@ namespace UiFramework.Runtime.Manager
             UiManager.instance = instance;
         }
 
+        // Domain reload can be disabled in Play Mode options, so the instance from the last session is cleared explicitly.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            instance = null;
+        }
+
         private UiConfig config;
 
         private UiState loadingState;
