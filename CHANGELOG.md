@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.6] - 2026-10-24
+
 ### Changed
 - Editor: the UI Setup Manager moved from the top-level **UiFramework** menu to **Window → UI Framework → UI Setup Manager**, because Asset Store packages may not add a top-level menu. The published tutorial videos still show the old menu; the docs' Tutorial tab says so
 - Package: requires Unity 2022.3 or newer (was 2021.3), the oldest version the Asset Store accepts. `package.json` now has `"unity": "2022.3"`
