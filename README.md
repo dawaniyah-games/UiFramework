@@ -20,7 +20,7 @@ A Unity UI framework that builds screens from **Addressable scenes** loaded addi
 
 ## Installation
 
-**From the Unity Asset Store:** add *UI Framework* to your assets, then install it from **Window → Package Manager → My Assets**. It is the same package as the git URL below, without the sample app.
+**From the Unity Asset Store (coming soon):** the listing isn't live yet. Once it is, add *UI Framework* to your assets, then install it from **Window → Package Manager → My Assets**. It is the same package as the git URL below, without the sample app.
 
 **From git: Package Manager → + → Add package from git URL…**
 
@@ -33,7 +33,7 @@ To pin a version, append `#vX.Y.Z` (see [Releases](https://github.com/dawaniyah-
 ```json
 {
   "dependencies": {
-    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.6"
+    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.7"
   }
 }
 ```
