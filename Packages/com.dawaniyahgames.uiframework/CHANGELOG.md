@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Docs: the README marks the Unity Asset Store install as coming soon until the listing is live
+- Docs site: search-friendly title and H1 ("Unity UI framework"), meta description, canonical, Open Graph and Twitter cards, JSON-LD (SoftwareApplication, FAQPage, BreadcrumbList), and a new `docs/llms.txt` summary for AI assistants. The website redeploys when `docs/llms.txt` changes
 
 ## [1.3.6] - 2026-10-24
 
