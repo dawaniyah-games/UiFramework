@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.8] - 2026-10-26
+
+### Changed
+- Docs: `docs/llms.txt` links to the docs site's per-tab pages (/uiframework/get-started/, /tutorial/, /concepts/, /animations/, /showcase/, /api/, /faq/) instead of `#` anchors
+
 ## [1.3.7] - 2026-10-26
 
 ### Changed
