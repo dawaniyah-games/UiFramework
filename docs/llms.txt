@@ -28,10 +28,13 @@ Use it when a Unity game needs: a UI manager / screen manager, popups and modal 
 ## Docs
 
 - [Overview and docs site](https://www.dawaniyahgames.com/uiframework/): features, comparisons, live diagrams
-- [Get started](https://www.dawaniyahgames.com/uiframework/#start): install to first screen
-- [Tutorial](https://www.dawaniyahgames.com/uiframework/#tutorial): step-by-step UI Setup Manager walkthrough with videos
-- [API reference](https://www.dawaniyahgames.com/uiframework/#api)
-- [FAQ and troubleshooting](https://www.dawaniyahgames.com/uiframework/#faq)
+- [Get started](https://www.dawaniyahgames.com/uiframework/get-started/): install to first screen
+- [Tutorial](https://www.dawaniyahgames.com/uiframework/tutorial/): step-by-step UI Setup Manager walkthrough with videos
+- [Concepts](https://www.dawaniyahgames.com/uiframework/concepts/): state stack, shared elements, scene contract
+- [Animations](https://www.dawaniyahgames.com/uiframework/animations/): presets and per-call overrides
+- [Showcase app](https://www.dawaniyahgames.com/uiframework/showcase/): a complete mobile game UI built with the framework
+- [API reference](https://www.dawaniyahgames.com/uiframework/api/)
+- [FAQ and troubleshooting](https://www.dawaniyahgames.com/uiframework/faq/)
 - [Source code and README](https://github.com/dawaniyah-games/UiFramework)
 - [Design document](https://github.com/dawaniyah-games/UiFramework/blob/main/DESIGN.md): lifecycle, invariants, limitations
 
