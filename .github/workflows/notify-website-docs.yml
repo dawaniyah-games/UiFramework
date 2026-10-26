@@ -7,6 +7,7 @@ on:
     paths:
       - 'docs/index.html'
       - 'docs/images/**'
+      - 'docs/llms.txt'
   workflow_dispatch:
 
 # The dispatch uses WEBSITE_DISPATCH_TOKEN, so the job needs nothing from GITHUB_TOKEN.
