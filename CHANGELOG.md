@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.9] - 2026-10-28
+
+### Changed
+- Docs site: title and descriptions use the project's own wording again ("UI Framework for Unity: Smooth, Organized Game UI, AI-Ready"; "Build Unity game UI from Addressable scenes on a state stack...") instead of "screen and popup manager"; `docs/llms.txt` summary updated to match
+
 ## [1.3.8] - 2026-10-26
 
 ### Changed

@@ -1,6 +1,6 @@
 # UI Framework: System Design
 
-> Package `com.dawaniyahgames.uiframework` · describes **v1.3.8** · last reviewed 2026-10-26
+> Package `com.dawaniyahgames.uiframework` · describes **v1.3.9** · last reviewed 2026-10-28
 >
 > This document describes how the framework works *today*. If you change behaviour, update the matching section in the same PR ([CODING_STANDARDS.md §10](CODING_STANDARDS.md#10-comments--documentation)).
 
