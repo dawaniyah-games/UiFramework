@@ -23,7 +23,8 @@ Fixes from the Unity Asset Store review (v1.3.10), an AI build guide (v1.3.11) a
 - The README quick start now says to build under `Canvas → Root` (it said `Content`).
 
 ### Upgrade notes
-- No API, serialized field, scene or asset change. Update the version and you're done.
+- No API, serialized field, scene or asset change.
+- Requires Unity 6 (6000.0 LTS) or newer. Projects on Unity 2022.3 or 2023 stay on v1.3.11.
 
 Full details: [CHANGELOG.md](https://github.com/dawaniyah-games/UiFramework/blob/v1.3.12/CHANGELOG.md)
 
