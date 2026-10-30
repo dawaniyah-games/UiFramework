@@ -38,6 +38,11 @@ Use it when a Unity game's UI needs a clear structure: every screen gets the sam
 - [Source code and README](https://github.com/dawaniyah-games/UiFramework)
 - [Design document](https://github.com/dawaniyah-games/UiFramework/blob/main/DESIGN.md): lifecycle, invariants, limitations
 
+## Building UI with an AI assistant
+
+- [AI build guide](https://github.com/dawaniyah-games/UiFramework/blob/main/Packages/com.dawaniyahgames.uiframework/Documentation~/ai-builder/SKILL.md): how an assistant should build Unity UI with the framework. Plan screens as element scenes and states, import art from Figma or Photoshop as sprite atlases with ASTC compression, make layouts responsive in the Inspector (anchors, layout groups, aspect fitters; a generic helper component only as the last step), follow the coding standards, and hand off with a checklist.
+- [UI_PROFILE.md template](https://github.com/dawaniyah-games/UiFramework/blob/main/Packages/com.dawaniyahgames.uiframework/Documentation~/ai-builder/references/project-profile.md): one file per project with target devices, canvas settings, art pipeline and budgets, so assistants don't ask every time.
+
 ## About
 
 Made by Mohamed Moghazi (Game Engineer, 15+ years on large productions) at Dawaniyah Games, a game development studio in Riyadh, Saudi Arabia and Cologne, Germany: https://www.dawaniyahgames.com/

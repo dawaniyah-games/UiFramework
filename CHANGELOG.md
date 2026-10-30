@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.10] - 2026-10-30
+
+### Added
+- Docs: an AI build guide in the package (`Documentation~/ai-builder/`) for Claude, ChatGPT / Codex, Copilot and other assistants. It covers planning screens as element scenes and states, importing art from Figma or Photoshop as sprite atlases with mobile compression, Inspector-first responsiveness (a generic helper only as the last step), the coding standards and a hand-off checklist, plus a `UI_PROFILE.md` template so a project states its devices, canvas settings and budgets once
+- Docs: `AGENTS.md` for coding agents working in this repository; README, the package README and `docs/llms.txt` point to the AI build guide
+
+### Fixed
+- Docs: the README quick start said to build the UI under `Canvas → Content`; generated scenes and the scene contract use `Canvas → Root`
+
 ## [1.3.9] - 2026-10-28
 
 ### Changed

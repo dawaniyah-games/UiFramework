@@ -33,7 +33,7 @@ To pin a version, append `#vX.Y.Z` (see [Releases](https://github.com/dawaniyah-
 ```json
 {
   "dependencies": {
-    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.9"
+    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.10"
   }
 }
 ```
@@ -46,7 +46,7 @@ To pin a version, append `#vX.Y.Z` (see [Releases](https://github.com/dawaniyah-
 
 1. Open **Window → UI Framework → UI Setup Manager**.
 2. **General** → *Create Config*. Set your script/scene paths and namespaces on the created `UiEditorConfig`.
-3. **Elements** → enter a name (e.g. `MainMenuUiElement`) → *Create*. This generates the script and scene. Build your UI under `MainMenuUiElementRoot → Canvas → Content` and pick show/hide animation presets in the list.
+3. **Elements** → enter a name (e.g. `MainMenuUiElement`) → *Create*. This generates the script and scene. Build your UI under `MainMenuUiElementRoot → Canvas → Root` and pick show/hide animation presets in the list.
 4. **States** → create a state key (e.g. `MainMenuUiState`), add its element scenes, and generate the state class.
 5. **General** → ***Build Runtime UiConfig***. Re-run it after every state or scene change.
 
@@ -126,6 +126,22 @@ Then open **Window → UI Framework → UI Setup Manager → Elements** and chan
 - **Logic in a `UiState` subclass never runs**: subclasses are only type markers for `ShowState<T>()`, and the runtime uses the base `UiState`.
 - **Element data duplicated after switching screens**: `Populate` runs again when a state reuses a shared scene, so make it idempotent.
 
+## Building UI with an AI assistant
+
+The package ships an AI build guide in [`Documentation~/ai-builder/`](Packages/com.dawaniyahgames.uiframework/Documentation~/ai-builder/SKILL.md). It tells Claude, ChatGPT / Codex, Copilot or any coding assistant how to build UI the way a team does: plan the screens as element scenes and states, bring art in from Figma, Photoshop or other tools as sprite atlases with mobile compression, make layouts responsive in the Inspector first (a small generic helper only as the last step), follow these coding standards, and hand off with a list of checks.
+
+1. Copy [`references/project-profile.md`](Packages/com.dawaniyahgames.uiframework/Documentation~/ai-builder/references/project-profile.md) to `UI_PROFILE.md` at your project root and fill it in once: target devices, canvas settings, art pipeline, budgets, naming. Assistants read it instead of asking every time.
+2. Point your assistant at the guide. Add this to your project's `AGENTS.md`, `CLAUDE.md` or `.github/copilot-instructions.md`:
+
+   ```markdown
+   ## UI
+   Before any UI work, read UI_PROFILE.md and follow the UI Framework AI build guide:
+   Library/PackageCache/com.dawaniyahgames.uiframework*/Documentation~/ai-builder/SKILL.md
+   (online: https://github.com/dawaniyah-games/UiFramework/tree/main/Packages/com.dawaniyahgames.uiframework/Documentation~/ai-builder)
+   ```
+
+   In Claude, you can also add the `ai-builder` folder as a skill.
+
 ## Documentation
 
 | Doc | For |
@@ -134,6 +150,7 @@ Then open **Window → UI Framework → UI Setup Manager → Elements** and chan
 | [DESIGN.md](DESIGN.md) | How the framework works: lifecycle, scene ref counting, animation, editor pipeline, limitations |
 | [CODING_STANDARDS.md](CODING_STANDARDS.md) | Code style and project rules (required for all contributions) |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Branching, PRs, releases |
+| [AI build guide](Packages/com.dawaniyahgames.uiframework/Documentation~/ai-builder/SKILL.md) | How AI assistants should build UI with the framework: design import, mobile optimization, responsiveness, code rules |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
 
 ## License
