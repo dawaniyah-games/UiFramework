@@ -1,6 +1,6 @@
 # UI Framework: System Design
 
-> Package `com.dawaniyahgames.uiframework` · describes **v1.3.13** · last reviewed 2026-10-30
+> Package `com.dawaniyahgames.uiframework` · describes **v1.3.14** · last reviewed 2026-10-30
 >
 > This document describes how the framework works *today*. If you change behaviour, update the matching section in the same PR ([CODING_STANDARDS.md §10](CODING_STANDARDS.md#10-comments--documentation)).
 
@@ -279,7 +279,9 @@ Run it after **any** change to states or element scenes, then rebuild Addressabl
 | Runtime `UiConfig` | `GlobalConfigs` | `UiConfig` (**the runtime loads by this key**) | `UiConfig`, `RuntimeUiConfig` |
 | Element scenes | `UiElements` | scene file name | `UiElements` |
 
-A legacy group named `Global Configs` (with a space) is renamed to `GlobalConfigs` automatically on build. The project's Addressables settings, groups and labels that do not exist yet are created.
+A legacy group named `Global Configs` (with a space) is renamed to `GlobalConfigs` automatically on build. The project's Addressables settings, groups and labels that do not exist yet are created. New groups copy the schemas of the project's default group, and an existing `GlobalConfigs` or `UiElements` group without a `BundledAssetGroupSchema` or `ContentUpdateGroupSchema` gets them added (`AddressablesAssetUtility.EnsureBuildSchemas`): a group without a bundled schema is left out of the content build, so its assets load in the editor but not in a player. Versions before 1.3.14 created the groups without schemas.
+
+*Build Runtime UiConfig* returns `true` only when the config was built and made Addressable; the General tab shows success or a pointer to the Console accordingly.
 
 ## 10. Invariants
 

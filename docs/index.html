@@ -41,7 +41,6 @@
   "price": "0",
   "priceCurrency": "USD"
  },
- "license": "https://opensource.org/licenses/MIT",
  "downloadUrl": "https://github.com/dawaniyah-games/UiFramework/releases",
  "codeRepository": "https://github.com/dawaniyah-games/UiFramework",
  "programmingLanguage": "C#",
@@ -167,7 +166,7 @@
    "name": "What does it cost?",
    "acceptedAnswer": {
     "@type": "Answer",
-    "text": "Nothing. It's open source under the MIT license."
+    "text": "Nothing. It's free on the Unity Asset Store, where the Asset Store End User License Agreement covers it. The GitHub repository, with the showcase project, is MIT licensed."
    }
   }
  ]
@@ -1501,7 +1500,7 @@ html, body { overflow-x: clip; }
     <div class="hero">
         <div class="hero-split">
             <div>
-                <span class="eyebrow">Unity package &middot; UGUI &middot; Addressables &middot; free and open source</span>
+                <span class="eyebrow">Unity package &middot; UGUI &middot; Addressables &middot; free</span>
                 <h1>The Unity UI framework for smooth, organized game UI, <span class="accent">AI-ready</span></h1>
                 <p class="lead">Building with AI? AI tools write a lot of code fast, and without a structure it piles up in places nobody can track. This framework gives every screen the same shape: its own Addressable scene, its own script, its own place in the state stack. Generated code always has a clear place to go, so your project stays easy to follow as it grows. Transitions animate with no flash, and an editor window writes the scripts, scenes and config for you.</p>
                 <div class="hero-actions">
@@ -1515,7 +1514,7 @@ html, body { overflow-x: clip; }
                     <span class="pill">Merge-friendly</span>
                     <span class="pill">AI-friendly</span>
                     <span class="pill">async / await</span>
-                    <span class="pill">MIT license</span>
+                    <span class="pill">Free</span>
                 </div>
             </div>
             <figure class="fig fig-hero">
@@ -1972,7 +1971,7 @@ await UiManager.HideUI();</code></pre></div>
     <div class="code"><div class="code-head"><span>Packages/manifest.json</span><button class="copy">Copy</button></div>
 <pre><code class="language-json">{
   "dependencies": {
-    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.13"
+    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.14"
   }
 }</code></pre></div>
 
@@ -2685,7 +2684,7 @@ await TweenPresets.ShakeLocal(buyButton.transform);  // "no": not enough coins</
     <details><summary>Can I load UI scenes from a remote content server?</summary><p>Element scenes are ordinary Addressables, so any Addressables setup works, including remote groups.</p></details>
     <details><summary>Is it heavy on mobile?</summary><p>Only what is on screen is loaded. Animations use a small allocation-light loop on unscaled time, and shared elements are never reloaded.</p></details>
     <details><summary>Can I add my own animation presets?</summary><p>Override <code>ShowAsync</code> / <code>HideAsync</code> / <code>PrepareForShow</code> in an element for one-off motion, or contribute a preset to <code>TweenPresets</code>.</p></details>
-    <details><summary>What does it cost?</summary><p>Nothing. It's open source under the MIT license.</p></details>
+    <details><summary>What does it cost?</summary><p>Nothing. It's free on the Unity Asset Store, where the Asset Store End User License Agreement covers it. The GitHub repository, with the showcase project, is MIT licensed.</p></details>
 
     <div class="callout note" style="margin-top:28px"><span class="callout-title">Still stuck?</span><p>Open an <a href="https://github.com/dawaniyah-games/UiFramework/issues" target="_blank" rel="noopener">issue</a> or start a <a href="https://github.com/dawaniyah-games/UiFramework/discussions" target="_blank" rel="noopener">discussion</a>.</p></div>
 </section>
@@ -2693,7 +2692,7 @@ await TweenPresets.ShakeLocal(buyButton.transform);  // "no": not enough coins</
 </main>
 
 <footer class="footer">
-    UI Framework for Unity &middot; by Dawaniyah Games &middot; MIT license &middot;
+    UI Framework for Unity &middot; by Dawaniyah Games &middot;
     <a href="https://github.com/dawaniyah-games/UiFramework" target="_blank" rel="noopener">GitHub</a>
 </footer>
 

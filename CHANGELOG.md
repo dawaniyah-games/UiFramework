@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.14] - 2026-10-30
+
+First release on the Unity Asset Store, with fixes from a pre-submission review.
+
+### Fixed
+- Editor: *Build Runtime UiConfig* and the element Addressables toggle created the `GlobalConfigs` and `UiElements` groups without schemas, so the Addressables content build left them out and a player couldn't load the runtime UiConfig or the element scenes (Play Mode with *Use Asset Database* hid this). New groups copy the schemas of the project's default group, and existing groups without a `BundledAssetGroupSchema` or `ContentUpdateGroupSchema` get them the next time the config is built or an element is made Addressable
+- Editor: the General tab reported "Built runtime UiConfig successfully" even when the build failed (for example before *Create Config*). `UiSetupEditorWindow.BuildRuntimeUiConfig()` now returns whether the config was built and made Addressable, and the tab says to check the Console when it wasn't
+- `UiManager.InitializeAsync()` no longer throws when an assembly in the project can't load all its types (`ReflectionTypeLoadException`, for example a plugin with a missing dependency); the types that loaded are still searched
+- Editor: the element change dialog keeps its result per dialog instead of in a static field, which the Asset Store Validator flags for Enter Play Mode Options
+
+### Changed
+- Package: ships its own `CHANGELOG.md` for Asset Store users, starting at this release, instead of a copy of this file. `tools/check-standards.sh` checks that its newest section matches `package.json` and that the package doesn't mention the MIT license or DenDon
+- Package: the README no longer describes installing from git, and says which Unity versions were tested (6.0 LTS and 6.6); the AI build guide no longer refers to DenDon or to repository-only files, installs from the Package Manager, and marks the showcase types it mentions as not included
+- Editor: the *Create* menu entries for the editor assets moved from *Scripts → UiFramework* to *UI Framework*, and the runtime `UiConfig` has no *Create* menu entry any more (the UI Setup Manager builds it; a project has exactly one)
+- Package: `package.json` description reads "UI framework for Unity"
+
+### Removed
+- `UiManager` no longer logs "Unloading UI state" each time a state is unloaded
+- Editor: the unused `Editor/Templates/EditorWindow.uxml` and `EditorWindow.uss`
+
 ## [1.3.13] - 2026-10-30
 
 ### Fixed

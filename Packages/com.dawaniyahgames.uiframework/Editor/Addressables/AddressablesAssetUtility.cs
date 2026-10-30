@@ -4,6 +4,7 @@ using System.IO;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
+using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using UnityEngine;
 
 namespace UiFramework.Editor.Addressables
@@ -179,7 +180,8 @@ namespace UiFramework.Editor.Addressables
             return Path.GetFileNameWithoutExtension(assetPath);
         }
 
-        private static AddressableAssetGroup GetOrCreateGroup(AddressableAssetSettings settings, string groupName)
+        // Returns the group, creating it with the build settings of the project's default group when it doesn't exist.
+        public static AddressableAssetGroup GetOrCreateGroup(AddressableAssetSettings settings, string groupName)
         {
             if (settings == null)
             {
@@ -192,14 +194,59 @@ namespace UiFramework.Editor.Addressables
             }
 
             AddressableAssetGroup group = settings.FindGroup(groupName);
-            if (group != null)
+            if (group == null)
             {
-                return group;
+                List<AddressableAssetGroupSchema> schemasToCopy = settings.DefaultGroup != null ? settings.DefaultGroup.Schemas : null;
+                group = settings.CreateGroup(groupName, false, false, true, schemasToCopy);
+                Debug.Log("[UiFramework] Created Addressables group '" + groupName + "'.");
             }
 
-            group = settings.CreateGroup(groupName, false, false, true, null);
-            Debug.Log("[UiFramework] Created Addressables group '" + groupName + "'.");
+            EnsureBuildSchemas(settings, group);
             return group;
+        }
+
+        // A group without a BundledAssetGroupSchema is left out of the Addressables build, so its assets load in the
+        // editor but not in a player. Versions before 1.3.14 created the UiFramework groups that way; this repairs them.
+        public static void EnsureBuildSchemas(AddressableAssetSettings settings, AddressableAssetGroup group)
+        {
+            if (settings == null || group == null || group.ReadOnly)
+            {
+                return;
+            }
+
+            bool changed = false;
+
+            if (!group.HasSchema<BundledAssetGroupSchema>())
+            {
+                AddSchemaLikeDefaultGroup<BundledAssetGroupSchema>(settings, group);
+                changed = true;
+            }
+
+            if (!group.HasSchema<ContentUpdateGroupSchema>())
+            {
+                AddSchemaLikeDefaultGroup<ContentUpdateGroupSchema>(settings, group);
+                changed = true;
+            }
+
+            if (changed)
+            {
+                settings.SetDirty(AddressableAssetSettings.ModificationEvent.GroupSchemaAdded, group, true);
+                AssetDatabase.SaveAssets();
+                Debug.Log("[UiFramework] Added the build settings to the Addressables group '" + group.Name + "', so its assets are included in player builds.");
+            }
+        }
+
+        private static void AddSchemaLikeDefaultGroup<TSchema>(AddressableAssetSettings settings, AddressableAssetGroup group) where TSchema : AddressableAssetGroupSchema
+        {
+            TSchema source = settings.DefaultGroup != null && settings.DefaultGroup != group ? settings.DefaultGroup.GetSchema<TSchema>() : null;
+            if (source != null)
+            {
+                group.AddSchema(source, false);
+            }
+            else
+            {
+                group.AddSchema<TSchema>(false);
+            }
         }
 
         private static void EnsureLabels(AddressableAssetSettings settings, AddressableAssetEntry entry, string[] labels)

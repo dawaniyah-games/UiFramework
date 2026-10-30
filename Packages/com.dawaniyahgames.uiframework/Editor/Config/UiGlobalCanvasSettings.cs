@@ -5,7 +5,7 @@ namespace UiFramework.Editor.Config
 {
     // Default Canvas/CanvasScaler values for new UI element scenes (and the per-element "Use Default Settings" button).
     // Written into scenes at authoring time only; nothing enforces them at runtime, and each scene can differ.
-    [CreateAssetMenu(fileName = "UiGlobalCanvasSettings", menuName = "Scripts/UiFramework/Global Canvas Settings")]
+    [CreateAssetMenu(fileName = "UiGlobalCanvasSettings", menuName = "UI Framework/Global Canvas Settings")]
     public sealed class UiGlobalCanvasSettings : ScriptableObject
     {
         public const string DefaultAssetPath = "Assets/UiConfigs/UiGlobalCanvasSettings.asset";
