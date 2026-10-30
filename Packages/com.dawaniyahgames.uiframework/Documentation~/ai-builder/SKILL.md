@@ -20,7 +20,7 @@ Never ask the user to repeat what the profile already says.
 ### Is UI Framework set up?
 
 - Check `Packages/manifest.json` for `com.dawaniyahgames.uiframework`. If the project uses another UI system (UI Toolkit, NGUI, a custom screen manager) and the user didn't ask for UI Framework, ask before switching; otherwise follow the project's system and still apply steps 2, 4 and 6.
-- Not installed and the user wants it: add `https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework` (pin `#vX.Y.Z`), then have the user open **Window → UI Framework → UI Setup Manager → General → Create Config**, set the paths and namespaces from the profile, and set **Global Canvas Settings** to the profile's canvas values before the first element is created.
+- Not installed and the user wants it: have the user install *UI Framework* from **Window → Package Manager → My Assets**, then open **Window → UI Framework → UI Setup Manager → General → Create Config**, set the paths and namespaces from the profile, and set **Global Canvas Settings** to the profile's canvas values before the first element is created.
 
 ### Audit the canvases (existing projects)
 
@@ -52,8 +52,8 @@ If a Figma connector is available, read the frames with it (design context, scre
 - Every scene follows the contract: `<Name>Root → Canvas → Root → (all content)`. Nothing sits next to `Root` under the Canvas. Check the row stays ✓ in the Elements tab (Validate All).
 - If you can drive the Unity Editor (an editor MCP or bridge), build the hierarchy through it. If you can't, write a **scene build sheet** per element for the technical artist: the hierarchy, each object's components, anchors/pivot/size, sprite, and which `[SerializeField]` it wires to. The TA builds it in minutes and nothing is guessed.
 - In the Create form, tick **Include Parameters Class** when the element takes data: it generates `<Element>Params : UiPopulationParams` next to the script. New scenes are made Addressable in the `UiElements` group automatically.
-- Render mode comes from the profile. Screen Space - Overlay needs nothing else. Screen Space - Camera scenes can't reference the bootstrap camera, so the project needs one binder that assigns it as scenes load (the UI Framework sample's `UiCanvasCamera` is the pattern); never put a camera in an element scene.
-- Pick show/hide presets in the Elements tab (popups: the backdrop fades, the panel moves). No animation code for standard transitions. For choreography inside a screen (staggered cards, a bar filling, a count-up), use the project's Inspector components if it has them (the sample's `RevealOnShow`, `StaggeredReveal`, `FillBar`, `CountUpText` through an `IUiShowEffect` element); otherwise propose adding that pattern once instead of animating per screen in code.
+- Render mode comes from the profile. Screen Space - Overlay needs nothing else. Screen Space - Camera scenes can't reference the bootstrap camera, so the project needs one binder that assigns it as scenes load (the showcase project's `UiCanvasCamera`, on GitHub and not included in the package, is the pattern); never put a camera in an element scene.
+- Pick show/hide presets in the Elements tab (popups: the backdrop fades, the panel moves). No animation code for standard transitions. For choreography inside a screen (staggered cards, a bar filling, a count-up), use the project's Inspector components if it has them (the showcase project's `RevealOnShow`, `StaggeredReveal`, `FillBar` and `CountUpText` through an `IUiShowEffect` element are examples; they are not included in the package); otherwise propose adding that pattern once instead of animating per screen in code.
 
 ## Step 4: make it responsive in the Inspector
 
@@ -72,7 +72,7 @@ Never fix a layout by setting positions or sizes from gameplay code.
 
 - Element script: override `Populate(object context)`, cast with `as`, return early on null, and make it **idempotent** (it runs again whenever a state reuses the scene). `[SerializeField] private` fields, wired in the scene.
 - Context: the generated `<Element>Params` class (or the project's existing `*Params` / `*Context` type). No services, singletons or game managers inside elements unless the project's architecture already does it there.
-- Navigation: `await UiManager.ShowState<StoreUiState>()`, `ShowState<ConfirmUiState>(context, additive: true)`, `await UiManager.HideUI()`. `UiManager` doesn't queue overlapping calls, so one place in the app changes UI state and runs requests one at a time. If the project has a navigator or task runner, go through it; if it has none, propose one modelled on the sample's `ShowcaseNavigator` (a queue, tab requests that coalesce, popups counted and closed with `HideUI`).
+- Navigation: `await UiManager.ShowState<StoreUiState>()`, `ShowState<ConfirmUiState>(context, additive: true)`, `await UiManager.HideUI()`. `UiManager` doesn't queue overlapping calls, so one place in the app changes UI state and runs requests one at a time. If the project has a navigator or task runner, go through it; if it has none, propose one modelled on the showcase project's `ShowcaseNavigator` (on GitHub, not included in the package) (a queue, tab requests that coalesce, popups counted and closed with `HideUI`).
 - Follow [references/code-rules.md](references/code-rules.md) and the project's own rules.
 
 ## Step 6: verify and hand off

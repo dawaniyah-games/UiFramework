@@ -13,7 +13,7 @@ You usually can't run Unity. Do the checks you can (read the files, run the proj
 7. **Long content:** longest translation or name, the biggest numbers, empty lists, RTL if the profile has it.
 8. **Transitions:** open and close each state in Play Mode. No flash, no leftover scenes in the Hierarchy, shared bars don't re-animate, popups close with Back.
 9. **Performance (low-end device):** Batches within the budget, the screen draws only its feature atlas + Common + font (Frame Debugger), no Canvas rebuild every frame (Profiler), Addressables Analyze shows no duplicate textures.
-10. **Project checks:** the project's standards script or linter, if it has one (UI Framework repo: `bash tools/check-standards.sh`).
+10. **Project checks:** the project's standards script or linter, if it has one.
 
 ## Hand-off report
 

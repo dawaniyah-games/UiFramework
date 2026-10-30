@@ -6,7 +6,7 @@ using UnityEditor;
 
 namespace UiFramework.Editor.Config
 {
-    [CreateAssetMenu(fileName = "UiEditorConfig", menuName = "Scripts/UiFramework/Editor Config")]
+    [CreateAssetMenu(fileName = "UiEditorConfig", menuName = "UI Framework/Editor Config")]
     public class UiEditorConfig : ScriptableObject
     {
         public string UiSetupAssetPath = "Assets/UiConfigs";

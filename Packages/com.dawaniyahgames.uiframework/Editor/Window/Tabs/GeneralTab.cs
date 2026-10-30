@@ -17,7 +17,7 @@ namespace UiFramework.Editor.Window.Tabs
         }
 
         private System.Action onLoadOrCreate;
-        private System.Action onBuildRuntimeUi;
+        private System.Func<bool> onBuildRuntimeUi;
         private Label statusLabel;
         private UiEditorConfig editorConfig;
         private VisualElement canvasInspectorContainer;
@@ -28,7 +28,7 @@ namespace UiFramework.Editor.Window.Tabs
             onLoadOrCreate = callback;
         }
 
-        public void SetRuntimeUiBuildCallback(System.Action callback)
+        public void SetRuntimeUiBuildCallback(System.Func<bool> callback)
         {
             onBuildRuntimeUi = callback;
         }
@@ -86,12 +86,11 @@ namespace UiFramework.Editor.Window.Tabs
 
             Button buildBtn = new Button(() =>
             {
-                if (onBuildRuntimeUi != null)
-                {
-                    onBuildRuntimeUi.Invoke();
-                }
-
-                statusLabel.text = "✅ Built runtime UiConfig successfully.";
+                bool built = onBuildRuntimeUi != null && onBuildRuntimeUi.Invoke();
+                statusLabel.style.color = built ? Color.green : new Color(1.0f, 0.45f, 0.4f);
+                statusLabel.text = built
+                    ? "✅ Built runtime UiConfig successfully."
+                    : "The runtime UiConfig was not built. See the Console for the reason.";
             })
             { text = "⚙️ Build Runtime UiConfig" };
 

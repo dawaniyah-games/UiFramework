@@ -1,42 +1,35 @@
-## UI Framework v1.3.13
+## UI Framework v1.3.14
 
-Fixes from the Unity Asset Store review (v1.3.10), an AI build guide (v1.3.11), an offline manual (v1.3.12) and a Unity 6.4+ analyzer fix (v1.3.13). A patch on top of v1.3.9.
+The version submitted to the Unity Asset Store, with fixes from a pre-submission review. A patch on top of v1.3.13.
 
 ### Highlights
 
-**No analyzer warnings on Unity 6.4+**
-- `UiManager` uses `CurrentAssemblies.GetLoadedAssemblies()` on Unity 6.4 and newer instead of `AppDomain.GetAssemblies()` (warning UAC0005). No behaviour change.
+**Player builds load the UI in new projects**
+- The UI Setup Manager created the `GlobalConfigs` and `UiElements` Addressables groups without build settings, so the content build left them out and a player couldn't load the runtime UiConfig. Play Mode with *Use Asset Database* hid it. New groups now copy the project's default group settings, and existing groups are repaired the next time you build the runtime UiConfig or make an element Addressable.
 
-**Unity 6 and newer**
-- The package now requires Unity 6 (6000.0 LTS) or newer, with Addressables 2.2.2+ and uGUI 2.0. Projects on Unity 2022.3 or 2023 stay on v1.3.11.
+**Honest status in the UI Setup Manager**
+- *Build Runtime UiConfig* says "successfully" only when it worked; otherwise it points to the Console.
 
-**Offline manual**
-- The package README is now a full manual: concepts, quick start, every UI Setup Manager tab, the element scene contract, the runtime API, animations, Addressables, limitations and troubleshooting.
-- The misspelled folder `Core/UiCompoenets` is now `Core/UiComponents` (GUIDs unchanged).
-
-**Unity 6.5 and newer**
-- The package compiles again on Unity 6.5+ (tested by the Asset Store on 6000.6). `UiManager` no longer calls `GetInstanceID()`, which Unity 6.5 turned into a compile error. No behaviour change.
+**More robust start-up**
+- `UiManager.InitializeAsync()` no longer fails when another plugin has an assembly with a missing dependency.
+- No more "Unloading UI state" log on every screen change.
 
 **Asset Store package**
-- The package no longer ships its own `LICENSE.md` or a `license` entry in `package.json`. The Asset Store's End User License Agreement covers the Asset Store copy; this repository stays MIT licensed.
-- The documentation link points straight at `https://www.dawaniyahgames.com/uiframework/`.
-
-**Building UI with an AI assistant**
-- The package ships an AI build guide in `Documentation~/ai-builder/` for Claude, ChatGPT / Codex and Copilot: screens as element scenes and states, art from Figma or Photoshop as compressed sprite atlases, Inspector-first responsiveness, and the coding standards. Copy its `UI_PROFILE.md` template to your project once. See "Building UI with an AI assistant" in the README.
-- The README quick start now says to build under `Canvas → Root` (it said `Content`).
+- The package ships its own changelog for Asset Store users, and its README and AI build guide no longer refer to git installs, the repository's license or internal projects.
+- *Create* menu entries for the editor assets moved to *UI Framework*; the runtime `UiConfig` has none (the UI Setup Manager builds it).
 
 ### Upgrade notes
-- No API, serialized field, scene or asset change.
-- Requires Unity 6 (6000.0 LTS) or newer. Projects on Unity 2022.3 or 2023 stay on v1.3.11.
+- No runtime API or serialized field change. `UiSetupEditorWindow.BuildRuntimeUiConfig()` now returns `bool`.
+- If you built your UI with an earlier version, click *Build Runtime UiConfig* once so the Addressables groups get their build settings, then rebuild Addressables content.
 
-Full details: [CHANGELOG.md](https://github.com/dawaniyah-games/UiFramework/blob/v1.3.13/CHANGELOG.md)
+Full details: [CHANGELOG.md](https://github.com/dawaniyah-games/UiFramework/blob/v1.3.14/CHANGELOG.md)
 
 ### Installation
 
 Coming soon to the Unity Asset Store. Until the listing is live, use Package Manager → **+** → *Add package from git URL…*
 
 ```
-https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.13
+https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.14
 ```
 
 Or in `Packages/manifest.json`:
@@ -44,7 +37,7 @@ Or in `Packages/manifest.json`:
 ```json
 {
   "dependencies": {
-    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.13"
+    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.14"
   }
 }
 ```

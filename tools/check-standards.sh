@@ -143,15 +143,25 @@ for file in "${files[@]}"; do
     fi
 done
 
-# The package ships a copy of the root CHANGELOG.md for the Asset Store; the root file is the source of truth. Line
-# endings are ignored, because Windows working copies may use CRLF. The package must not ship a license file: the
-# Asset Store rejects packages with their own license, because its EULA covers them. The repository keeps LICENSE.md.
+# The package ships its own CHANGELOG.md for Asset Store and Package Manager users, starting at the first Asset Store
+# release; the root CHANGELOG.md is the full repository history. The newest released section of the package changelog
+# must match the package version. The package must not ship a license file or mention the repository's MIT license:
+# the Asset Store rejects packages with their own license, because its EULA covers them. The repository keeps
+# LICENSE.md. Internal names (the DenDon project) stay out of the package too.
 if [ -n "$check_copies" ]; then
-    packaged="Packages/com.dawaniyahgames.uiframework/CHANGELOG.md"
-    if [ ! -f "$packaged" ] || ! cmp -s <(tr -d '\r' < CHANGELOG.md) <(tr -d '\r' < "$packaged"); then
-        echo "$packaged: [package-copy] Must match the root CHANGELOG.md. Copy it: cp CHANGELOG.md $packaged"
+    package_dir="Packages/com.dawaniyahgames.uiframework"
+    packaged="$package_dir/CHANGELOG.md"
+    package_version="$(sed -n 's/^ *"version": *"\([^"]*\)".*/\1/p' "$package_dir/package.json" | head -n 1)"
+    changelog_version="$(tr -d '\r' < "$packaged" 2>/dev/null | sed -n 's/^## \[\([0-9][^]]*\)\].*/\1/p' | head -n 1)"
+    if [ "$changelog_version" != "$package_version" ]; then
+        echo "$packaged: [package-changelog] The newest section is [${changelog_version:-none}] but package.json is $package_version. Add a section for $package_version written for Asset Store users"
         failures=$((failures + 1))
     fi
+
+    while IFS= read -r match; do
+        echo "$match: [package-wording] The package must not mention the MIT license or DenDon; the Asset Store EULA covers the package"
+        failures=$((failures + 1))
+    done < <(grep -rnwI -e "MIT" -e "DenDon" "$package_dir" --exclude-dir=Tests | cut -d: -f1,2)
 
     for license in Packages/com.dawaniyahgames.uiframework/LICENSE*; do
         if [ -e "$license" ]; then

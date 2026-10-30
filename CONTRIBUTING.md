@@ -55,13 +55,13 @@ Group commits by intent (runtime fix / editor tooling / tests / version bump), n
 - [ ] `.meta` files committed for every new file or folder.
 - [ ] EditMode and PlayMode tests pass (Test Runner), and the change was checked in Play Mode with the sample project ([CODING_STANDARDS.md §11](CODING_STANDARDS.md#11-testing--verification)).
 - [ ] [DESIGN.md](DESIGN.md) / [README.md](README.md) updated if behaviour, API or editor workflow changed.
-- [ ] Entry added under `## [Unreleased]` in [CHANGELOG.md](CHANGELOG.md), and the file copied into the package (`cp CHANGELOG.md Packages/com.dawaniyahgames.uiframework/CHANGELOG.md`).
+- [ ] Entry added under `## [Unreleased]` in [CHANGELOG.md](CHANGELOG.md).
 
 ## Release process
 
 1. On `dev`, bump `version` in `Packages/com.dawaniyahgames.uiframework/package.json` following [SemVer](https://semver.org/): patch = fix, minor = feature, major = breaking.
 2. In `CHANGELOG.md`, rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD` and add a new empty `## [Unreleased]` above it.
-3. Copy `CHANGELOG.md` into the package: `cp CHANGELOG.md Packages/com.dawaniyahgames.uiframework/CHANGELOG.md`. The root file is the source of truth; the package copy is what the Asset Store and Package Manager show. `bash tools/check-standards.sh` fails when the package's `CHANGELOG.md` differs from the root file. The package has no `LICENSE.md` on purpose: the Asset Store rejects packages that carry their own license, and the check fails if one is added.
+3. Add a section for the new version to the package's own `Packages/com.dawaniyahgames.uiframework/CHANGELOG.md`, written for Asset Store users: what changed for them, without repository files, team process or license wording. It is what the Asset Store and Package Manager show; the root `CHANGELOG.md` is the full repository history. `bash tools/check-standards.sh` fails when the package changelog's newest section doesn't match `package.json`, or when the package mentions the MIT license or DenDon. The package has no `LICENSE.md` on purpose: the Asset Store rejects packages that carry their own license, and the check fails if one is added.
 4. Update the version line at the top of `DESIGN.md` and the pinned example in `README.md`.
 5. Open a PR `dev → main` titled `Release vX.Y.Z: short description`, then merge.
    - `main` is guarded by the **Protect-main** ruleset: 1 approving review and a required status check named "Bump Package Version". That check comes from a workflow that no longer exists, so it never reports. Until the ruleset is updated, repository admins merge release PRs with the bypass (*Merge without waiting for requirements*, or `gh pr merge <n> --merge --admin`).
@@ -73,6 +73,7 @@ Group commits by intent (runtime fix / editor tooling / tests / version bump), n
    - Run *Tools > Asset Store > Validator* (UPM) first. The only expected warnings are:
      - *Check Static Variables*: informational. `UiManager` clears its instance at `SubsystemRegistration`.
      - *Check Dependencies* listing `com.unity.addressables` and `com.unity.ugui` as unused: a Validator limitation. It treats a dependency as used only when the declared version equals the version the editor resolves (for example 2.11.2 and 2.6.0 on Unity 6.6).
+   - Before uploading, check in a new project on the lowest supported Unity version (6000.0 LTS) and the newest: the package compiles with no warnings, *Create Config*, a new element and state, and *Build Runtime UiConfig* work, Play Mode shows the state with domain reload disabled, and a **player build** shows it too (Play Mode with *Use Asset Database* does not prove the Addressables content builds).
    - Upload with *Tools > Asset Store > Uploader*, then check the version, the supported Unity versions (6000.x) and the release notes in the Publisher Portal draft before submitting.
 
 ## Questions

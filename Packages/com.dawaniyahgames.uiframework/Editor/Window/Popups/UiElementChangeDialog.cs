@@ -73,7 +73,8 @@ namespace UiFramework.Editor.Window.Popups
         private static readonly Color mutedColor = new Color(0.6f, 0.6f, 0.6f);
         private static readonly Color manualColor = new Color(0.95f, 0.65f, 0.3f);
 
-        private static bool lastConfirmed;
+        // Per dialog instead of static, so nothing carries over between dialogs or Play Mode sessions.
+        private bool confirmed;
 
         private UiElementChangeDialogModel model;
         private ScrollView body;
@@ -81,8 +82,6 @@ namespace UiFramework.Editor.Window.Popups
         // Blocks until the dialog is closed. Returns true when the confirm button was pressed.
         public static bool Show(UiElementChangeDialogModel model)
         {
-            lastConfirmed = false;
-
             UiElementChangeDialog dialog = CreateInstance<UiElementChangeDialog>();
             dialog.titleContent = new GUIContent(model.WindowTitle);
             dialog.model = model;
@@ -94,7 +93,8 @@ namespace UiFramework.Editor.Window.Popups
             dialog.position = new Rect(main.x + (main.width - size.x) * 0.5f, main.y + (main.height - size.y) * 0.5f, size.x, size.y);
             dialog.ShowModal();
 
-            return lastConfirmed;
+            // The window is closed by now, but its C# object and fields are still readable.
+            return dialog.confirmed;
         }
 
         private void BuildUi()
@@ -442,13 +442,13 @@ namespace UiFramework.Editor.Window.Popups
 
         private void Confirm()
         {
-            lastConfirmed = true;
+            confirmed = true;
             Close();
         }
 
         private void Cancel()
         {
-            lastConfirmed = false;
+            confirmed = false;
             Close();
         }
     }

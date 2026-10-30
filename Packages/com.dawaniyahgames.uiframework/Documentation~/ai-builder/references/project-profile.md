@@ -1,6 +1,6 @@
 # UI_PROFILE.md template
 
-Copy this to `UI_PROFILE.md` at the project root and fill it in once. Every AI tool and every teammate reads it instead of asking again. The defaults are the setup of DenDon (a multiplayer mobile game built on UI Framework), so a new mobile project can usually keep them.
+Copy this to `UI_PROFILE.md` at the project root and fill it in once. Every AI tool and every teammate reads it instead of asking again. The defaults suit a portrait mobile game, so a new mobile project can usually keep them.
 
 Read the real values from the project where you can:
 

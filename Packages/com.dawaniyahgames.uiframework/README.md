@@ -28,25 +28,17 @@ This file is the offline manual. The same material, with screenshots and video t
 
 | | |
 | --- | --- |
-| Unity | Unity 6 (6000.0 LTS) or newer. Tested on Unity 6.6 |
+| Unity | Unity 6 (6000.0 LTS) or newer. Tested on Unity 6.0 LTS, 6.3 LTS and 6.6 |
 | Dependencies | Addressables (`com.unity.addressables` 2.2.2 or newer) and uGUI (`com.unity.ugui` 2.0). Package Manager installs them automatically |
 | Render pipelines | Built-in, URP and HDRP. The framework only uses uGUI canvases, so it doesn't depend on the render pipeline |
 | Platforms | Every platform Unity and Addressables support. There is no native code |
 | Play Mode | Works with *Enter Play Mode Options* and domain reload disabled (see [section 11](#11-enter-play-mode-options)) |
 
-The package contains C# scripts, editor tools, uss/uxml styles, code templates and tests. It contains no art, no third-party code and no samples (see [section 3](#no-samples-on-purpose)).
+The package contains C# scripts, editor tools, uss styles and code templates. It contains no art, no third-party code and no samples (see [section 3](#no-samples-on-purpose)).
 
 ## 2. Installation
 
 **From the Asset Store:** add *UI Framework* to your assets, then in Unity open **Window → Package Manager → My Assets**, select *UI Framework* and click **Install**.
-
-**From git:** open **Window → Package Manager → + → Add package from git URL…** and enter:
-
-```
-https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework
-```
-
-Append `#vX.Y.Z` to pin a release.
 
 After installing, open **Window → UI Framework → UI Setup Manager**.
 
