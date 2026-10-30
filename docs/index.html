@@ -3,8 +3,196 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>UI Framework for Unity</title>
+<title>UI Framework for Unity: Smooth, Organized Game UI, AI-Ready</title>
 <meta name="description" content="Build Unity game UI from Addressable scenes on a state stack, with shared elements, built-in animations and an editor that generates the scripts, scenes and config for you.">
+<link rel="canonical" href="https://www.dawaniyahgames.com/uiframework/">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Dawaniyah Games">
+<meta property="og:title" content="UI Framework for Unity: smooth, organized game UI, AI-ready">
+<meta property="og:description" content="Build Unity game UI from Addressable scenes on a state stack, with shared elements, built-in animations and an editor that generates the scripts, scenes and config for you.">
+<meta property="og:url" content="https://www.dawaniyahgames.com/uiframework/">
+<meta property="og:image" content="https://www.dawaniyahgames.com/uiframework/images/editor-overview.png">
+<meta property="og:image:alt" content="The Unity editor running the UI Framework showcase app with the UI Setup Manager window">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="UI Framework for Unity: smooth, organized game UI, AI-ready">
+<meta name="twitter:description" content="Build Unity game UI from Addressable scenes on a state stack, with shared elements, built-in animations and an editor that generates the scripts, scenes and config for you.">
+<meta name="twitter:image" content="https://www.dawaniyahgames.com/uiframework/images/editor-overview.png">
+<link rel="alternate" type="text/plain" title="LLM summary" href="llms.txt">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "SoftwareApplication",
+ "name": "UI Framework for Unity",
+ "alternateName": [
+  "UiFramework",
+  "Dawaniyah UI Framework",
+  "com.dawaniyahgames.uiframework"
+ ],
+ "description": "Build Unity game UI from Addressable scenes on a state stack, with shared elements, built-in animations and an editor that generates the scripts, scenes and config for you.",
+ "url": "https://www.dawaniyahgames.com/uiframework/",
+ "image": "https://www.dawaniyahgames.com/uiframework/images/editor-overview.png",
+ "applicationCategory": "DeveloperApplication",
+ "applicationSubCategory": "UI framework for Unity",
+ "operatingSystem": "Windows, macOS, Linux (Unity Editor 2022.3 to Unity 6)",
+ "softwareRequirements": "Unity 2022.3+, Addressables 1.21.0+",
+ "offers": {
+  "@type": "Offer",
+  "price": "0",
+  "priceCurrency": "USD"
+ },
+ "license": "https://opensource.org/licenses/MIT",
+ "downloadUrl": "https://github.com/dawaniyah-games/UiFramework/releases",
+ "codeRepository": "https://github.com/dawaniyah-games/UiFramework",
+ "programmingLanguage": "C#",
+ "keywords": "UI framework for Unity, Unity UI framework, Unity game UI, Unity tools, game UI tools, Unity GUI, UGUI, Addressables, state stack, AI-ready game UI",
+ "author": {
+  "@type": "Person",
+  "name": "Mohamed Moghazi",
+  "url": "https://www.linkedin.com/in/mohamed-moghazi-9a729554/"
+ },
+ "publisher": {
+  "@type": "Organization",
+  "name": "Dawaniyah Games",
+  "url": "https://www.dawaniyahgames.com/"
+ },
+ "sameAs": [
+  "https://github.com/dawaniyah-games/UiFramework"
+ ]
+}
+</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "FAQPage",
+ "mainEntity": [
+  {
+   "@type": "Question",
+   "name": "\"No UI state key registered for MyUiState\"",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "The state class name must equal the state key exactly, and Build Runtime UiConfig must have run after you created the state."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "\"Failed to locate UiConfig via Addressables\"",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Run Build Runtime UiConfig, then make sure Addressables can find it: play mode script Use Asset Database in the editor, or build Addressables content for a player."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Nothing appears on screen",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Check the element's status in the Elements tab (✓), that your content is under Root, that there is an EventSystem and, for Screen Space – Camera canvases, that a camera is assigned at runtime. Look for [UiManager] errors in the Console."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "My list doubles every time I come back to the screen",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Populate runs again when a state reuses the scene. Rebuild lists instead of appending, and guard one-time setup with a flag."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Code in my UiState subclass never runs",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "State classes are only type markers; the runtime builds states from the config. Put behaviour in elements."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Two fast taps show the wrong screen",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Calls aren't queued for you. Await each call, or route navigation through one place that queues calls, like the showcase's ShowcaseNavigator."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Can several people add screens and states at the same time?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Yes. Each state is its own UiStateDefinition asset and each element its own scene and script, so parallel branches add different files and merge cleanly. The only shared files, RuntimeUiConfig and the Addressables group, are generated: after a merge, press Build Runtime UiConfig and they are rebuilt from the state definitions. Never resolve them by hand."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Does it work with TextMeshPro, my own components, my art?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Yes. The framework only cares about the scene's shape; anything UGUI can draw works inside Root."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Screen Space Overlay or Camera?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Both. Pick the default in Global Canvas Settings and per element in the Canvas section. With Camera, assign your UI camera at runtime as scenes load (the showcase's UiCanvasCamera shows how)."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Can I load UI scenes from a remote content server?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Element scenes are ordinary Addressables, so any Addressables setup works, including remote groups."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Is it heavy on mobile?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Only what is on screen is loaded. Animations use a small allocation-light loop on unscaled time, and shared elements are never reloaded."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Can I add my own animation presets?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Override ShowAsync / HideAsync / PrepareForShow in an element for one-off motion, or contribute a preset to TweenPresets."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "What does it cost?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Nothing. It's open source under the MIT license."
+   }
+  }
+ ]
+}
+</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "BreadcrumbList",
+ "itemListElement": [
+  {
+   "@type": "ListItem",
+   "position": 1,
+   "name": "Dawaniyah Games",
+   "item": "https://www.dawaniyahgames.com/"
+  },
+  {
+   "@type": "ListItem",
+   "position": 2,
+   "name": "UI Framework for Unity",
+   "item": "https://www.dawaniyahgames.com/uiframework/"
+  }
+ ]
+}
+</script>
 <link rel="icon" type="image/svg+xml" href="images/logo.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1314,7 +1502,7 @@ html, body { overflow-x: clip; }
         <div class="hero-split">
             <div>
                 <span class="eyebrow">Unity package &middot; UGUI &middot; Addressables &middot; free and open source</span>
-                <h1>Smooth, organized game UI, <span class="accent">AI-ready</span></h1>
+                <h1>The Unity UI framework for smooth, organized game UI, <span class="accent">AI-ready</span></h1>
                 <p class="lead">Building with AI? AI tools write a lot of code fast, and without a structure it piles up in places nobody can track. This framework gives every screen the same shape: its own Addressable scene, its own script, its own place in the state stack. Generated code always has a clear place to go, so your project stays easy to follow as it grows. Transitions animate with no flash, and an editor window writes the scripts, scenes and config for you.</p>
                 <div class="hero-actions">
                     <a class="btn btn-primary" href="#start">Add it to your Unity project</a>
@@ -1784,7 +1972,7 @@ await UiManager.HideUI();</code></pre></div>
     <div class="code"><div class="code-head"><span>Packages/manifest.json</span><button class="copy">Copy</button></div>
 <pre><code class="language-json">{
   "dependencies": {
-    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.7"
+    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.10"
   }
 }</code></pre></div>
 

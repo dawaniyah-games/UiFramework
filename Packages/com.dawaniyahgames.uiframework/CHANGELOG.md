@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.3.7] - 2026-10-30
+## [1.3.10] - 2026-10-30
 
 ### Fixed
 - Unity 6.5 and newer: the package compiles again. `UiManager` tracked shared elements by `GameObject.GetInstanceID()`, which Unity 6.5 turned into a compile error (CS0619, "Use GetEntityId instead"). It now keeps the GameObjects themselves in its sets, which works on every supported version without a version check. No behaviour change
@@ -15,6 +15,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - Package: `LICENSE.md` and the `license` / `licensesUrl` entries in `package.json`. The Unity Asset Store rejects packages that carry their own license, because its End User License Agreement covers them. The repository is still MIT licensed (root `LICENSE.md`), and `tools/check-standards.sh` now fails if a license file is added to the package
+
+## [1.3.9] - 2026-10-28
+
+### Changed
+- Docs site: title and descriptions use the project's own wording again ("UI Framework for Unity: Smooth, Organized Game UI, AI-Ready"; "Build Unity game UI from Addressable scenes on a state stack...") instead of "screen and popup manager"; `docs/llms.txt` summary updated to match
+
+## [1.3.8] - 2026-10-26
+
+### Changed
+- Docs: `docs/llms.txt` links to the docs site's per-tab pages (/uiframework/get-started/, /tutorial/, /concepts/, /animations/, /showcase/, /api/, /faq/) instead of `#` anchors
+
+## [1.3.7] - 2026-10-26
+
+### Changed
+- Docs: the README marks the Unity Asset Store install as coming soon until the listing is live
+- Docs site: search-friendly title and H1 ("Unity UI framework"), meta description, canonical, Open Graph and Twitter cards, JSON-LD (SoftwareApplication, FAQPage, BreadcrumbList), and a new `docs/llms.txt` summary for AI assistants. The website redeploys when `docs/llms.txt` changes
 
 ## [1.3.6] - 2026-10-24
 

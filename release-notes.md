@@ -1,6 +1,6 @@
-## UI Framework v1.3.7
+## UI Framework v1.3.10
 
-Fixes from the Unity Asset Store review. A patch on top of v1.3.6.
+Fixes from the Unity Asset Store review. A patch on top of v1.3.9.
 
 ### Highlights
 
@@ -14,7 +14,7 @@ Fixes from the Unity Asset Store review. A patch on top of v1.3.6.
 ### Upgrade notes
 - No API, serialized field, scene or asset change. Update the version and you're done.
 
-Full details: [CHANGELOG.md](https://github.com/dawaniyah-games/UiFramework/blob/v1.3.7/CHANGELOG.md)
+Full details: [CHANGELOG.md](https://github.com/dawaniyah-games/UiFramework/blob/v1.3.10/CHANGELOG.md)
 
 ### Installation
 
@@ -23,7 +23,7 @@ From the Unity Asset Store: add *UI Framework* to your assets, then install it f
 Or Package Manager → **+** → *Add package from git URL…*
 
 ```
-https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.7
+https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.10
 ```
 
 Or in `Packages/manifest.json`:
@@ -31,7 +31,7 @@ Or in `Packages/manifest.json`:
 ```json
 {
   "dependencies": {
-    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.7"
+    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.10"
   }
 }
 ```

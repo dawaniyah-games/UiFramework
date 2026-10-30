@@ -1,0 +1,43 @@
+# UI Framework for Unity
+
+> UI Framework for Unity: smooth, organized game UI, AI-ready. Build Unity game UI from Addressable scenes on a state stack, with shared elements, built-in animations and an editor (UI Setup Manager) that generates the scripts, scenes and config for you. Free and open source (MIT), by Dawaniyah Games. Works with Unity 2022.3 through Unity 6.
+
+Use it when a Unity game's UI needs a clear structure: every screen gets the same shape (its own Addressable scene, its own script, its own place in the state stack), so code written by a team or by AI coding tools always has a clear place to go. It also gives popups and overlays on top of screens, shared bars that stay on screen, UI that loads on demand, smooth transitions with no empty frame, and merge-friendly files for teams.
+
+## Install
+
+- Unity Package Manager → Add package from git URL: `https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework`
+- Pin a version by appending `#vX.Y.Z` (latest releases: https://github.com/dawaniyah-games/UiFramework/releases)
+- Requirements: Unity 2022.3+, Addressables 1.21.0+ (installed as a dependency)
+
+## Core API
+
+- `await UiManager.InitializeAsync()` creates the manager and loads `UiConfig` from Addressables.
+- `await UiManager.ShowState<T>(context, additive)` shows a state; `additive: true` pushes a popup/overlay on top.
+- `await UiManager.HideUI()` pops and unloads the top state.
+- `UiElement.Populate(object context)` is the single data contract for every element; keep it idempotent.
+- `UiTransition.ShowWith(TweenPresets.ScaleKey)` overrides the animation for one call. Presets: Fade, Scale, SlideUp/Down/Left/Right, ClickPop, SettlePop, Shake.
+
+## Key concepts
+
+- Element: one UI piece (e.g. MainMenuUiElement), one Addressable scene with the contract `<Name>Root → Canvas → Root`.
+- State: a list of element scenes shown together (e.g. StoreUiState = TopBar + Store + NavBar). State class names must equal state keys.
+- Shared elements: scenes used by consecutive states stay loaded and do not re-animate.
+- Reference counting: scenes unload only when no state on the stack uses them.
+
+## Docs
+
+- [Overview and docs site](https://www.dawaniyahgames.com/uiframework/): features, comparisons, live diagrams
+- [Get started](https://www.dawaniyahgames.com/uiframework/get-started/): install to first screen
+- [Tutorial](https://www.dawaniyahgames.com/uiframework/tutorial/): step-by-step UI Setup Manager walkthrough with videos
+- [Concepts](https://www.dawaniyahgames.com/uiframework/concepts/): state stack, shared elements, scene contract
+- [Animations](https://www.dawaniyahgames.com/uiframework/animations/): presets and per-call overrides
+- [Showcase app](https://www.dawaniyahgames.com/uiframework/showcase/): a complete mobile game UI built with the framework
+- [API reference](https://www.dawaniyahgames.com/uiframework/api/)
+- [FAQ and troubleshooting](https://www.dawaniyahgames.com/uiframework/faq/)
+- [Source code and README](https://github.com/dawaniyah-games/UiFramework)
+- [Design document](https://github.com/dawaniyah-games/UiFramework/blob/main/DESIGN.md): lifecycle, invariants, limitations
+
+## About
+
+Made by Mohamed Moghazi (Game Engineer, 15+ years on large productions) at Dawaniyah Games, a game development studio in Riyadh, Saudi Arabia and Cologne, Germany: https://www.dawaniyahgames.com/
