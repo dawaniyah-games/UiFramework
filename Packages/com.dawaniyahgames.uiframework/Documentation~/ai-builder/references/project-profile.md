@@ -25,7 +25,7 @@ Read by AI assistants and the team before any UI work. Change it here, not in pr
 ## Targets
 - Platforms: Android (min SDK 25) and iOS
 - Orientation: portrait only
-- Unity: 6000.3 (UI Framework needs 2022.3+)
+- Unity: 6000.3 (UI Framework needs Unity 6, 6000.0+)
 - Test devices (Device Simulator): a tall 20:9 Android phone, a 19.5:9 iPhone with a notch or Dynamic Island,
   a small 16:9 phone (iPhone SE class), a 4:3 tablet (iPad class), and one low-end Android (2-3 GB RAM)
 - Low-end budget is the bar: if it runs there, it ships

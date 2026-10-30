@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.3.12] - 2026-10-30
 
 ### Changed
+- Package: requires Unity 6 (6000.0.23f1, the first Unity 6 LTS release) or newer, with Addressables 2.2.2+ and uGUI 2.0 (was Unity 2022.3 with Addressables 1.21.0 and uGUI 1.0). Addressables 1.x does not compile on Unity 6.5 and newer, so a Unity 6 project could otherwise be offered a dependency that fails. Projects on Unity 2022.3 or 2023 stay on v1.3.11
 - Package: the folder `Core/UiCompoenets` is now `Core/UiComponents`. Its scripts keep their `.meta` files and GUIDs, so scenes, prefabs and assets that use `UiElement`, `UiState` and the other types are unaffected
 - Docs: the package README is now a full offline manual: requirements and compatibility (Unity 2022.3 LTS and Unity 6; Built-in, URP and HDRP), concepts, quick start, every UI Setup Manager tab, the element scene contract and its validation issues, writing elements, the runtime API, animation presets and per-call transitions, the Addressables layout, Enter Play Mode options, known limitations, troubleshooting and support
 

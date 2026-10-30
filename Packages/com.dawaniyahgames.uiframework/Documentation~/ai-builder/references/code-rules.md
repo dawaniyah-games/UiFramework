@@ -28,7 +28,7 @@ From UI Framework's CODING_STANDARDS.md (the DenDon team rules). The project's o
 - No `var`. No target-typed `new()`. No expression-bodied members (`=>`); use block bodies.
 - Allman braces, braces on every `if` / `for` / `while`, one statement per line, 4 spaces.
 - `using` directives at the top, outside the namespace, `System.*` first.
-- Block-scoped namespaces (C# 9 on Unity 2022.3).
+- Block-scoped namespaces (C# 9 on Unity 6).
 - No try/catch for validation or parsing: guard up front (null, empty, range) and return early. try/catch only around real async or IO boundaries, and it logs with context.
 
 ## Unity

@@ -4,6 +4,9 @@ Fixes from the Unity Asset Store review (v1.3.10), an AI build guide (v1.3.11) a
 
 ### Highlights
 
+**Unity 6 and newer**
+- The package now requires Unity 6 (6000.0 LTS) or newer, with Addressables 2.2.2+ and uGUI 2.0. Projects on Unity 2022.3 or 2023 stay on v1.3.11.
+
 **Offline manual**
 - The package README is now a full manual: concepts, quick start, every UI Setup Manager tab, the element scene contract, the runtime API, animations, Addressables, limitations and troubleshooting.
 - The misspelled folder `Core/UiCompoenets` is now `Core/UiComponents` (GUIDs unchanged).
