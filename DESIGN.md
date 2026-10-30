@@ -332,8 +332,8 @@ If nothing appears, check the following: the key matches the class name; *Build 
 | File | Responsibility |
 | --- | --- |
 | `Runtime/Manager/UiManager.cs` | Stack, scene loading and ref counting, transitions, public API |
-| `Core/UiCompoenets/UiState.cs` | Per-state scene list, acquired GUIDs, element discovery and `Populate` |
-| `Core/UiCompoenets/UiElement.cs` | Element base: animation target, show/hide/prepare (optionally with a per-call preset) |
+| `Core/UiComponents/UiState.cs` | Per-state scene list, acquired GUIDs, element discovery and `Populate` |
+| `Core/UiComponents/UiElement.cs` | Element base: animation target, show/hide/prepare (optionally with a per-call preset) |
 | `Core/Transitions/UiTransition.cs` | Optional per-call animation override for `ShowState*` / `HideUI` |
 | `Core/Config/UiConfig.cs` | Runtime state key → scenes map |
 | `Runtime/Tweening/TweenPresets.cs` | Preset catalogue and implementations |

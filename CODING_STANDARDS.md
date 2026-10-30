@@ -56,7 +56,7 @@ Enforced by `.editorconfig`.
 - Suffixes: `*UiState` (states), `*UiElement` (scene elements), `*UiDisplay` (a reusable sub-widget MonoBehaviour, e.g. a card or a row), `*Context` or `*Params` (populate data), `*Signal` / `*SignalParam` (game side only).
 - A state's `UiState` subclass name **MUST** equal its `stateKey` exactly (see [DESIGN.md §5.3](DESIGN.md#53-type--key-resolution)).
 - Namespaces: `UiFramework.Core`, `UiFramework.Runtime.*`, `UiFramework.Tweening`, `UiFramework.Editor.*`. Generated consumer code lands in `UiFramework.Editor.States` / `UiFramework.Editor.Elements` by default (`UiEditorConfig`); don't change that default without a migration plan.
-- Don't rename existing folders or files (including the misspelled `Core/UiCompoenets`) without approval. GUIDs, asmdefs and consumer references depend on them.
+- Don't rename existing folders or files without approval. Scripts keep their GUIDs when their `.meta` files move with them, but asmdefs, docs and tooling may reference paths.
 
 ## 3. Language features
 
@@ -287,7 +287,6 @@ The rules above apply to all new and modified code. These pre-existing deviation
 
 | Location | Deviation |
 | --- | --- |
-| `Core/UiCompoenets/IUiElement.cs`; `Editor/Window/Tabs/IVisualElementTab.cs`, `BaseVisualElementTab.cs` | `using` inside the namespace |
+| `Core/UiComponents/IUiElement.cs`; `Editor/Window/Tabs/IVisualElementTab.cs`, `BaseVisualElementTab.cs` | `using` inside the namespace |
 | `Core/Config/UiConfig.cs` | Lives in the `UiFramework.Core` assembly but declares `namespace UiFramework.Runtime` (kept for compatibility) |
 | `UiConfig.entries`, `UiStateEntry.*`, `UiEditorConfig.*`, `UiStateRegistry.*` | Public serialized fields (§4.2); part of the serialized format, so they stay until an approved breaking change |
-| Folder `Core/UiCompoenets/` | Misspelled; renaming moves GUIDs/paths for users, so it is deferred to a major version |
