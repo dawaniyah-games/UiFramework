@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 using System.Threading.Tasks;
 using UiFramework.Core;
@@ -670,7 +671,14 @@ namespace UiFramework.Runtime.Manager
 
         private Type GetTypeForKey(string key)
         {
-            return AppDomain.CurrentDomain.GetAssemblies()
+            // From Unity 6.4, AppDomain.GetAssemblies can return assemblies that are being unloaded (analyzer UAC0005),
+            // and CurrentAssemblies lists only the live ones. It is internal before 6.4.
+#if UNITY_6000_4_OR_NEWER
+            IReadOnlyList<Assembly> assemblies = UnityEngine.Assemblies.CurrentAssemblies.GetLoadedAssemblies();
+#else
+            IReadOnlyList<Assembly> assemblies = AppDomain.CurrentDomain.GetAssemblies();
+#endif
+            return assemblies
                 .SelectMany(asm => asm.GetTypes())
                 .FirstOrDefault(t => typeof(UiState).IsAssignableFrom(t) && t.Name == key)
                 ?? typeof(UiState);

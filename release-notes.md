@@ -1,8 +1,11 @@
-## UI Framework v1.3.12
+## UI Framework v1.3.13
 
-Fixes from the Unity Asset Store review (v1.3.10), an AI build guide (v1.3.11) and an offline manual (v1.3.12). A patch on top of v1.3.9.
+Fixes from the Unity Asset Store review (v1.3.10), an AI build guide (v1.3.11), an offline manual (v1.3.12) and a Unity 6.4+ analyzer fix (v1.3.13). A patch on top of v1.3.9.
 
 ### Highlights
+
+**No analyzer warnings on Unity 6.4+**
+- `UiManager` uses `CurrentAssemblies.GetLoadedAssemblies()` on Unity 6.4 and newer instead of `AppDomain.GetAssemblies()` (warning UAC0005). No behaviour change.
 
 **Unity 6 and newer**
 - The package now requires Unity 6 (6000.0 LTS) or newer, with Addressables 2.2.2+ and uGUI 2.0. Projects on Unity 2022.3 or 2023 stay on v1.3.11.
@@ -26,14 +29,14 @@ Fixes from the Unity Asset Store review (v1.3.10), an AI build guide (v1.3.11) a
 - No API, serialized field, scene or asset change.
 - Requires Unity 6 (6000.0 LTS) or newer. Projects on Unity 2022.3 or 2023 stay on v1.3.11.
 
-Full details: [CHANGELOG.md](https://github.com/dawaniyah-games/UiFramework/blob/v1.3.12/CHANGELOG.md)
+Full details: [CHANGELOG.md](https://github.com/dawaniyah-games/UiFramework/blob/v1.3.13/CHANGELOG.md)
 
 ### Installation
 
 Coming soon to the Unity Asset Store. Until the listing is live, use Package Manager → **+** → *Add package from git URL…*
 
 ```
-https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.12
+https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.13
 ```
 
 Or in `Packages/manifest.json`:
@@ -41,7 +44,7 @@ Or in `Packages/manifest.json`:
 ```json
 {
   "dependencies": {
-    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.12"
+    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.13"
   }
 }
 ```

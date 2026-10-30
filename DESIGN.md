@@ -1,6 +1,6 @@
 # UI Framework: System Design
 
-> Package `com.dawaniyahgames.uiframework` · describes **v1.3.12** · last reviewed 2026-10-30
+> Package `com.dawaniyahgames.uiframework` · describes **v1.3.13** · last reviewed 2026-10-30
 >
 > This document describes how the framework works *today*. If you change behaviour, update the matching section in the same PR ([CODING_STANDARDS.md §10](CODING_STANDARDS.md#10-comments--documentation)).
 
@@ -132,7 +132,7 @@ Notes:
 
 ### 5.3 Type ↔ key resolution
 
-At init, `GetTypeForKey(stateKey)` scans all loaded assemblies for a type assignable to `UiState` whose **simple class name equals the key**. If none is found it falls back to `typeof(UiState)`.
+At init, `GetTypeForKey(stateKey)` scans all loaded assemblies (`CurrentAssemblies.GetLoadedAssemblies()` from Unity 6.4, `AppDomain.GetAssemblies()` before) for a type assignable to `UiState` whose **simple class name equals the key**. If none is found it falls back to `typeof(UiState)`.
 
 Consequences:
 - `ShowState<MainMenuUiState>()` works only if `UiConfig` has `stateKey = "MainMenuUiState"`.
