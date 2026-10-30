@@ -314,12 +314,10 @@ namespace UiFramework.Editor.Window
                 return;
             }
 
-            AddressableAssetSettings addressableSettings;
-            bool hasAddressables = AddressablesAssetUtility.TryGetSettings(out addressableSettings);
-            if (!hasAddressables)
-            {
-                Debug.LogWarning("[UiFramework] Addressables settings not found. Element scenes will not be auto-registered as Addressables.");
-            }
+            // The runtime loads the config and the element scenes through Addressables, so a project without
+            // Addressables settings gets the default ones here instead of a config that can't be loaded.
+            AddressableAssetSettings addressableSettings = AddressablesAssetUtility.GetOrCreateSettings();
+            bool hasAddressables = addressableSettings != null;
 
             string configOutputPath = configAsset.RuntimeConfigOutputPath;
 

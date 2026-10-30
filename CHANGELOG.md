@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.12] - 2026-10-30
 
+### Fixed
+- Editor: *Build Runtime UiConfig* creates the project's default Addressables settings (`Assets/AddressableAssetsData`) when there are none yet. In a new project it used to log two "Addressables settings not found" warnings and build a config that wasn't Addressable, so `UiManager.InitializeAsync()` couldn't load it
+
 ### Changed
 - Package: requires Unity 6 (6000.0.23f1, the first Unity 6 LTS release) or newer, with Addressables 2.2.2+ and uGUI 2.0 (was Unity 2022.3 with Addressables 1.21.0 and uGUI 1.0). Addressables 1.x does not compile on Unity 6.5 and newer, so a Unity 6 project could otherwise be offered a dependency that fails. Projects on Unity 2022.3 or 2023 stay on v1.3.11
 - Package: the folder `Core/UiCompoenets` is now `Core/UiComponents`. Its scripts keep their `.meta` files and GUIDs, so scenes, prefabs and assets that use `UiElement`, `UiState` and the other types are unaffected
