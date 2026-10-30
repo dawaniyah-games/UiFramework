@@ -1,6 +1,6 @@
 # UI Framework: System Design
 
-> Package `com.dawaniyahgames.uiframework` · describes **v1.3.6** · last reviewed 2026-10-24
+> Package `com.dawaniyahgames.uiframework` · describes **v1.3.7** · last reviewed 2026-10-30
 >
 > This document describes how the framework works *today*. If you change behaviour, update the matching section in the same PR ([CODING_STANDARDS.md §10](CODING_STANDARDS.md#10-comments--documentation)).
 
@@ -166,7 +166,7 @@ A state counts a GUID at most once, even if `UiConfig` lists it twice. A scene u
 
 When a new state uses an already-loaded scene, its elements are:
 - **re-populated**: `Populate(newContext)` runs again on the same instance, so `Populate` must be idempotent;
-- **not prepared, hidden or shown**: their GameObject IDs are in `sharedIds`, so they stay on screen without re-animating.
+- **not prepared, hidden or shown**: their GameObjects are in the shared set (`GetSharedElements`), so they stay on screen without re-animating. The sets hold the GameObjects themselves rather than instance IDs: `Object.GetInstanceID()` is a compile error from Unity 6.5, and Unity's `Object.Equals` already compares object identity.
 
 ## 7. Animation & transitions
 
