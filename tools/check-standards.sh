@@ -143,13 +143,19 @@ for file in "${files[@]}"; do
     fi
 done
 
-# The package ships copies of these root files for the Asset Store; the root files are the source of truth. Line
-# endings are ignored, because Windows working copies may use CRLF.
+# The package ships a copy of the root CHANGELOG.md for the Asset Store; the root file is the source of truth. Line
+# endings are ignored, because Windows working copies may use CRLF. The package must not ship a license file: the
+# Asset Store rejects packages with their own license, because its EULA covers them. The repository keeps LICENSE.md.
 if [ -n "$check_copies" ]; then
-    for copied in LICENSE.md CHANGELOG.md; do
-        packaged="Packages/com.dawaniyahgames.uiframework/$copied"
-        if [ ! -f "$packaged" ] || ! cmp -s <(tr -d '\r' < "$copied") <(tr -d '\r' < "$packaged"); then
-            echo "$packaged: [package-copy] Must match the root $copied. Copy it: cp $copied $packaged"
+    packaged="Packages/com.dawaniyahgames.uiframework/CHANGELOG.md"
+    if [ ! -f "$packaged" ] || ! cmp -s <(tr -d '\r' < CHANGELOG.md) <(tr -d '\r' < "$packaged"); then
+        echo "$packaged: [package-copy] Must match the root CHANGELOG.md. Copy it: cp CHANGELOG.md $packaged"
+        failures=$((failures + 1))
+    fi
+
+    for license in Packages/com.dawaniyahgames.uiframework/LICENSE*; do
+        if [ -e "$license" ]; then
+            echo "$license: [package-license] The Asset Store rejects packages with their own license. Remove it; the root LICENSE.md covers the repository"
             failures=$((failures + 1))
         fi
     done

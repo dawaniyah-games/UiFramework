@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.12] - 2026-10-30
+
+### Fixed
+- Editor: *Build Runtime UiConfig* creates the project's default Addressables settings (`Assets/AddressableAssetsData`) when there are none yet. In a new project it used to log two "Addressables settings not found" warnings and build a config that wasn't Addressable, so `UiManager.InitializeAsync()` couldn't load it
+
+### Changed
+- Package: requires Unity 6 (6000.0.23f1, the first Unity 6 LTS release) or newer, with Addressables 2.2.2+ and uGUI 2.0 (was Unity 2022.3 with Addressables 1.21.0 and uGUI 1.0). Addressables 1.x does not compile on Unity 6.5 and newer, so a Unity 6 project could otherwise be offered a dependency that fails. Projects on Unity 2022.3 or 2023 stay on v1.3.11
+- Package: the folder `Core/UiCompoenets` is now `Core/UiComponents`. Its scripts keep their `.meta` files and GUIDs, so scenes, prefabs and assets that use `UiElement`, `UiState` and the other types are unaffected
+- Docs: the package README is now a full offline manual: requirements and compatibility (Unity 2022.3 LTS and Unity 6; Built-in, URP and HDRP), concepts, quick start, every UI Setup Manager tab, the element scene contract and its validation issues, writing elements, the runtime API, animation presets and per-call transitions, the Addressables layout, Enter Play Mode options, known limitations, troubleshooting and support
+
+## [1.3.11] - 2026-10-30
+
+### Added
+- Docs: an AI build guide in the package (`Documentation~/ai-builder/`) for Claude, ChatGPT / Codex, Copilot and other assistants. It covers planning screens as element scenes and states, importing art from Figma or Photoshop as sprite atlases with mobile compression, Inspector-first responsiveness (a generic helper only as the last step), the coding standards and a hand-off checklist, plus a `UI_PROFILE.md` template so a project states its devices, canvas settings and budgets once
+- Docs: `AGENTS.md` for coding agents working in this repository; README, the package README and `docs/llms.txt` point to the AI build guide
+
+### Fixed
+- Docs: the README quick start said to build the UI under `Canvas → Content`; generated scenes and the scene contract use `Canvas → Root`
+
+## [1.3.10] - 2026-10-30
+
+### Fixed
+- Unity 6.5 and newer: the package compiles again. `UiManager` tracked shared elements by `GameObject.GetInstanceID()`, which Unity 6.5 turned into a compile error (CS0619, "Use GetEntityId instead"). It now keeps the GameObjects themselves in its sets, which works on every supported version without a version check. No behaviour change
+- Package: the Package Manager documentation link and the package README use `https://www.dawaniyahgames.com/uiframework/` directly instead of going through a redirect
+
+### Removed
+- Package: `LICENSE.md` and the `license` / `licensesUrl` entries in `package.json`. The Unity Asset Store rejects packages that carry their own license, because its End User License Agreement covers them. The repository is still MIT licensed (root `LICENSE.md`), and `tools/check-standards.sh` now fails if a license file is added to the package
+
 ## [1.3.9] - 2026-10-28
 
 ### Changed

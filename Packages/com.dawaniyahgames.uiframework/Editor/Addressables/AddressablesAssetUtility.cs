@@ -16,6 +16,26 @@ namespace UiFramework.Editor.Addressables
             return settings != null;
         }
 
+        // Creates the project's default Addressables settings (Assets/AddressableAssetsData) when there are none yet.
+        public static AddressableAssetSettings GetOrCreateSettings()
+        {
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+            if (settings != null)
+            {
+                return settings;
+            }
+
+            settings = AddressableAssetSettingsDefaultObject.GetSettings(true);
+            if (settings == null)
+            {
+                Debug.LogError("[UiFramework] Could not create the Addressables settings. Create them in Window > Asset Management > Addressables > Groups, then build the runtime UiConfig again.");
+                return null;
+            }
+
+            Debug.Log("[UiFramework] Created the project's Addressables settings in " + AddressableAssetSettingsDefaultObject.kDefaultConfigFolder + ", so the runtime UiConfig and element scenes can be loaded.");
+            return settings;
+        }
+
         public static List<string> GetGroupNames(AddressableAssetSettings settings)
         {
             List<string> names = new List<string>();

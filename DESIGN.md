@@ -1,6 +1,6 @@
 # UI Framework: System Design
 
-> Package `com.dawaniyahgames.uiframework` · describes **v1.3.9** · last reviewed 2026-10-28
+> Package `com.dawaniyahgames.uiframework` · describes **v1.3.12** · last reviewed 2026-10-30
 >
 > This document describes how the framework works *today*. If you change behaviour, update the matching section in the same PR ([CODING_STANDARDS.md §10](CODING_STANDARDS.md#10-comments--documentation)).
 
@@ -104,24 +104,24 @@ ShowStateByKey(key, ctx, additive, transition)
 │
 ├─ newState   = new UiState(key, entry.uiElementScenes)      ← always the base class
 ├─ loadingState = newState                                    ← GetCurrentState() returns it while loading
-├─ visibleIds = GameObject IDs of every element in every state on the stack
+├─ visibleElements = GameObjects of every element in every state on the stack
 │
 ├─ LoadStateScenesAsync(newState)            for each distinct scene GUID, in config order:
 │     ├─ LoadSceneIfNeededAsync              reuse a loaded scene │ await an in-flight load │ Addressables.LoadSceneAsync(Additive)
 │     ├─ refCount[guid]++
 │     ├─ newState.RegisterLoadedScene        find every IUiElement in the scene (incl. inactive) → Populate(ctx)
-│     └─ PrepareForShow()                    on new elements not in visibleIds (sets the "before" pose: no flash)
+│     └─ PrepareForShow()                    on new elements not in visibleElements (sets the "before" pose: no flash)
 │
 ├─ if !additive && stack not empty:
-│     ├─ sharedIds = newState elements ∩ visibleIds
-│     ├─ await WhenAll( hide every stacked state except sharedIds,
-│     │                 show newState except sharedIds )     ← overlapping transition
+│     ├─ sharedElements = newState elements ∩ visibleElements
+│     ├─ await WhenAll( hide every stacked state except sharedElements,
+│     │                 show newState except sharedElements )     ← overlapping transition
 │     └─ finally: pop every old state → refCount-- per scene → unload at 0 → Dispose
 │                 stack = [ newState ]; loadingState = null
 │
 └─ else (additive, or empty stack):
       ├─ finally: push newState; loadingState = null
-      └─ show newState except sharedIds
+      └─ show newState except sharedElements
 ```
 
 Notes:
@@ -166,7 +166,7 @@ A state counts a GUID at most once, even if `UiConfig` lists it twice. A scene u
 
 When a new state uses an already-loaded scene, its elements are:
 - **re-populated**: `Populate(newContext)` runs again on the same instance, so `Populate` must be idempotent;
-- **not prepared, hidden or shown**: their GameObject IDs are in `sharedIds`, so they stay on screen without re-animating.
+- **not prepared, hidden or shown**: their GameObjects are in `sharedElements` (`GetSharedElements`), so they stay on screen without re-animating. The sets hold the GameObjects themselves rather than instance IDs: `Object.GetInstanceID()` is a compile error from Unity 6.5, and Unity's `Object.Equals` already compares object identity.
 
 ## 7. Animation & transitions
 
@@ -264,6 +264,7 @@ Confirmations (`UiElementChangeDialog`): every structure fix and *Use Default Se
 Scene editing rules (`UiElementSceneAccess.WithScene`): a scene **already open** in the editor is edited in place with Undo and left dirty. It is never saved or closed for you. A scene that is **not open** is opened additively, saved if changed, and closed again. Bulk actions call `SaveCurrentModifiedScenesIfUserWantsTo()` first. No scene is modified on import, refresh or window open.
 
 **Build Runtime UiConfig**:
+0. If the project has no Addressables settings yet, create the default ones (`Assets/AddressableAssetsData`, via `AddressableAssetSettingsDefaultObject.GetSettings(true)`), because the runtime loads everything through Addressables.
 1. Load or create `UiConfig` at `RuntimeConfigOutputPath` and **clear all entries**.
 2. For each `UiStateDefinition` (sorted by key, duplicates skipped with a warning): resolve each scene name to a path, make the scene Addressable (§9), and add an `AssetReference(guid)`.
 3. If there are no definitions, fall back to the legacy `UiStateRegistry`.
@@ -278,7 +279,7 @@ Run it after **any** change to states or element scenes, then rebuild Addressabl
 | Runtime `UiConfig` | `GlobalConfigs` | `UiConfig` (**the runtime loads by this key**) | `UiConfig`, `RuntimeUiConfig` |
 | Element scenes | `UiElements` | scene file name | `UiElements` |
 
-A legacy group named `Global Configs` (with a space) is renamed to `GlobalConfigs` automatically on build. Groups and labels that do not exist yet are created.
+A legacy group named `Global Configs` (with a space) is renamed to `GlobalConfigs` automatically on build. The project's Addressables settings, groups and labels that do not exist yet are created.
 
 ## 10. Invariants
 
@@ -332,8 +333,8 @@ If nothing appears, check the following: the key matches the class name; *Build 
 | File | Responsibility |
 | --- | --- |
 | `Runtime/Manager/UiManager.cs` | Stack, scene loading and ref counting, transitions, public API |
-| `Core/UiCompoenets/UiState.cs` | Per-state scene list, acquired GUIDs, element discovery and `Populate` |
-| `Core/UiCompoenets/UiElement.cs` | Element base: animation target, show/hide/prepare (optionally with a per-call preset) |
+| `Core/UiComponents/UiState.cs` | Per-state scene list, acquired GUIDs, element discovery and `Populate` |
+| `Core/UiComponents/UiElement.cs` | Element base: animation target, show/hide/prepare (optionally with a per-call preset) |
 | `Core/Transitions/UiTransition.cs` | Optional per-call animation override for `ShowState*` / `HideUI` |
 | `Core/Config/UiConfig.cs` | Runtime state key → scenes map |
 | `Runtime/Tweening/TweenPresets.cs` | Preset catalogue and implementations |
