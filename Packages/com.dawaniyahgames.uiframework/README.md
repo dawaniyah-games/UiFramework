@@ -65,6 +65,10 @@ This package ships no sample scenes or sample config. `UiManager.InitializeAsync
 
 To see a complete app built with the framework, clone the [GitHub repository](https://github.com/dawaniyah-games/UiFramework), open it in Unity 6 and play `Assets/Scenes/Bootstrapper.unity`.
 
+## Building UI with an AI assistant
+
+`Documentation~/ai-builder/` is a guide for Claude, ChatGPT / Codex, Copilot and other coding assistants: how to plan screens as element scenes and states, import art from Figma or Photoshop as compressed sprite atlases, make layouts responsive in the Inspector, and follow the coding standards. Copy `Documentation~/ai-builder/references/project-profile.md` to `UI_PROFILE.md` at your project root and fill it in once, then point your assistant at `Documentation~/ai-builder/SKILL.md` from your `AGENTS.md`, `CLAUDE.md` or Copilot instructions.
+
 ## Links
 
 - [Documentation](https://www.dawaniyahgames.com/uiframework/): getting started, a step-by-step UI Setup Manager tutorial, animations and the API

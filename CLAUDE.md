@@ -8,7 +8,7 @@ Follow these. They are the single source of truth:
 - @DESIGN.md: architecture, runtime lifecycle, invariants (§10), known limitations (§11).
 - @CONTRIBUTING.md: branching, commit messages, release steps.
 
-`.github/copilot-instructions.md` is a condensed version of the same rules for other assistants. Keep it in sync when the rules change.
+`.github/copilot-instructions.md` and `AGENTS.md` are condensed versions of the same rules for other assistants. Keep them in sync when the rules change. The guide for building UI *with* the package (for consumers' assistants) is `Packages/com.dawaniyahgames.uiframework/Documentation~/ai-builder/`.
 
 Working notes:
 - Unity is not driven from the CLI here. Say which Play Mode checks (CODING_STANDARDS §11) the user should run, rather than claiming a change is verified.
