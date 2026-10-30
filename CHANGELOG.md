@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.13] - 2026-10-30
+
+### Fixed
+- Unity 6.4 and newer: `UiManager` finds `UiState` types through `UnityEngine.Assemblies.CurrentAssemblies.GetLoadedAssemblies()` instead of `AppDomain.CurrentDomain.GetAssemblies()`, which Unity's analyzer warns about (UAC0005: it can return assemblies that are being unloaded). Unity 6.0 to 6.3 keep `AppDomain`, because `CurrentAssemblies` is internal there. No behaviour change
+
 ## [1.3.12] - 2026-10-30
 
 ### Fixed
