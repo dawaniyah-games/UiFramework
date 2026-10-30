@@ -104,24 +104,24 @@ ShowStateByKey(key, ctx, additive, transition)
 │
 ├─ newState   = new UiState(key, entry.uiElementScenes)      ← always the base class
 ├─ loadingState = newState                                    ← GetCurrentState() returns it while loading
-├─ visibleIds = GameObject IDs of every element in every state on the stack
+├─ visibleElements = GameObjects of every element in every state on the stack
 │
 ├─ LoadStateScenesAsync(newState)            for each distinct scene GUID, in config order:
 │     ├─ LoadSceneIfNeededAsync              reuse a loaded scene │ await an in-flight load │ Addressables.LoadSceneAsync(Additive)
 │     ├─ refCount[guid]++
 │     ├─ newState.RegisterLoadedScene        find every IUiElement in the scene (incl. inactive) → Populate(ctx)
-│     └─ PrepareForShow()                    on new elements not in visibleIds (sets the "before" pose: no flash)
+│     └─ PrepareForShow()                    on new elements not in visibleElements (sets the "before" pose: no flash)
 │
 ├─ if !additive && stack not empty:
-│     ├─ sharedIds = newState elements ∩ visibleIds
-│     ├─ await WhenAll( hide every stacked state except sharedIds,
-│     │                 show newState except sharedIds )     ← overlapping transition
+│     ├─ sharedElements = newState elements ∩ visibleElements
+│     ├─ await WhenAll( hide every stacked state except sharedElements,
+│     │                 show newState except sharedElements )     ← overlapping transition
 │     └─ finally: pop every old state → refCount-- per scene → unload at 0 → Dispose
 │                 stack = [ newState ]; loadingState = null
 │
 └─ else (additive, or empty stack):
       ├─ finally: push newState; loadingState = null
-      └─ show newState except sharedIds
+      └─ show newState except sharedElements
 ```
 
 Notes:
@@ -166,7 +166,7 @@ A state counts a GUID at most once, even if `UiConfig` lists it twice. A scene u
 
 When a new state uses an already-loaded scene, its elements are:
 - **re-populated**: `Populate(newContext)` runs again on the same instance, so `Populate` must be idempotent;
-- **not prepared, hidden or shown**: their GameObjects are in the shared set (`GetSharedElements`), so they stay on screen without re-animating. The sets hold the GameObjects themselves rather than instance IDs: `Object.GetInstanceID()` is a compile error from Unity 6.5, and Unity's `Object.Equals` already compares object identity.
+- **not prepared, hidden or shown**: their GameObjects are in `sharedElements` (`GetSharedElements`), so they stay on screen without re-animating. The sets hold the GameObjects themselves rather than instance IDs: `Object.GetInstanceID()` is a compile error from Unity 6.5, and Unity's `Object.Equals` already compares object identity.
 
 ## 7. Animation & transitions
 
