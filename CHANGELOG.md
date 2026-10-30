@@ -19,7 +19,7 @@ First release on the Unity Asset Store, with fixes from a pre-submission review.
 
 ### Changed
 - Package: ships its own `CHANGELOG.md` for Asset Store users, starting at this release, instead of a copy of this file. `tools/check-standards.sh` checks that its newest section matches `package.json` and that the package doesn't mention the MIT license or DenDon
-- Package: the README no longer describes installing from git, and says which Unity versions were tested (6.0 LTS, 6.3 LTS and 6.6); the AI build guide no longer refers to DenDon or to repository-only files, installs from the Package Manager, and marks the showcase types it mentions as not included
+- Package: the README no longer describes installing from git, and says which Unity versions were tested (6.0 LTS and 6.6); the AI build guide no longer refers to DenDon or to repository-only files, installs from the Package Manager, and marks the showcase types it mentions as not included
 - Editor: the *Create* menu entries for the editor assets moved from *Scripts → UiFramework* to *UI Framework*, and the runtime `UiConfig` has no *Create* menu entry any more (the UI Setup Manager builds it; a project has exactly one)
 - Package: `package.json` description reads "UI framework for Unity"
 

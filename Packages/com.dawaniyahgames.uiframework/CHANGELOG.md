@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 First release on the Unity Asset Store.
 
 ### Requirements
-- Unity 6 (6000.0 LTS) or newer, with Addressables 2.2.2 or newer and uGUI 2.0. Tested on Unity 6.0 LTS, 6.3 LTS and 6.6.
+- Unity 6 (6000.0 LTS) or newer, with Addressables 2.2.2 or newer and uGUI 2.0. Tested on Unity 6.0 LTS and 6.6.
 - Works with the Built-in Render Pipeline, URP and HDRP, because the framework only uses uGUI canvases.
 
 ### Features
