@@ -2,7 +2,7 @@
 
 # UI Framework
 
-[![Unity Version](https://img.shields.io/badge/Unity-2022.3%2B-blue.svg)](https://unity.com)
+[![Unity Version](https://img.shields.io/badge/Unity-6000.0%2B-blue.svg)](https://unity.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.md)
 
 A Unity UI framework that builds screens from **Addressable scenes** loaded additively and managed on a **LIFO state stack**. Elements receive runtime data through a single `Populate(object context)` contract, and an editor window generates the scripts, scenes and runtime config for you.
@@ -33,12 +33,12 @@ To pin a version, append `#vX.Y.Z` (see [Releases](https://github.com/dawaniyah-
 ```json
 {
   "dependencies": {
-    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.11"
+    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.12"
   }
 }
 ```
 
-**Requirements:** Unity 2022.3+, Addressables 1.21.0+ (installed as a dependency).
+**Requirements:** Unity 6 (6000.0 LTS) or newer, Addressables 2.2.2+ (installed as a dependency).
 
 ## Quick start
 

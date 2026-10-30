@@ -1,6 +1,6 @@
 # UI Framework for Unity
 
-> UI Framework for Unity: smooth, organized game UI, AI-ready. Build Unity game UI from Addressable scenes on a state stack, with shared elements, built-in animations and an editor (UI Setup Manager) that generates the scripts, scenes and config for you. Free and open source (MIT), by Dawaniyah Games. Works with Unity 2022.3 through Unity 6.
+> UI Framework for Unity: smooth, organized game UI, AI-ready. Build Unity game UI from Addressable scenes on a state stack, with shared elements, built-in animations and an editor (UI Setup Manager) that generates the scripts, scenes and config for you. Free and open source (MIT), by Dawaniyah Games. Works with Unity 6 (6000.0 LTS) and newer.
 
 Use it when a Unity game's UI needs a clear structure: every screen gets the same shape (its own Addressable scene, its own script, its own place in the state stack), so code written by a team or by AI coding tools always has a clear place to go. It also gives popups and overlays on top of screens, shared bars that stay on screen, UI that loads on demand, smooth transitions with no empty frame, and merge-friendly files for teams.
 
@@ -8,7 +8,7 @@ Use it when a Unity game's UI needs a clear structure: every screen gets the sam
 
 - Unity Package Manager → Add package from git URL: `https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework`
 - Pin a version by appending `#vX.Y.Z` (latest releases: https://github.com/dawaniyah-games/UiFramework/releases)
-- Requirements: Unity 2022.3+, Addressables 1.21.0+ (installed as a dependency)
+- Requirements: Unity 6 (6000.0 LTS) or newer, Addressables 2.2.2+ (installed as a dependency)
 
 ## Core API
 
