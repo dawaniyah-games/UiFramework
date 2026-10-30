@@ -68,6 +68,12 @@ Group commits by intent (runtime fix / editor tooling / tests / version bump), n
    - Keep `dev` after the merge: ignore the *Delete branch* button. The **Protect-dev** ruleset blocks deleting or force-pushing `dev`. Deleting it would also retarget every open PR into `dev` to `main`.
 6. The **Auto release on main** workflow (`.github/workflows/release.yml`) reads the version, creates and pushes tag `vX.Y.Z`, and publishes a GitHub Release with generated notes.
    - It **fails if the tag already exists**, which almost always means step 1 was skipped. Bump the version and merge again.
+7. Asset Store: upload the tagged package from a Unity 6 project that embeds it (`Packages/com.dawaniyahgames.uiframework`, identical to the tag), **without `Tests/` and `Tests.meta`**. Move them out of the embedded copy, then refresh the asset database (Ctrl+R).
+   - The tests reference the Test Framework and NUnit, which the package does not declare, so the Asset Store Validator warns under *Check Dependencies*. Buyers never compile them.
+   - Run *Tools > Asset Store > Validator* (UPM) first. The only expected warnings are:
+     - *Check Static Variables*: informational. `UiManager` clears its instance at `SubsystemRegistration`.
+     - *Check Dependencies* listing `com.unity.addressables` and `com.unity.ugui` as unused: a Validator limitation. It treats a dependency as used only when the declared version equals the version the editor resolves (for example 2.11.2 and 2.6.0 on Unity 6.6).
+   - Upload with *Tools > Asset Store > Uploader*, then check the version, the supported Unity versions (6000.x) and the release notes in the Publisher Portal draft before submitting.
 
 ## Questions
 
