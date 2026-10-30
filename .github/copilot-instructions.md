@@ -39,5 +39,5 @@ Don't restate or override those documents here. If they and this file disagree, 
 - New or changed generated code: edit `Editor/Templates/*.txt`. The output must satisfy CODING_STANDARDS.
 - Behaviour, API or editor workflow change: update DESIGN.md (and README.md if user-facing) and add a `CHANGELOG.md` `[Unreleased]` entry in the same change.
 - Version bumps: `package.json` `version`, SemVer. Release steps are in CONTRIBUTING.md.
-- The root `CHANGELOG.md` and `LICENSE.md` are the source of truth. After editing either, copy it into `Packages/com.dawaniyahgames.uiframework/`; `tools/check-standards.sh` fails when the copies differ.
+- The root `CHANGELOG.md` is the source of truth. After editing it, copy it into `Packages/com.dawaniyahgames.uiframework/`; `tools/check-standards.sh` fails when the copies differ. Never add a `LICENSE` file to the package: the Asset Store rejects packages with their own license (the root `LICENSE.md` covers the repository).
 - Run `bash tools/check-standards.sh` and the EditMode and PlayMode tests in `Packages/com.dawaniyahgames.uiframework/Tests/`, and verify runtime changes in Play Mode with the sample project (CODING_STANDARDS §11).

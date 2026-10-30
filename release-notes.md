@@ -1,33 +1,31 @@
-## UI Framework v1.3.6
+## UI Framework v1.3.11
 
-Fixes for the Unity Asset Store Validator. A patch on top of v1.3.5.
+Fixes from the Unity Asset Store review (v1.3.10) and an AI build guide (v1.3.11). A patch on top of v1.3.9.
 
 ### Highlights
 
-**UI Setup Manager menu**
-- The window moved from the top-level **UiFramework** menu to **Window → UI Framework → UI Setup Manager**, because Asset Store packages may not add a top-level menu.
-- The published tutorial videos still show the old menu. The docs' Tutorial tab says so.
+**Unity 6.5 and newer**
+- The package compiles again on Unity 6.5+ (tested by the Asset Store on 6000.6). `UiManager` no longer calls `GetInstanceID()`, which Unity 6.5 turned into a compile error. No behaviour change.
 
-**Unity version**
-- The package now requires Unity 2022.3 or newer (was 2021.3), the oldest version the Asset Store accepts.
+**Asset Store package**
+- The package no longer ships its own `LICENSE.md` or a `license` entry in `package.json`. The Asset Store's End User License Agreement covers the Asset Store copy; this repository stays MIT licensed.
+- The documentation link points straight at `https://www.dawaniyahgames.com/uiframework/`.
 
-**Play Mode without domain reload**
-- `UiManager` clears its static instance when a Play session starts, so with *Enter Play Mode Options* and domain reload turned off every session starts clean. Behaviour was already right; the reset is now explicit.
+**Building UI with an AI assistant**
+- The package ships an AI build guide in `Documentation~/ai-builder/` for Claude, ChatGPT / Codex and Copilot: screens as element scenes and states, art from Figma or Photoshop as compressed sprite atlases, Inspector-first responsiveness, and the coding standards. Copy its `UI_PROFILE.md` template to your project once. See "Building UI with an AI assistant" in the README.
+- The README quick start now says to build under `Canvas → Root` (it said `Content`).
 
 ### Upgrade notes
-- No breaking API change. Only the menu location changed: open the window from **Window → UI Framework → UI Setup Manager**. No runtime behaviour or public API change, and no scene, prefab or asset migration.
-- Projects on Unity 2021.3 must upgrade to 2022.3 or newer before taking this version.
+- No API, serialized field, scene or asset change. Update the version and you're done.
 
-Full details: [CHANGELOG.md](https://github.com/dawaniyah-games/UiFramework/blob/v1.3.6/CHANGELOG.md)
+Full details: [CHANGELOG.md](https://github.com/dawaniyah-games/UiFramework/blob/v1.3.11/CHANGELOG.md)
 
 ### Installation
 
-From the Unity Asset Store: add *UI Framework* to your assets, then install it from **Window → Package Manager → My Assets**.
-
-Or Package Manager → **+** → *Add package from git URL…*
+Coming soon to the Unity Asset Store. Until the listing is live, use Package Manager → **+** → *Add package from git URL…*
 
 ```
-https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.6
+https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.11
 ```
 
 Or in `Packages/manifest.json`:
@@ -35,7 +33,7 @@ Or in `Packages/manifest.json`:
 ```json
 {
   "dependencies": {
-    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.6"
+    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.11"
   }
 }
 ```
