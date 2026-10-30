@@ -327,7 +327,7 @@ Preset names are the `TweenPresets.*Key` constants, matched ignoring case. An un
 | Runtime `UiConfig` | `GlobalConfigs` | `UiConfig` (the runtime loads it by this address) | `UiConfig`, `RuntimeUiConfig` |
 | Element scenes | `UiElements` | the scene file name | `UiElements` |
 
-Missing groups and labels are created. Element scene names must be unique in the project, because states refer to scenes by name until the config is built.
+If the project has no Addressables settings yet, the default ones are created in `Assets/AddressableAssetsData`. Missing groups and labels are created too. Element scene names must be unique in the project, because states refer to scenes by name until the config is built.
 
 For player builds, build Addressables content after *Build Runtime UiConfig*. In the Editor, the *Use Asset Database* play mode script needs no build.
 

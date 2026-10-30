@@ -264,6 +264,7 @@ Confirmations (`UiElementChangeDialog`): every structure fix and *Use Default Se
 Scene editing rules (`UiElementSceneAccess.WithScene`): a scene **already open** in the editor is edited in place with Undo and left dirty. It is never saved or closed for you. A scene that is **not open** is opened additively, saved if changed, and closed again. Bulk actions call `SaveCurrentModifiedScenesIfUserWantsTo()` first. No scene is modified on import, refresh or window open.
 
 **Build Runtime UiConfig**:
+0. If the project has no Addressables settings yet, create the default ones (`Assets/AddressableAssetsData`, via `AddressableAssetSettingsDefaultObject.GetSettings(true)`), because the runtime loads everything through Addressables.
 1. Load or create `UiConfig` at `RuntimeConfigOutputPath` and **clear all entries**.
 2. For each `UiStateDefinition` (sorted by key, duplicates skipped with a warning): resolve each scene name to a path, make the scene Addressable (§9), and add an `AssetReference(guid)`.
 3. If there are no definitions, fall back to the legacy `UiStateRegistry`.
@@ -278,7 +279,7 @@ Run it after **any** change to states or element scenes, then rebuild Addressabl
 | Runtime `UiConfig` | `GlobalConfigs` | `UiConfig` (**the runtime loads by this key**) | `UiConfig`, `RuntimeUiConfig` |
 | Element scenes | `UiElements` | scene file name | `UiElements` |
 
-A legacy group named `Global Configs` (with a space) is renamed to `GlobalConfigs` automatically on build. Groups and labels that do not exist yet are created.
+A legacy group named `Global Configs` (with a space) is renamed to `GlobalConfigs` automatically on build. The project's Addressables settings, groups and labels that do not exist yet are created.
 
 ## 10. Invariants
 
