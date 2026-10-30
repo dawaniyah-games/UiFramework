@@ -33,7 +33,7 @@ To pin a version, append `#vX.Y.Z` (see [Releases](https://github.com/dawaniyah-
 ```json
 {
   "dependencies": {
-    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.9"
+    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.10"
   }
 }
 ```
@@ -138,7 +138,7 @@ Then open **Window → UI Framework → UI Setup Manager → Elements** and chan
 
 ## License
 
-MIT. See [LICENSE.md](LICENSE.md).
+MIT. See [LICENSE.md](LICENSE.md). The copy on the Unity Asset Store is covered by the Asset Store End User License Agreement instead.
 
 ## Support
 

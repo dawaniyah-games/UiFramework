@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.10] - 2026-10-30
+
+### Fixed
+- Unity 6.5 and newer: the package compiles again. `UiManager` tracked shared elements by `GameObject.GetInstanceID()`, which Unity 6.5 turned into a compile error (CS0619, "Use GetEntityId instead"). It now keeps the GameObjects themselves in its sets, which works on every supported version without a version check. No behaviour change
+- Package: the Package Manager documentation link and the package README use `https://www.dawaniyahgames.com/uiframework/` directly instead of going through a redirect
+
+### Removed
+- Package: `LICENSE.md` and the `license` / `licensesUrl` entries in `package.json`. The Unity Asset Store rejects packages that carry their own license, because its End User License Agreement covers them. The repository is still MIT licensed (root `LICENSE.md`), and `tools/check-standards.sh` now fails if a license file is added to the package
+
 ## [1.3.9] - 2026-10-28
 
 ### Changed

@@ -61,7 +61,7 @@ Group commits by intent (runtime fix / editor tooling / tests / version bump), n
 
 1. On `dev`, bump `version` in `Packages/com.dawaniyahgames.uiframework/package.json` following [SemVer](https://semver.org/): patch = fix, minor = feature, major = breaking.
 2. In `CHANGELOG.md`, rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD` and add a new empty `## [Unreleased]` above it.
-3. Copy `CHANGELOG.md` into the package: `cp CHANGELOG.md Packages/com.dawaniyahgames.uiframework/CHANGELOG.md`. The root file is the source of truth; the package copy is what the Asset Store and Package Manager show. `bash tools/check-standards.sh` fails when the package's `CHANGELOG.md` or `LICENSE.md` differs from the root file.
+3. Copy `CHANGELOG.md` into the package: `cp CHANGELOG.md Packages/com.dawaniyahgames.uiframework/CHANGELOG.md`. The root file is the source of truth; the package copy is what the Asset Store and Package Manager show. `bash tools/check-standards.sh` fails when the package's `CHANGELOG.md` differs from the root file. The package has no `LICENSE.md` on purpose: the Asset Store rejects packages that carry their own license, and the check fails if one is added.
 4. Update the version line at the top of `DESIGN.md` and the pinned example in `README.md`.
 5. Open a PR `dev → main` titled `Release vX.Y.Z: short description`, then merge.
    - `main` is guarded by the **Protect-main** ruleset: 1 approving review and a required status check named "Bump Package Version". That check comes from a workflow that no longer exists, so it never reports. Until the ruleset is updated, repository admins merge release PRs with the bypass (*Merge without waiting for requirements*, or `gh pr merge <n> --merge --admin`).

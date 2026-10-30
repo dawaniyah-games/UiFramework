@@ -148,18 +148,18 @@ namespace UiFramework.Runtime.Manager
 
             loadingState = newState;
 
-            HashSet<int> currentlyVisibleElementIds = GetVisibleElementIds();
+            HashSet<GameObject> currentlyVisibleElements = GetVisibleElements();
 
             if (!additive && stateStack.Count > 0)
             {
                 try
                 {
-                    await LoadStateScenesAsync(newState, context, true, currentlyVisibleElementIds, transition.ShowPreset);
+                    await LoadStateScenesAsync(newState, context, true, currentlyVisibleElements, transition.ShowPreset);
 
-                    HashSet<int> sharedElementIds = GetSharedElementIds(currentlyVisibleElementIds, newState);
+                    HashSet<GameObject> sharedElements = GetSharedElements(currentlyVisibleElements, newState);
 
-                    Task hideTask = PlayHideTransitionsForAllStatesAsync(sharedElementIds, transition.HidePreset);
-                    Task showTask = PlayShowTransitionAsync(newState, sharedElementIds, transition.ShowPreset);
+                    Task hideTask = PlayHideTransitionsForAllStatesAsync(sharedElements, transition.HidePreset);
+                    Task showTask = PlayShowTransitionAsync(newState, sharedElements, transition.ShowPreset);
                     await Task.WhenAll(hideTask, showTask);
                 }
                 catch (Exception exception)
@@ -179,7 +179,7 @@ namespace UiFramework.Runtime.Manager
 
             try
             {
-                await LoadStateScenesAsync(newState, context, true, currentlyVisibleElementIds, transition.ShowPreset);
+                await LoadStateScenesAsync(newState, context, true, currentlyVisibleElements, transition.ShowPreset);
             }
             catch (Exception exception)
             {
@@ -193,7 +193,7 @@ namespace UiFramework.Runtime.Manager
 
             try
             {
-                HashSet<int> sharedInAdditive = GetSharedElementIds(currentlyVisibleElementIds, newState);
+                HashSet<GameObject> sharedInAdditive = GetSharedElements(currentlyVisibleElements, newState);
                 await PlayShowTransitionAsync(newState, sharedInAdditive, transition.ShowPreset);
             }
             catch (Exception exception)
@@ -203,7 +203,7 @@ namespace UiFramework.Runtime.Manager
         }
 
         // showPreset: per-call override (UiTransition.ShowPreset), or null for each element's own animation.
-        private static void PrepareShowTransition(UiState state, HashSet<int> skipElementIds, string showPreset)
+        private static void PrepareShowTransition(UiState state, HashSet<GameObject> skipElements, string showPreset)
         {
             if (state == null)
             {
@@ -216,7 +216,7 @@ namespace UiFramework.Runtime.Manager
                 return;
             }
 
-            HashSet<int> visited = new HashSet<int>();
+            HashSet<GameObject> visited = new HashSet<GameObject>();
 
             for (int i = 0; i < elements.Count; i++)
             {
@@ -226,13 +226,13 @@ namespace UiFramework.Runtime.Manager
                     continue;
                 }
 
-                int id = uiElementBehaviour.gameObject.GetInstanceID();
-                if (!visited.Add(id))
+                GameObject uiElementGameObject = uiElementBehaviour.gameObject;
+                if (!visited.Add(uiElementGameObject))
                 {
                     continue;
                 }
 
-                if (skipElementIds != null && skipElementIds.Contains(id))
+                if (skipElements != null && skipElements.Contains(uiElementGameObject))
                 {
                     continue;
                 }
@@ -254,17 +254,17 @@ namespace UiFramework.Runtime.Manager
             }
         }
 
-        private async Task PlayShowTransitionAsync(UiState state, HashSet<int> skipElementIds, string showPreset)
+        private async Task PlayShowTransitionAsync(UiState state, HashSet<GameObject> skipElements, string showPreset)
         {
             if (state == null)
             {
                 return;
             }
 
-            await PlayTransitionAsync(state, true, skipElementIds, showPreset);
+            await PlayTransitionAsync(state, true, skipElements, showPreset);
         }
 
-        private async Task PlayHideTransitionsForAllStatesAsync(HashSet<int> skipElementIds, string hidePreset)
+        private async Task PlayHideTransitionsForAllStatesAsync(HashSet<GameObject> skipElements, string hidePreset)
         {
             if (stateStack == null || stateStack.Count == 0)
             {
@@ -276,14 +276,14 @@ namespace UiFramework.Runtime.Manager
             List<Task> hides = new List<Task>(states.Length);
             for (int i = 0; i < states.Length; i++)
             {
-                hides.Add(PlayTransitionAsync(states[i], false, skipElementIds, hidePreset));
+                hides.Add(PlayTransitionAsync(states[i], false, skipElements, hidePreset));
             }
 
             await Task.WhenAll(hides);
         }
 
         // presetOverride: per-call UiTransition preset, or null to play each element's own show / hide animation.
-        private static async Task PlayTransitionAsync(UiState state, bool isShow, HashSet<int> skipElementIds, string presetOverride)
+        private static async Task PlayTransitionAsync(UiState state, bool isShow, HashSet<GameObject> skipElements, string presetOverride)
         {
             if (state == null)
             {
@@ -296,7 +296,7 @@ namespace UiFramework.Runtime.Manager
                 return;
             }
 
-            HashSet<int> visited = new HashSet<int>();
+            HashSet<GameObject> visited = new HashSet<GameObject>();
             List<Task> tasks = new List<Task>();
 
             for (int i = 0; i < elements.Count; i++)
@@ -313,13 +313,12 @@ namespace UiFramework.Runtime.Manager
                     continue;
                 }
 
-                int id = uiElementGameObject.GetInstanceID();
-                if (!visited.Add(id))
+                if (!visited.Add(uiElementGameObject))
                 {
                     continue;
                 }
 
-                if (skipElementIds != null && skipElementIds.Contains(id))
+                if (skipElements != null && skipElements.Contains(uiElementGameObject))
                 {
                     continue;
                 }
@@ -340,7 +339,7 @@ namespace UiFramework.Runtime.Manager
             }
         }
 
-        private async Task LoadStateScenesAsync(UiState state, object context, bool prepareForShow, HashSet<int> skipPrepareElementIds, string showPreset)
+        private async Task LoadStateScenesAsync(UiState state, object context, bool prepareForShow, HashSet<GameObject> skipPrepareElements, string showPreset)
         {
             if (state == null)
             {
@@ -387,14 +386,14 @@ namespace UiFramework.Runtime.Manager
 
                 if (prepareForShow)
                 {
-                    PrepareShowTransition(state, skipPrepareElementIds, showPreset);
+                    PrepareShowTransition(state, skipPrepareElements, showPreset);
                 }
             }
         }
 
-        private HashSet<int> GetVisibleElementIds()
+        private HashSet<GameObject> GetVisibleElements()
         {
-            HashSet<int> result = new HashSet<int>();
+            HashSet<GameObject> result = new HashSet<GameObject>();
 
             if (stateStack == null || stateStack.Count == 0)
             {
@@ -424,18 +423,18 @@ namespace UiFramework.Runtime.Manager
                         continue;
                     }
 
-                    result.Add(behaviour.gameObject.GetInstanceID());
+                    result.Add(behaviour.gameObject);
                 }
             }
 
             return result;
         }
 
-        private static HashSet<int> GetSharedElementIds(HashSet<int> currentlyVisibleElementIds, UiState newState)
+        private static HashSet<GameObject> GetSharedElements(HashSet<GameObject> currentlyVisibleElements, UiState newState)
         {
-            HashSet<int> shared = new HashSet<int>();
+            HashSet<GameObject> shared = new HashSet<GameObject>();
 
-            if (currentlyVisibleElementIds == null || currentlyVisibleElementIds.Count == 0 || newState == null)
+            if (currentlyVisibleElements == null || currentlyVisibleElements.Count == 0 || newState == null)
             {
                 return shared;
             }
@@ -454,10 +453,10 @@ namespace UiFramework.Runtime.Manager
                     continue;
                 }
 
-                int id = behaviour.gameObject.GetInstanceID();
-                if (currentlyVisibleElementIds.Contains(id))
+                GameObject elementGameObject = behaviour.gameObject;
+                if (currentlyVisibleElements.Contains(elementGameObject))
                 {
-                    shared.Add(id);
+                    shared.Add(elementGameObject);
                 }
             }
 
