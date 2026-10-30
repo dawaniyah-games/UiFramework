@@ -69,4 +69,4 @@ To see a complete app built with the framework, clone the [GitHub repository](ht
 
 - [Documentation](https://dawaniyahgames.com/uiframework/): getting started, a step-by-step UI Setup Manager tutorial, animations and the API
 - [GitHub repository](https://github.com/dawaniyah-games/UiFramework): source, showcase app, [issues](https://github.com/dawaniyah-games/UiFramework/issues) and [discussions](https://github.com/dawaniyah-games/UiFramework/discussions)
-- [CHANGELOG.md](CHANGELOG.md) and [LICENSE.md](LICENSE.md) (MIT)
+- [CHANGELOG.md](CHANGELOG.md)

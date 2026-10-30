@@ -138,7 +138,7 @@ Then open **Window → UI Framework → UI Setup Manager → Elements** and chan
 
 ## License
 
-MIT. See [LICENSE.md](LICENSE.md).
+MIT. See [LICENSE.md](LICENSE.md). The copy on the Unity Asset Store is covered by the Asset Store End User License Agreement instead.
 
 ## Support
 
