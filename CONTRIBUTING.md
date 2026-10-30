@@ -74,7 +74,8 @@ Group commits by intent (runtime fix / editor tooling / tests / version bump), n
      - *Check Static Variables*: informational. `UiManager` clears its instance at `SubsystemRegistration`.
      - *Check Dependencies* listing `com.unity.addressables` and `com.unity.ugui` as unused: a Validator limitation. It treats a dependency as used only when the declared version equals the version the editor resolves (for example 2.11.2 and 2.6.0 on Unity 6.6).
    - Before uploading, check in a new project on the lowest supported Unity version (6000.0 LTS) and the newest: the package compiles with no warnings, *Create Config*, a new element and state, and *Build Runtime UiConfig* work, Play Mode shows the state with domain reload disabled, and a **player build** shows it too (Play Mode with *Use Asset Database* does not prove the Addressables content builds).
-   - Upload with *Tools > Asset Store > Uploader*, then check the version, the supported Unity versions (6000.x) and the release notes in the Publisher Portal draft before submitting.
+   - Upload with *Tools > Asset Store > Uploader*. Each version starts with empty metadata: in the Publisher Portal (UPM products are only listed at **cloud.unity.com → Asset Store → Publisher → Products**, not on publisher.unity.com), open the product, *Fill out package metadata* for the new version (tick 6000.x, add release notes), check the description and media, then *Submit* with a short note for the curation team. Leave *Auto publish* off unless the release should go live as soon as it is approved.
+   - Media must not mention the MIT license: the store images read "FREE · UNITY 6".
 
 ## Questions
 
