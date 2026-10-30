@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.12] - 2026-10-30
+
+### Changed
+- Package: the folder `Core/UiCompoenets` is now `Core/UiComponents`. Its scripts keep their `.meta` files and GUIDs, so scenes, prefabs and assets that use `UiElement`, `UiState` and the other types are unaffected
+- Docs: the package README is now a full offline manual: requirements and compatibility (Unity 2022.3 LTS and Unity 6; Built-in, URP and HDRP), concepts, quick start, every UI Setup Manager tab, the element scene contract and its validation issues, writing elements, the runtime API, animation presets and per-call transitions, the Addressables layout, Enter Play Mode options, known limitations, troubleshooting and support
+
 ## [1.3.11] - 2026-10-30
 
 ### Added

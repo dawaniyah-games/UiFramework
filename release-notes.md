@@ -1,8 +1,12 @@
-## UI Framework v1.3.11
+## UI Framework v1.3.12
 
-Fixes from the Unity Asset Store review (v1.3.10) and an AI build guide (v1.3.11). A patch on top of v1.3.9.
+Fixes from the Unity Asset Store review (v1.3.10), an AI build guide (v1.3.11) and an offline manual (v1.3.12). A patch on top of v1.3.9.
 
 ### Highlights
+
+**Offline manual**
+- The package README is now a full manual: concepts, quick start, every UI Setup Manager tab, the element scene contract, the runtime API, animations, Addressables, limitations and troubleshooting.
+- The misspelled folder `Core/UiCompoenets` is now `Core/UiComponents` (GUIDs unchanged).
 
 **Unity 6.5 and newer**
 - The package compiles again on Unity 6.5+ (tested by the Asset Store on 6000.6). `UiManager` no longer calls `GetInstanceID()`, which Unity 6.5 turned into a compile error. No behaviour change.
@@ -18,14 +22,14 @@ Fixes from the Unity Asset Store review (v1.3.10) and an AI build guide (v1.3.11
 ### Upgrade notes
 - No API, serialized field, scene or asset change. Update the version and you're done.
 
-Full details: [CHANGELOG.md](https://github.com/dawaniyah-games/UiFramework/blob/v1.3.11/CHANGELOG.md)
+Full details: [CHANGELOG.md](https://github.com/dawaniyah-games/UiFramework/blob/v1.3.12/CHANGELOG.md)
 
 ### Installation
 
 Coming soon to the Unity Asset Store. Until the listing is live, use Package Manager → **+** → *Add package from git URL…*
 
 ```
-https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.11
+https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.12
 ```
 
 Or in `Packages/manifest.json`:
@@ -33,7 +37,7 @@ Or in `Packages/manifest.json`:
 ```json
 {
   "dependencies": {
-    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.11"
+    "com.dawaniyahgames.uiframework": "https://github.com/dawaniyah-games/UiFramework.git?path=Packages/com.dawaniyahgames.uiframework#v1.3.12"
   }
 }
 ```
