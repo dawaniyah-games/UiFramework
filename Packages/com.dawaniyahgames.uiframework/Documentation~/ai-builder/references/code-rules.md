@@ -1,6 +1,6 @@
 # Code rules for UI code
 
-From UI Framework's CODING_STANDARDS.md (the DenDon team rules). The project's own `AGENTS.md`, `.editorconfig` and instructions win for game code; these apply wherever they are silent. Before writing anything, read the nearest existing element, display and state in the project and copy their shape.
+The coding rules UI Framework itself follows. The project's own `AGENTS.md`, `.editorconfig` and instructions win for game code; these apply wherever they are silent. Before writing anything, read the nearest existing element, display and state in the project and copy their shape.
 
 ## How to work
 - Read the existing code path first. Don't guess the architecture.
@@ -51,9 +51,7 @@ From UI Framework's CODING_STANDARDS.md (the DenDon team rules). The project's o
 - Every message starts with a tag: `Debug.LogWarning("[StoreUiElement] coinPackTemplate is not assigned. Assign it in the scene.", this);`
 - Say what happened and what to do. No emoji, no per-frame logs, no debug spam left in.
 
-## Git
-- Branch off `dev` (`feature/*`, `fix/*`), PR back to `dev`. Don't push or publish unless asked.
-- Commit subjects: imperative, sentence case, no prefix, no trailing period, about 72 characters, describing the outcome ("Add the store coin packs screen").
+## Assets
 - Commit every new asset with its `.meta`. Never edit GUIDs.
 
 ## Reference shape

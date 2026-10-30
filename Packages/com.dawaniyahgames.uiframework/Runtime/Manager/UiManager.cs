@@ -641,8 +641,6 @@ namespace UiFramework.Runtime.Manager
 
                 if (poppedState != null)
                 {
-                    Debug.Log($"[UiManager] Unloading UI state: {poppedState.StateName}");
-
                     if (playHideTransitions)
                     {
                         await PlayTransitionAsync(poppedState, false, null, null);
@@ -678,10 +676,34 @@ namespace UiFramework.Runtime.Manager
 #else
             IReadOnlyList<Assembly> assemblies = AppDomain.CurrentDomain.GetAssemblies();
 #endif
-            return assemblies
-                .SelectMany(asm => asm.GetTypes())
-                .FirstOrDefault(t => typeof(UiState).IsAssignableFrom(t) && t.Name == key)
-                ?? typeof(UiState);
+            for (int i = 0; i < assemblies.Count; i++)
+            {
+                Type[] types = GetLoadableTypes(assemblies[i]);
+                for (int j = 0; j < types.Length; j++)
+                {
+                    Type type = types[j];
+                    if (type != null && type.Name == key && typeof(UiState).IsAssignableFrom(type))
+                    {
+                        return type;
+                    }
+                }
+            }
+
+            return typeof(UiState);
+        }
+
+        // GetTypes() throws for a plugin assembly with a missing dependency. Its loadable types are still searched, so one
+        // broken plugin does not stop the UI from loading.
+        private static Type[] GetLoadableTypes(Assembly assembly)
+        {
+            try
+            {
+                return assembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException exception)
+            {
+                return exception.Types ?? new Type[0];
+            }
         }
     }
 }

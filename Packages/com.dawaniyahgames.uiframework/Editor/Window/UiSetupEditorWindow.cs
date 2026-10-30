@@ -161,7 +161,7 @@ namespace UiFramework.Editor.Window
                     generalTab.SetLoadOrCreateCallback(() => LoadOrCreateConfig());
                     generalTab.SetRuntimeUiBuildCallback(() =>
                     {
-                        BuildRuntimeUiConfig();
+                        return BuildRuntimeUiConfig();
                     });
                 }
 
@@ -306,12 +306,13 @@ namespace UiFramework.Editor.Window
             }
         }
 
-        public void BuildRuntimeUiConfig()
+        // Returns true when the runtime UiConfig was built and is Addressable, so UiManager.InitializeAsync() can load it.
+        public bool BuildRuntimeUiConfig()
         {
             if (configAsset == null)
             {
-                Debug.LogError("[UiFramework] No config asset loaded to build runtime UI config.");
-                return;
+                Debug.LogError("[UiFramework] No UI config yet. Click Create Config first, then build the runtime UiConfig.");
+                return false;
             }
 
             // The runtime loads the config and the element scenes through Addressables, so a project without
@@ -381,8 +382,7 @@ namespace UiFramework.Editor.Window
                 AssetDatabase.SaveAssets();
                 Debug.Log("[UiFramework] Built runtime UiConfig from UiStateDefinition assets.");
 
-                EnsureConfigIsAddressable(configOutputPath, new string[] { "UiConfig", "RuntimeUiConfig" }, GlobalConfigsGroupName);
-                return;
+                return EnsureConfigIsAddressable(configOutputPath, new string[] { "UiConfig", "RuntimeUiConfig" }, GlobalConfigsGroupName);
             }
 
             string registryPath = configAsset.StateRegistryPath;
@@ -436,7 +436,7 @@ namespace UiFramework.Editor.Window
             Debug.Log("[UiFramework] Built runtime UiConfig from UiStateRegistry.");
 
             // Ensure Addressables setup: add to GlobalConfigs group and assign labels
-            EnsureConfigIsAddressable(configOutputPath, new string[] { "UiConfig", "RuntimeUiConfig" }, GlobalConfigsGroupName);
+            return EnsureConfigIsAddressable(configOutputPath, new string[] { "UiConfig", "RuntimeUiConfig" }, GlobalConfigsGroupName);
         }
 
         private static void EnsureUnityFolderExists(string folderPath)
@@ -471,44 +471,42 @@ namespace UiFramework.Editor.Window
             }
         }
 
-        private static void EnsureConfigIsAddressable(string assetPath, string[] labels, string groupName)
+        // Returns false when the config could not be made Addressable, so the runtime could not load it.
+        private static bool EnsureConfigIsAddressable(string assetPath, string[] labels, string groupName)
         {
             AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
             if (settings == null)
             {
-                Debug.LogWarning("[UiFramework] Addressables settings not found. Please enable Addressables in your project.");
-                return;
+                Debug.LogError("[UiFramework] Addressables settings not found, so the runtime UiConfig is not Addressable and UiManager.InitializeAsync() cannot load it. Create them in Window > Asset Management > Addressables > Groups, then build the runtime UiConfig again.");
+                return false;
             }
 
-            // Ensure group exists
-            AddressableAssetGroup group = settings.FindGroup(groupName);
+            // Projects from older versions have the config group under its old name; rename it instead of adding a second one.
+            if (settings.FindGroup(groupName) == null && string.Equals(groupName, GlobalConfigsGroupName, System.StringComparison.Ordinal))
+            {
+                AddressableAssetGroup legacyGroup = settings.FindGroup(LegacyGlobalConfigsGroupName);
+                if (legacyGroup != null)
+                {
+                    legacyGroup.Name = GlobalConfigsGroupName;
+                    EditorUtility.SetDirty(settings);
+                    AssetDatabase.SaveAssets();
+                    Debug.Log("[UiFramework] Renamed Addressables group '" + LegacyGlobalConfigsGroupName + "' to '" + GlobalConfigsGroupName + "'.");
+                }
+            }
+
+            // Creates the group when needed and makes sure it is included in player builds.
+            AddressableAssetGroup group = AddressablesAssetUtility.GetOrCreateGroup(settings, groupName);
             if (group == null)
             {
-                if (string.Equals(groupName, GlobalConfigsGroupName, System.StringComparison.Ordinal))
-                {
-                    AddressableAssetGroup legacyGroup = settings.FindGroup(LegacyGlobalConfigsGroupName);
-                    if (legacyGroup != null)
-                    {
-                        legacyGroup.Name = GlobalConfigsGroupName;
-                        group = legacyGroup;
-                        EditorUtility.SetDirty(settings);
-                        AssetDatabase.SaveAssets();
-                        Debug.Log("[UiFramework] Renamed Addressables group '" + LegacyGlobalConfigsGroupName + "' to '" + GlobalConfigsGroupName + "'.");
-                    }
-                }
-
-                if (group == null)
-                {
-                group = settings.CreateGroup(groupName, false, false, true, null);
-                Debug.Log($"[UiFramework] Created Addressables group '{groupName}'.");
-                }
+                Debug.LogError("[UiFramework] Could not find or create the Addressables group '" + groupName + "'. Check the Addressables Groups window.");
+                return false;
             }
 
             string guid = AssetDatabase.AssetPathToGUID(assetPath);
             if (string.IsNullOrEmpty(guid))
             {
                 Debug.LogError($"[UiFramework] Could not resolve GUID for asset at {assetPath}");
-                return;
+                return false;
             }
 
             AddressableAssetEntry entry = settings.FindAssetEntry(guid);
@@ -541,6 +539,7 @@ namespace UiFramework.Editor.Window
 
             settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryModified, entry, true);
             AssetDatabase.SaveAssets();
+            return true;
         }
     }
 }

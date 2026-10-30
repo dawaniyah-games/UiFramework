@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace UiFramework.Editor.Data
 {
-    [CreateAssetMenu(fileName = "UiStateDefinition", menuName = "Scripts/UiFramework/State Definition")]
+    [CreateAssetMenu(fileName = "UiStateDefinition", menuName = "UI Framework/State Definition")]
     public sealed class UiStateDefinition : ScriptableObject
     {
         [SerializeField] private string stateKey;

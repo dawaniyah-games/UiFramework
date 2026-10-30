@@ -5,7 +5,7 @@ using UnityEngine.AddressableAssets;
 
 namespace UiFramework.Runtime
 {
-    [CreateAssetMenu(fileName = "UiConfig", menuName = "UiFramework/UiConfig")]
+    // No Create menu entry: the runtime UiConfig is built by the UI Setup Manager, and a project has exactly one.
     public class UiConfig : ScriptableObject
     {
         public List<UiStateEntry> entries = new List<UiStateEntry>();
